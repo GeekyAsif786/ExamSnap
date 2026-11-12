@@ -45,6 +45,20 @@ test("unknown source type", async () => {
   await expectOneError("unknown-source-type", /\/sources\/0\/type: must be equal to one of the allowed values: "notice", "portal", "secondary"/);
 });
 
+test("reserved ids: custom, icons, src and every two-letter (language folder) id", async () => {
+  const { errors } = await validatePresets(fixture("reserved-id"), { now: NOW });
+  assert.deepEqual(errors.map((e) => e.replace(/^.*?(\w+\.json)/, "$1")), [
+    'custom.json: /id: "custom" is reserved; choose another id',
+    'hi.json: /id: "hi" is reserved: two-letter ids are language folders (like /hi/); choose another id',
+  ]);
+});
+
+test("reservedIdReason", async () => {
+  const { reservedIdReason } = await import("../scripts/check-presets.mjs");
+  for (const id of ["custom", "icons", "src", "hi", "en", "bn", "zz"]) assert.ok(reservedIdReason(id), id);
+  for (const id of ["ssc", "jee-main", "a1", "h", "neet-ug", "ib"+"ps"]) assert.equal(reservedIdReason(id), null, id);
+});
+
 test("extra property", async () => {
   await expectOneError("extra-property", /sample\.json: \/: unknown property "website"/);
 });

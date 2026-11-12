@@ -8,6 +8,22 @@ import addFormats from "ajv-formats";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SCHEMA_PATH = join(ROOT, "schema", "preset.schema.json");
 const STALE_DAYS = 365;
+
+/** Ids that would clash with the app ("custom") or with built site folders. */
+export const RESERVED_IDS = new Set(["custom", "icons", "src"]);
+/** Two lowercase letters: the folder of a language (e.g. /hi/), now or later. */
+export const LANGUAGE_ID_RE = /^[a-z]{2}$/;
+
+/**
+ * Why a preset id can't be used, or null if it can.
+ * @param {string} id
+ * @returns {string | null}
+ */
+export function reservedIdReason(id) {
+  if (RESERVED_IDS.has(id)) return `"${id}" is reserved`;
+  if (LANGUAGE_ID_RE.test(id)) return `"${id}" is reserved: two-letter ids are language folders (like /hi/)`;
+  return null;
+}
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 let validateSchema;
@@ -71,6 +87,8 @@ export async function validatePresets(dir, { now = new Date() } = {}) {
 
     const { id } = data;
     if (typeof id === "string") {
+      const reserved = reservedIdReason(id);
+      if (reserved) err("/id", `${reserved}; choose another id`);
       if (name !== `${id}.json`) {
         err("/id", `file name must be "${id}.json" to match the id`);
       }
