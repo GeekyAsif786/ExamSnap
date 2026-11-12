@@ -1,0 +1,104 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { build, JS_BUDGET } from "../scripts/build.mjs";
+import { PRESETS } from "../src/generated/presets.js";
+
+const tmp = () => mkdtemp(join(tmpdir(), "examsnap-build-"));
+
+test("two builds are byte-identical", async (t) => {
+  const [a, b] = await Promise.all([tmp(), tmp()]);
+  t.after(() => Promise.all([rm(a, { recursive: true, force: true }), rm(b, { recursive: true, force: true })]));
+  const ra = await build({ outDir: a });
+  const rb = await build({ outDir: b });
+  assert.deepEqual(ra.files, rb.files);
+  for (const f of ra.files) {
+    assert.ok((await readFile(join(a, f.path))).equals(await readFile(join(b, f.path))), f.path);
+  }
+});
+
+test("output layout: pages, crawl files, hashed assets, budget", async (t) => {
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const r = await build({ outDir: dir });
+  const paths = r.files.map((f) => f.path);
+  for (const p of ["index.html", "404.html", "sitemap.xml", "robots.txt", "manifest.webmanifest", "sw.js", ...PRESETS.map((p) => `${p.id}/index.html`)]) {
+    assert.ok(paths.includes(p), p);
+  }
+  // Every JS/CSS/image asset is content-hashed; no unhashed source paths ship.
+  for (const p of paths.filter((p) => /\.(js|css|png|svg)$/.test(p) && p !== "sw.js")) {
+    assert.match(p, /\.[0-9a-f]{8}\.(js|css|png|svg)$/, p);
+  }
+  assert.ok(r.jsBytes < JS_BUDGET);
+  assert.deepEqual(r.pages, ["", ...PRESETS.map((p) => `${p.id}/`)]);
+});
+
+test("BASE_PATH and SITE_ORIGIN: a custom domain only needs base '/' and a new origin", async (t) => {
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await build({ outDir: dir, base: "/", origin: "https://examsnap.example" });
+  const ssc = await readFile(join(dir, "ssc/index.html"), "utf8");
+  assert.match(ssc, /<link rel="canonical" href="https:\/\/examsnap\.example\/ssc\/">/);
+  assert.match(ssc, /src="\.\.\/src\/ui\/app\.[0-9a-f]{8}\.js"/, "assets stay relative");
+  const notFound = await readFile(join(dir, "404.html"), "utf8");
+  assert.match(notFound, /href="\/src\/ui\/styles\.[0-9a-f]{8}\.css"/, "404 uses root-absolute paths under the base");
+  assert.match(await readFile(join(dir, "robots.txt"), "utf8"), /Sitemap: https:\/\/examsnap\.example\/sitemap\.xml/);
+  // No root-absolute /ExamSnap/ paths or default-origin URLs left over (the
+  // GitHub repo link in the footer legitimately contains "ExamSnap/").
+  assert.doesNotMatch(ssc + notFound, /["'(]\/ExamSnap\//, "no leftover /ExamSnap/ paths");
+  assert.doesNotMatch(ssc + notFound, /github\.io/, "no default-origin URLs");
+});
+
+test("hashed imports point at files that exist in the build", async (t) => {
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const r = await build({ outDir: dir });
+  const paths = new Set(r.files.map((f) => f.path));
+  for (const f of r.files.filter((f) => f.path.endsWith(".js") && f.path.startsWith("src/"))) {
+    const code = await readFile(join(dir, f.path), "utf8");
+    for (const m of code.matchAll(/\bfrom\s*"(\.{1,2}\/[^"]+)"/g)) {
+      const target = new URL(m[1], `file:///${f.path}`).pathname.slice(1);
+      assert.ok(paths.has(target), `${f.path} imports missing ${target}`);
+    }
+  }
+});
+
+test("sw.js precaches every page and shipped asset (not the OG image), and parses", async (t) => {
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const r = await build({ outDir: dir });
+  const sw = await readFile(join(dir, "sw.js"), "utf8");
+  const precache = JSON.parse(sw.match(/const PRECACHE = (\[[\s\S]*?\]);/)[1]);
+  assert.ok(precache.includes("./"));
+  for (const p of PRESETS) assert.ok(precache.includes(`${p.id}/`), p.id);
+  for (const f of r.files) {
+    if (/^(sw\.js|sitemap\.xml|robots\.txt)$/.test(f.path) || f.path.includes("og-image")) continue;
+    const url = f.path === "index.html" ? "./" : f.path.replace(/index\.html$/, "");
+    assert.ok(precache.includes(url), `${f.path} not precached`);
+  }
+  assert.ok(!precache.some((u) => u.includes("og-image")));
+  new Function(sw); // syntax check
+  // A content change gives a new cache name.
+  const other = await tmp();
+  t.after(() => rm(other, { recursive: true, force: true }));
+  await build({ outDir: other, origin: "https://examsnap.example" });
+  const cacheOf = async (d) => (await readFile(join(d, "sw.js"), "utf8")).match(/const CACHE = "([^"]+)"/)[1];
+  assert.notEqual(await cacheOf(dir), await cacheOf(other));
+});
+
+test("the in-tool warning is left out exactly where the page-level warning is shown", async (t) => {
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await build({ outDir: dir });
+  for (const p of PRESETS) {
+    const html = await readFile(join(dir, `${p.id}/index.html`), "utf8");
+    const pageLevel = !p.sources.some((s) => s.type === "notice");
+    assert.equal(html.includes('id="page-warning"'), pageLevel, p.id);
+    assert.equal(html.includes('id="warning"'), !pageLevel, p.id);
+    assert.equal(html.match(/class="warning"/g).length, 1, p.id);
+  }
+  assert.ok((await readFile(join(dir, "index.html"), "utf8")).includes('id="warning"'), "root keeps the in-tool warning");
+});

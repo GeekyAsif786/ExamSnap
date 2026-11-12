@@ -7,6 +7,7 @@ import {
   CUSTOM_ID,
   CUSTOM_MAX_PX,
   CUSTOM_MIN_PX,
+  canUseServiceWorker,
   clampZoom,
   createState,
   currentDoc,
@@ -25,6 +26,7 @@ import {
 import { drawCrop, resizeBitmap } from "./render.js";
 import { canvasEncoder } from "./encode.js";
 import { attachGestures } from "./gestures.js";
+import { registerServiceWorker } from "./pwa.js";
 
 const $ = (id) => document.getElementById(id);
 const el = {
@@ -63,7 +65,9 @@ const el = {
   download: $("download"),
 };
 
-const state = createState(PRESETS, location.search);
+// Landing pages (dist/<exam>/) name their exam on <body data-exam>.
+const pageExam = document.body.dataset.exam || null;
+const state = createState(PRESETS, location.search, pageExam);
 const previewCtx = el.preview.getContext("2d", { willReadFrequently: true });
 let lastDoc = currentDoc(state, PRESETS); // last valid spec, keeps the preview up while custom input is invalid
 let view = { cssW: 0, cssH: 0 };
@@ -80,7 +84,6 @@ const make$ = (tag, props = {}, children = []) => {
 // ---- Step 1: exam & document -------------------------------------------
 
 function applyStrings() {
-  document.title = S.docTitle;
   for (const n of document.querySelectorAll("[data-s]")) n.textContent = S[n.dataset.s];
   el.preview.setAttribute("aria-label", S.previewLabel);
   el.chips.setAttribute("aria-label", S.chipsLabel);
@@ -127,7 +130,8 @@ function renderSpec() {
       : []),
   );
 
-  el.warning.hidden = isCustom || hasNotice(preset);
+  // Exam pages that already show the warning above the tool omit this copy.
+  if (el.warning) el.warning.hidden = isCustom || hasNotice(preset);
   // The document's own notes stay visible; preset-wide notes live in the
   // collapsible sources section to keep step 1 short on phones.
   const paragraphs = (...texts) => texts.filter(Boolean).map((t) => make$("p", { textContent: t }));
@@ -152,7 +156,7 @@ function renderSpec() {
 }
 
 function selectionChanged() {
-  const search = selectionSearch(location.search, state);
+  const search = selectionSearch(location.search, state, pageExam);
   history.replaceState(null, "", `${location.pathname}${search}${location.hash}`);
   resetAdjust(state, PRESETS);
   syncAdjustControls();
@@ -488,7 +492,16 @@ buildExamSelect();
 buildDocSelect();
 renderSpec();
 syncAdjustControls();
-history.replaceState(null, "", `${location.pathname}${selectionSearch(location.search, state)}${location.hash}`);
+history.replaceState(null, "", `${location.pathname}${selectionSearch(location.search, state, pageExam)}${location.hash}`);
+
+// Built pages carry the service worker URL on <body data-sw>; dev pages don't.
+const swUrl = document.body.dataset.sw;
+if (swUrl && "serviceWorker" in navigator && canUseServiceWorker(location)) {
+  registerServiceWorker(swUrl, (apply) => {
+    $("update").hidden = false;
+    $("update-reload").addEventListener("click", apply, { once: true });
+  });
+}
 
 if (new URLSearchParams(location.search).get("test") === "1") {
   window.__examsnap = { state, loadFile, make };

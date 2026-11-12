@@ -104,6 +104,7 @@ header.site {
 
 .brand {
   margin: 0;
+  font-weight: 700;
   font-size: 1.75rem;
   line-height: 1.2;
   letter-spacing: -0.01em;
@@ -136,6 +137,22 @@ footer.site p {
   display: inline-block;
   padding: 10px 0;
   min-height: 44px;
+}
+
+/* ---- Update banner ---- */
+
+.update p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 8px 0 0;
+  padding: 8px 8px 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  font-weight: 600;
 }
 
 /* ---- Steps ---- */
@@ -513,6 +530,146 @@ input[type="range"] {
   color: var(--error);
 }
 
+/* ---- Built pages: landing intro, sources, exam links ---- */
+
+.brand a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.intro,
+.page-specs,
+.page-sources,
+.exam-links {
+  margin: 16px 0;
+}
+
+.intro h1 {
+  margin: 8px 0 4px;
+  font-size: 1.375rem;
+  line-height: 1.25;
+}
+
+.intro .summary {
+  margin: 0 0 8px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.page-specs h2,
+.page-sources h2,
+.exam-links h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.spec-table th,
+.spec-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.spec-table tbody tr:last-child th,
+.spec-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.spec-table td:nth-child(2),
+.spec-table td:nth-child(3) {
+  white-space: nowrap;
+}
+
+.spec-table td:last-child {
+  color: var(--muted);
+  min-width: 12em;
+}
+
+/* Narrow screens: one card per document, cells labelled from data-label. */
+@media (max-width: 559px) {
+  .spec-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .spec-table tbody,
+  .spec-table tr,
+  .spec-table th,
+  .spec-table td {
+    display: block;
+  }
+
+  .spec-table tr {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .spec-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .spec-table th,
+  .spec-table td,
+  .spec-table tbody tr:last-child th,
+  .spec-table tbody tr:last-child td {
+    padding: 2px 12px;
+    border-bottom: 0;
+  }
+
+  .spec-table td {
+    display: flex;
+    gap: 8px;
+  }
+
+  .spec-table td::before {
+    content: attr(data-label);
+    flex: none;
+    width: 5.5em;
+    color: var(--muted);
+  }
+
+  .spec-table td:last-child {
+    min-width: 0;
+  }
+
+  .spec-table td.empty {
+    display: none;
+  }
+}
+
+.page-sources ul,
+.exam-links ul {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.page-sources li {
+  margin: 6px 0;
+}
+
+.exam-links a {
+  display: inline-block;
+  padding: 10px 0;
+  min-height: 44px;
+}
+
 @media (min-width: 640px) {
   .step {
     padding: 20px 24px;
@@ -520,6 +677,72 @@ input[type="range"] {
 
   .grid {
     grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Phones: tighter vertical rhythm so an exam page's tool starts on the
+   first screen (390x844 is checked by e2e). Desktop is unchanged. */
+@media (max-width: 639px) {
+  header.site {
+    padding: 12px 0 0;
+  }
+
+  .brand {
+    font-size: 1.5rem;
+  }
+
+  .tagline {
+    margin-top: 2px;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  .step,
+  .intro,
+  .page-specs,
+  .page-sources,
+  .exam-links {
+    margin: 12px 0;
+  }
+
+  .intro h1 {
+    font-size: 1.25rem;
+  }
+
+  .intro .summary {
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  .warning {
+    padding: 6px 10px;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .step h2 {
+    margin-bottom: 8px;
+  }
+
+  .field {
+    margin-bottom: 8px;
+  }
+
+  .chips {
+    margin-bottom: 8px;
+  }
+
+  .notes p {
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  .step p {
+    margin: 6px 0;
+  }
+
+  .drop {
+    padding: 12px;
   }
 }
 

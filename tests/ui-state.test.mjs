@@ -5,6 +5,7 @@ import { PRESETS } from "../src/generated/presets.js";
 import { cropRect } from "../src/core/index.js";
 import {
   CUSTOM_ID,
+  canUseServiceWorker,
   clampZoom,
   createState,
   currentDoc,
@@ -58,6 +59,34 @@ test("selectionSearch round-trips through parseSelection", () => {
       assert.deepEqual(parseSelection(selectionSearch("", sel), PRESETS), sel);
     }
   }
+});
+
+test("parseSelection: a landing page's exam is the default, ?exam= and ?doc= override", () => {
+  assert.deepEqual(parseSelection("", PRESETS, "ssc"), { examId: "ssc", docId: "photo" });
+  assert.deepEqual(parseSelection("?doc=signature", PRESETS, "ssc"), { examId: "ssc", docId: "signature" });
+  assert.deepEqual(parseSelection("?exam=jee-main&doc=signature", PRESETS, "ssc"), { examId: "jee-main", docId: "signature" });
+  assert.deepEqual(parseSelection("?exam=custom", PRESETS, "ssc"), { examId: CUSTOM_ID, docId: null });
+  // Unknown ?exam= on a landing page falls back to the page's exam.
+  assert.deepEqual(parseSelection("?exam=nope", PRESETS, "ssc"), { examId: "ssc", docId: "photo" });
+  // An unknown page exam behaves like the root page.
+  assert.deepEqual(parseSelection("", PRESETS, "nope"), { examId: PRESETS[0].id, docId: PRESETS[0].documents[0].id });
+});
+
+test("selectionSearch on a landing page omits ?exam= for the page's own exam", () => {
+  assert.equal(selectionSearch("?test=1", { examId: "ssc", docId: "signature" }, "ssc"), "?test=1&doc=signature");
+  assert.equal(selectionSearch("?exam=ssc&doc=photo", { examId: "ssc", docId: "photo" }, "ssc"), "?doc=photo");
+  assert.equal(selectionSearch("", { examId: "jee-main", docId: "photo" }, "ssc"), "?exam=jee-main&doc=photo");
+  assert.equal(selectionSearch("?doc=photo", { examId: CUSTOM_ID, docId: null }, "ssc"), "?exam=custom");
+  for (const p of PRESETS) {
+    for (const d of p.documents) {
+      const sel = { examId: p.id, docId: d.id };
+      assert.deepEqual(parseSelection(selectionSearch("", sel, "ssc"), PRESETS, "ssc"), sel);
+    }
+  }
+});
+
+test("createState honours the page exam", () => {
+  assert.equal(createState(PRESETS, "", "upsc-cse").examId, "upsc-cse");
 });
 
 test("defaultClean: on for signature and thumb only", () => {
@@ -222,4 +251,13 @@ test("hasMetadataSegment: unparseable input is treated as not clean", () => {
   assert.equal(hasMetadataSegment(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00])), true);
   assert.equal(hasMetadataSegment(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x01, 0x00, 0x00])), true);
   assert.equal(hasMetadataSegment(null), true);
+});
+
+test("canUseServiceWorker: https or localhost only", () => {
+  assert.equal(canUseServiceWorker({ protocol: "https:", hostname: "geekyasif786.github.io" }), true);
+  assert.equal(canUseServiceWorker({ protocol: "http:", hostname: "localhost" }), true);
+  assert.equal(canUseServiceWorker({ protocol: "http:", hostname: "127.0.0.1" }), true);
+  assert.equal(canUseServiceWorker({ protocol: "http:", hostname: "[::1]" }), true);
+  assert.equal(canUseServiceWorker({ protocol: "http:", hostname: "192.168.1.5" }), false);
+  assert.equal(canUseServiceWorker({ protocol: "file:", hostname: "" }), false);
 });

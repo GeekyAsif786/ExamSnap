@@ -8,10 +8,11 @@ import { test as base, expect } from "@playwright/test";
 export const test = base.extend({
   page: async ({ page, baseURL }, use) => {
     const problems = [];
+    const origin = new URL(baseURL).origin;
     page.on("pageerror", (e) => problems.push(`pageerror: ${e.message}`));
     page.on("request", (req) => {
       const url = req.url();
-      if (!url.startsWith(`${baseURL}/`) && !url.startsWith("blob:") && !url.startsWith("data:")) {
+      if (!url.startsWith(`${origin}/`) && !url.startsWith("blob:") && !url.startsWith("data:")) {
         problems.push(`external request: ${url}`);
       }
     });
@@ -23,7 +24,8 @@ export { expect };
 
 /** Open the app with the test hook enabled. */
 export async function openApp(page, query = "") {
-  await page.goto(`/?test=1${query ? `&${query}` : ""}`);
+  // Relative to baseURL (the built site under BASE_PATH).
+  await page.goto(`./?test=1${query ? `&${query}` : ""}`);
   await page.waitForFunction(() => window.__examsnap);
 }
 

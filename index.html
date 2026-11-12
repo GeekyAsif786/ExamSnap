@@ -4,13 +4,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <meta name="color-scheme" content="light dark">
   <title>ExamSnap</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="src/ui/styles.css">
   <script type="module" src="src/ui/app.js"></script>
+  <!-- build:head -->
 </head>
 <body>
   <!-- The one exception to "every user-visible string lives in src/ui/strings.js":
@@ -24,7 +25,12 @@
     </div>
   </header>
 
+  <div id="update" class="update wrap" role="status" hidden>
+    <p><span data-s="updateAvailable"></span> <button id="update-reload" type="button" class="button" data-s="updateReload"></button></p>
+  </div>
+
   <main class="wrap">
+    <!-- build:above -->
     <section class="step" aria-labelledby="h-spec">
       <h2 id="h-spec"><span class="num" aria-hidden="true">1</span><span data-s="stepSpec"></span></h2>
 
@@ -109,6 +115,7 @@
         <a id="download" class="button primary wide" href="#"></a>
       </div>
     </section>
+    <!-- build:below -->
   </main>
 
   <footer class="site">
