@@ -18,6 +18,11 @@
 </div>
 
 <!-- DEMO_GIF -->
+
+
+https://github.com/user-attachments/assets/6cc848a9-ffcb-42be-a3d5-b17467e6c295
+
+
 <!-- Maintainer: paste the GitHub-hosted demo video/GIF link above (uploaded via an issue or PR comment; no binaries in the repo). -->
 
 <p>
