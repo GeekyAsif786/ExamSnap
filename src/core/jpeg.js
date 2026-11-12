@@ -83,3 +83,52 @@ export function padJpeg(bytes, targetLen) {
   out.set(bytes.subarray(at), pos);
   return out;
 }
+
+const METADATA_MARKERS = new Set([0xe1, 0xed]); // APP1 (EXIF/XMP), APP13 (IPTC/Photoshop)
+
+/**
+ * Remove metadata segments that can carry location or camera data — APP1
+ * (EXIF, XMP) and APP13 (IPTC / Photoshop) — from the header of a JPEG.
+ * Everything else, including APP0 JFIF, APP2 ICC profiles and the scan data,
+ * is kept byte-for-byte. Some encoders (WebKit/ImageIO) write these segments
+ * even for canvas output.
+ *
+ * If the header can't be walked safely up to SOS, the input is returned
+ * unchanged rather than risk corrupting it.
+ *
+ * @param {Uint8Array} bytes
+ * @returns {Uint8Array} the input itself if nothing was removed.
+ */
+export function stripMetadata(bytes) {
+  if (!isJpeg(bytes)) throw new TypeError("stripMetadata: input is not a JPEG");
+  const keep = []; // [start, end) ranges to keep
+  let start = 0;
+  let pos = 2;
+  for (;;) {
+    if (pos + 4 > bytes.length || bytes[pos] !== 0xff) return bytes;
+    const marker = bytes[pos + 1];
+    if (marker === 0xff) {
+      pos++; // fill byte before a marker
+      continue;
+    }
+    if (marker === 0xda) break; // SOS: scan data follows, stop
+    // Standalone markers (TEM, RSTn, SOI, EOI) have no business in the header.
+    if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd9)) return bytes;
+    const len = (bytes[pos + 2] << 8) | bytes[pos + 3];
+    if (len < 2 || pos + 2 + len > bytes.length) return bytes;
+    if (METADATA_MARKERS.has(marker)) {
+      keep.push([start, pos]);
+      start = pos + 2 + len;
+    }
+    pos += 2 + len;
+  }
+  if (!keep.length) return bytes;
+  keep.push([start, bytes.length]);
+  const out = new Uint8Array(keep.reduce((n, [a, b]) => n + (b - a), 0));
+  let at = 0;
+  for (const [a, b] of keep) {
+    out.set(bytes.subarray(a, b), at);
+    at += b - a;
+  }
+  return out;
+}

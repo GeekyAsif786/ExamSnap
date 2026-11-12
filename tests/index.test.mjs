@@ -4,6 +4,6 @@ import assert from "node:assert/strict";
 import * as core from "../src/core/index.js";
 
 test("core index re-exports every public function", () => {
-  assert.deepEqual(Object.keys(core).sort(), ["byteRange", "cleanInk", "cropRect", "fitToRange", "isJpeg", "padJpeg"]);
+  assert.deepEqual(Object.keys(core).sort(), ["byteRange", "cleanInk", "cropRect", "fitToRange", "isJpeg", "padJpeg", "stripMetadata"]);
   for (const fn of Object.values(core)) assert.equal(typeof fn, "function");
 });
