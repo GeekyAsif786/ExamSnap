@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Full-page review screenshots of the BUILT site (as npm run preview serves
 // it): {root, ssc} × {empty, adjust, result} × {desktop 1280, mobile 390} ×
-// {light, dark} -> docs/screenshots/. Run: npm run screenshots
-import { mkdir, readdir, rm } from "node:fs/promises";
+// {light, dark} -> screenshots/ (gitignored; CI uploads them on PRs).
+//
+//   npm run screenshots              all 24 shots into screenshots/
+//   npm run screenshots -- --readme  only the two README images, at device
+//                                    scale factor 1, as lossy WebP (q 0.85,
+//                                    each <= 150 KB), into docs/screenshots/
+import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
@@ -11,7 +16,32 @@ import { DEFAULT_BASE } from "./build-lib.mjs";
 import { createDevServer } from "./serve.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const OUT = join(ROOT, "docs", "screenshots");
+const README = process.argv.includes("--readme");
+const OUT = join(ROOT, README ? "docs/screenshots" : "screenshots");
+// The README shows these two; everything else stays out of git.
+export const README_SHOTS = ["root-empty-desktop-light", "ssc-result-mobile-light"];
+const README_QUALITY = 0.85;
+const README_MAX_BYTES = 150_000;
+
+/** Re-encode a PNG screenshot as lossy WebP in a blank page (no extra deps). */
+async function toWebp(browser, png) {
+  const page = await browser.newPage();
+  try {
+    const bytes = await page.evaluate(
+      async ([data, quality]) => {
+        const img = await createImageBitmap(new Blob([new Uint8Array(data)], { type: "image/png" }));
+        const canvas = new OffscreenCanvas(img.width, img.height);
+        canvas.getContext("2d").drawImage(img, 0, 0);
+        const blob = await canvas.convertToBlob({ type: "image/webp", quality });
+        return [...new Uint8Array(await blob.arrayBuffer())];
+      },
+      [[...png], README_QUALITY],
+    );
+    return Buffer.from(bytes);
+  } finally {
+    await page.close();
+  }
+}
 const VIEWPORTS = { desktop: { width: 1280, height: 900 }, mobile: { width: 390, height: 844 } };
 const SCHEMES = ["light", "dark"];
 const PAGES = { root: "", ssc: "ssc/" };
@@ -60,7 +90,7 @@ const server = createDevServer({ root: dist, base: DEFAULT_BASE, notFound: "404.
 await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const site = `http://127.0.0.1:${server.address().port}${DEFAULT_BASE}`;
 await mkdir(OUT, { recursive: true });
-for (const f of await readdir(OUT)) if (f.endsWith(".png")) await rm(join(OUT, f));
+for (const f of await readdir(OUT)) if (/\.(png|webp)$/.test(f)) await rm(join(OUT, f));
 const browser = await chromium.launch();
 try {
   for (const [pageName, path] of Object.entries(PAGES)) {
@@ -69,16 +99,24 @@ try {
         const context = await browser.newContext({
           viewport,
           colorScheme,
-          deviceScaleFactor: vpName === "mobile" ? 2 : 1,
+          deviceScaleFactor: README || vpName === "desktop" ? 1 : 2,
           reducedMotion: "reduce",
           serviceWorkers: "block", // keep the shots independent of caching
         });
         const page = await context.newPage();
         const shot = async (state) => {
           await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
-          const name = `${pageName}-${state}-${vpName}-${colorScheme}.png`;
-          await page.screenshot({ path: join(OUT, name), fullPage: true });
-          console.log(`wrote docs/screenshots/${name}`);
+          const name = `${pageName}-${state}-${vpName}-${colorScheme}`;
+          if (README && !README_SHOTS.includes(name)) return;
+          if (!README) {
+            await page.screenshot({ path: join(OUT, `${name}.png`), fullPage: true });
+            console.log(`wrote screenshots/${name}.png`);
+            return;
+          }
+          const webp = await toWebp(browser, await page.screenshot({ fullPage: true }));
+          if (webp.length > README_MAX_BYTES) throw new Error(`${name}.webp is ${webp.length} bytes (max ${README_MAX_BYTES})`);
+          await writeFile(join(OUT, `${name}.webp`), webp);
+          console.log(`wrote docs/screenshots/${name}.webp (${webp.length} bytes)`);
         };
 
         await page.goto(`${site}${path}?test=1`);

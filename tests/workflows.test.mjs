@@ -55,3 +55,9 @@ test("CI runs npm audit on runtime dependencies; CodeQL covers JavaScript on PR,
   assert.match(codeql, /languages: javascript-typescript/);
   assert.match(codeql, /security-events: write/);
 });
+
+test("CI uploads review screenshots on every PR (14 days)", async () => {
+  const ci = (await workflows()).find((w) => w.name === "ci.yml").text;
+  assert.match(ci, /- run: npm run screenshots\n\s+if: github\.event_name == 'pull_request'/);
+  assert.match(ci, /name: screenshots\n\s+path: screenshots\/\n\s+retention-days: 14/);
+});
