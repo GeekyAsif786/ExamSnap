@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { padJpeg, stripMetadata } from "../src/core/jpeg.js";
+import { ensureJfif, padJpeg, stripMetadata } from "../src/core/jpeg.js";
 
 const ascii = (s) => [...s].map((c) => c.charCodeAt(0));
 const segment = (marker, payload) => [0xff, marker, (payload.length + 2) >> 8, (payload.length + 2) & 0xff, ...payload];
@@ -66,4 +66,31 @@ test("strip then pad keeps JFIF first and stays metadata-free", () => {
   assert.deepEqual([...padded.subarray(0, 4)], [0xff, 0xd8, 0xff, 0xe0]);
   assert.deepEqual(stripMetadata(padded), padded);
   assert.equal(stripMetadata(padded), padded);
+});
+
+test("ensureJfif: already JFIF returns the same array", () => {
+  const input = u8(SOI, APP0, DQT, SOS, EOI);
+  assert.equal(ensureJfif(input), input);
+});
+
+test("ensureJfif: no APP0 gets a standard JFIF APP0 right after SOI", () => {
+  const out = ensureJfif(u8(SOI, DQT, SOS, EOI));
+  assert.deepEqual(out, u8(SOI, APP0, DQT, SOS, EOI));
+  assert.deepEqual([...out.subarray(0, 4)], [0xff, 0xd8, 0xff, 0xe0]);
+  assert.deepEqual([...out.subarray(6, 11)], [...ascii("JFIF"), 0]);
+});
+
+test("ensureJfif: a non-JFIF APP0 (e.g. JFXX) or APP1 first gets JFIF in front", () => {
+  const jfxx = segment(0xe0, [...ascii("JFXX"), 0, 0x10]);
+  assert.deepEqual(ensureJfif(u8(SOI, jfxx, DQT, SOS)), u8(SOI, APP0, jfxx, DQT, SOS));
+  assert.deepEqual(ensureJfif(u8(SOI, APP2, DQT, SOS)), u8(SOI, APP0, APP2, DQT, SOS));
+});
+
+test("strip + ensureJfif on an APP0-less WebKit-like header yields JFIF and no metadata", () => {
+  const out = ensureJfif(stripMetadata(u8(SOI, APP1, APP13, DQT, SOF0, SOS, EOI)));
+  assert.deepEqual(out, u8(SOI, APP0, DQT, SOF0, SOS, EOI));
+});
+
+test("ensureJfif rejects non-JPEG input", () => {
+  assert.throws(() => ensureJfif(new Uint8Array([0x00, 0x01])), TypeError);
 });

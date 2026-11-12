@@ -132,3 +132,34 @@ export function stripMetadata(bytes) {
   }
   return out;
 }
+
+// APP0 JFIF 1.01, aspect ratio 1:1 (units 0), no thumbnail.
+const JFIF_APP0 = [0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00];
+
+/**
+ * Make sure a JPEG starts with an APP0 JFIF segment (FF D8 FF E0 … "JFIF\0"),
+ * which some portals check for. If the first segment after SOI isn't APP0
+ * JFIF, a standard JFIF 1.01 APP0 (1:1 aspect, no thumbnail) is inserted
+ * right after SOI. Decoded pixels are unchanged.
+ *
+ * @param {Uint8Array} bytes
+ * @returns {Uint8Array} the input itself if it already starts with JFIF.
+ */
+export function ensureJfif(bytes) {
+  if (!isJpeg(bytes)) throw new TypeError("ensureJfif: input is not a JPEG");
+  const hasJfif =
+    bytes.length >= 11 &&
+    bytes[2] === 0xff &&
+    bytes[3] === 0xe0 &&
+    bytes[6] === 0x4a &&
+    bytes[7] === 0x46 &&
+    bytes[8] === 0x49 &&
+    bytes[9] === 0x46 &&
+    bytes[10] === 0x00;
+  if (hasJfif) return bytes;
+  const out = new Uint8Array(bytes.length + JFIF_APP0.length);
+  out.set(bytes.subarray(0, 2), 0);
+  out.set(JFIF_APP0, 2);
+  out.set(bytes.subarray(2), 2 + JFIF_APP0.length);
+  return out;
+}
