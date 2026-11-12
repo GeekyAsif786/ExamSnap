@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Full-page review screenshots: {empty, adjust, result} × {desktop 1280,
-// mobile 390} × {light, dark} -> docs/screenshots/. Run: npm run screenshots
-import { mkdir } from "node:fs/promises";
+// Full-page review screenshots of the BUILT site (as npm run preview serves
+// it): {root, ssc} × {empty, adjust, result} × {desktop 1280, mobile 390} ×
+// {light, dark} -> docs/screenshots/. Run: npm run screenshots
+import { mkdir, readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
+import { build } from "./build.mjs";
+import { DEFAULT_BASE } from "./build-lib.mjs";
 import { createDevServer } from "./serve.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const OUT = join(ROOT, "docs", "screenshots");
 const VIEWPORTS = { desktop: { width: 1280, height: 900 }, mobile: { width: 390, height: 844 } };
 const SCHEMES = ["light", "dark"];
+const PAGES = { root: "", ssc: "ssc/" };
 
 /** A synthetic head-and-shoulders portrait, drawn in the page. */
 async function loadPortrait() {
@@ -50,43 +54,48 @@ async function loadPortrait() {
   return window.__examsnap.loadFile(new File([blob], "portrait.jpg", { type: "image/jpeg" }));
 }
 
-const server = createDevServer({ root: ROOT });
+const dist = join(ROOT, "dist");
+await build({ outDir: dist, base: DEFAULT_BASE });
+const server = createDevServer({ root: dist, base: DEFAULT_BASE, notFound: "404.html" });
 await new Promise((r) => server.listen(0, "127.0.0.1", r));
-const base = `http://127.0.0.1:${server.address().port}`;
+const site = `http://127.0.0.1:${server.address().port}${DEFAULT_BASE}`;
 await mkdir(OUT, { recursive: true });
+for (const f of await readdir(OUT)) if (f.endsWith(".png")) await rm(join(OUT, f));
 const browser = await chromium.launch();
 try {
-  for (const [vpName, viewport] of Object.entries(VIEWPORTS)) {
-    for (const colorScheme of SCHEMES) {
-      const context = await browser.newContext({
-        viewport,
-        colorScheme,
-        deviceScaleFactor: vpName === "mobile" ? 2 : 1,
-        reducedMotion: "reduce",
-      });
-      const page = await context.newPage();
-      const shot = async (state) => {
-        await page.evaluate(() => document.fonts.ready);
-        await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
-        const path = join(OUT, `${state}-${vpName}-${colorScheme}.png`);
-        await page.screenshot({ path, fullPage: true });
-        console.log(`wrote docs/screenshots/${state}-${vpName}-${colorScheme}.png`);
-      };
+  for (const [pageName, path] of Object.entries(PAGES)) {
+    for (const [vpName, viewport] of Object.entries(VIEWPORTS)) {
+      for (const colorScheme of SCHEMES) {
+        const context = await browser.newContext({
+          viewport,
+          colorScheme,
+          deviceScaleFactor: vpName === "mobile" ? 2 : 1,
+          reducedMotion: "reduce",
+          serviceWorkers: "block", // keep the shots independent of caching
+        });
+        const page = await context.newPage();
+        const shot = async (state) => {
+          await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+          const name = `${pageName}-${state}-${vpName}-${colorScheme}.png`;
+          await page.screenshot({ path: join(OUT, name), fullPage: true });
+          console.log(`wrote docs/screenshots/${name}`);
+        };
 
-      await page.goto(`${base}/?test=1&exam=jee-main&doc=photo`);
-      await page.waitForFunction(() => window.__examsnap);
-      await shot("empty");
+        await page.goto(`${site}${path}?test=1`);
+        await page.waitForFunction(() => window.__examsnap);
+        await shot("empty");
 
-      await page.evaluate(loadPortrait);
-      await page.locator("#zoom").fill("1.3");
-      await page.locator("#zoom").blur();
-      await shot("adjust");
+        await page.evaluate(loadPortrait);
+        await page.locator("#zoom").fill("1.3");
+        await page.locator("#zoom").blur();
+        await shot("adjust");
 
-      await page.locator("#make").click();
-      await page.locator("#result").waitFor();
-      await page.evaluate(() => window.scrollTo(0, 0));
-      await shot("result");
-      await context.close();
+        await page.locator("#make").click();
+        await page.locator("#result").waitFor();
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await shot("result");
+        await context.close();
+      }
     }
   }
 } finally {
