@@ -210,15 +210,18 @@ label {
   font-weight: 600;
 }
 
+/* Small on purpose: it must not push step 2 off a phone's first screen.
+   24 px tall still meets the WCAG 2.2 minimum target size. */
 .field .request {
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
 }
 
 .field .request a {
   display: inline-block;
-  padding: 10px 0;
-  min-height: 44px;
+  padding: 3px 0;
+  min-height: 24px;
 }
 
 select,
