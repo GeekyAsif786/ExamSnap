@@ -16,6 +16,35 @@ export default [
     },
   },
   {
+    // No HTML-from-strings anywhere in shipped code: build DOM with
+    // createElement/textContent. (XSS hardening; see tests/lint-dom.test.mjs.)
+    files: ["src/**/*.js"],
+    rules: {
+      "no-eval": "error",
+      "no-implied-eval": "error",
+      "no-new-func": "error",
+      "no-restricted-properties": [
+        "error",
+        ...["innerHTML", "outerHTML", "insertAdjacentHTML", "createContextualFragment", "setHTMLUnsafe", "srcdoc"].map(
+          (property) => ({ property, message: `${property} parses HTML; use createElement and textContent.` }),
+        ),
+        ...["write", "writeln"].map((property) => ({
+          object: "document",
+          property,
+          message: `document.${property} parses HTML; use createElement and textContent.`,
+        })),
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          // Object.assign(el, { innerHTML: … }) and similar.
+          selector: "Property[key.name=/^(innerHTML|outerHTML|srcdoc)$/], Property[key.value=/^(innerHTML|outerHTML|srcdoc)$/]",
+          message: "Setting HTML through an object literal; use createElement and textContent.",
+        },
+      ],
+    },
+  },
+  {
     files: ["src/ui/**/*.js"],
     languageOptions: {
       ecmaVersion: "latest",
