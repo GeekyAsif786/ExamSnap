@@ -14,7 +14,8 @@
     "lint": "eslint .",
     "build:presets": "node scripts/bundle-presets.mjs",
     "dev": "node scripts/serve.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

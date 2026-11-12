@@ -33,7 +33,7 @@ export default [
   },
   {
     // Playwright specs run in Node, but page.evaluate callbacks run in the page.
-    files: ["tests/e2e/**/*.mjs"],
+    files: ["tests/e2e/**/*.mjs", "scripts/screenshots.mjs"],
     languageOptions: {
       globals: { ...globals.node, ...globals.browser },
     },
