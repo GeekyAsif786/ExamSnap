@@ -4,6 +4,7 @@
 import { byteRange } from "../core/index.js";
 
 export const CUSTOM_ID = "custom";
+export const ISSUES_URL = "https://github.com/GeekyAsif786/ExamSnap/issues/new";
 export const ZOOM_MIN = 1;
 export const ZOOM_MAX = 4;
 export const THRESHOLD_MIN = 120;
@@ -275,4 +276,20 @@ export function isFramed(win) {
  */
 export function canUseServiceWorker(loc) {
   return loc.protocol === "https:" || ["localhost", "127.0.0.1", "[::1]"].includes(loc.hostname);
+}
+
+/**
+ * The "request an exam" issue form URL. Given a custom-size doc, prefills
+ * only its width, height and KB range (via `specsText`); nothing else.
+ *
+ * @param {{ width: number, height: number, min_kb: number, max_kb: number } | null} customDoc
+ * @param {(w: number, h: number, min: number, max: number) => string} specsText
+ */
+export function requestExamUrl(customDoc, specsText) {
+  let url = `${ISSUES_URL}?template=request-exam.yml&title=${encodeURIComponent("[Exam] ")}`;
+  if (customDoc) {
+    const { width, height, min_kb: min, max_kb: max } = customDoc;
+    url += `&specs=${encodeURIComponent(specsText(width, height, min, max))}`;
+  }
+  return url;
 }

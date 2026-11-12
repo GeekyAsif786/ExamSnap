@@ -1,0 +1,19 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share an idea. It can be rough. If it becomes concrete, it'll turn into an issue.
+
+        ExamSnap stays fully in the browser: no uploads, no accounts, no tracking.
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Who would it help, and how?
+    validations:
+      required: false

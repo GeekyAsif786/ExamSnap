@@ -1,5 +1,11 @@
 name: CI
 
+# Triggers stay push and pull_request. Never use pull_request_target: it
+# runs with the base repository's secrets and a write-capable token while a
+# forked PR controls the code being checked out, so a malicious fork could
+# steal the token or push to the repo. Everything here is read-only; the
+# preset table goes to the job summary instead of a bot comment for the
+# same reason.
 on:
   push:
   pull_request:
@@ -21,6 +27,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Full history, so the preset summary can diff against the base branch.
+          fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
@@ -32,6 +40,12 @@ jobs:
       - run: npm run lint
       - run: npm run check
       - run: npm test
+      # Every preset × document, with the ones this PR changes listed first.
+      # base_ref comes in through env, never interpolated into the script.
+      - name: Preset summary
+        env:
+          BASE_REF: ${{ github.base_ref || 'main' }}
+        run: node scripts/preset-summary.mjs --base "origin/$BASE_REF" >> "$GITHUB_STEP_SUMMARY"
 
   e2e:
     runs-on: ubuntu-latest

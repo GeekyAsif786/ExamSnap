@@ -1,0 +1,19 @@
+# Auto-generated release notes (Releases → Draft → "Generate release notes").
+# A PR lands in the first category whose labels it has. GitHub lists
+# first-time contributors on its own.
+changelog:
+  exclude:
+    labels: [duplicate, wontfix]
+  categories:
+    - title: New exams
+      labels: [preset]
+    - title: Fixes
+      labels: [bug]
+    - title: Features
+      labels: [enhancement]
+    - title: Translations
+      labels: [i18n]
+    - title: Docs
+      labels: [documentation]
+    - title: Other changes
+      labels: ["*"]

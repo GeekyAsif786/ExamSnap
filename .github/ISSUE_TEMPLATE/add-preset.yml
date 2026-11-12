@@ -1,0 +1,31 @@
+name: I'm adding an exam
+description: Claim an exam you're about to add, so nobody else does it twice.
+title: "[Exam] "
+labels: [preset]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Great! The steps are in [CONTRIBUTING.md → Add an exam in 10 minutes](https://github.com/GeekyAsif786/ExamSnap/blob/main/CONTRIBUTING.md#add-an-exam-in-10-minutes). Open this issue, then send a pull request that mentions it.
+  - type: input
+    id: exam
+    attributes:
+      label: Exam name
+      placeholder: e.g. NEET UG (NTA)
+    validations:
+      required: true
+  - type: input
+    id: notice
+    attributes:
+      label: Official notice link
+      description: The notification PDF or official page that states the sizes. Required. Secondary sources (coaching or news sites) can go in the PR, flagged as secondary.
+      placeholder: https://
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything unusual?
+      description: Sources that disagree, documents other than photo and signature, live photo capture, etc.
+    validations:
+      required: false

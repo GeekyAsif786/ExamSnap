@@ -1,0 +1,40 @@
+name: Wrong spec
+description: A portal rejected a file ExamSnap made, or a size doesn't match the notice.
+title: "[Wrong spec] "
+labels: [preset, bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Sorry about that. Please **don't attach your photo or signature**; the portal's message and the notice link are what we need.
+  - type: input
+    id: preset
+    attributes:
+      label: Exam
+      description: As shown in ExamSnap's exam list.
+      placeholder: e.g. SSC — CGL / CHSL / MTS / GD / CPO
+    validations:
+      required: true
+  - type: input
+    id: document
+    attributes:
+      label: Document
+      placeholder: e.g. Signature
+    validations:
+      required: true
+  - type: textarea
+    id: portal
+    attributes:
+      label: What the portal said
+      description: The exact error text, if any, and the size and KB of the file ExamSnap made.
+      placeholder: '"Signature size should be between 10 KB and 20 KB." ExamSnap made 472 × 157 px, 19.6 KB.'
+    validations:
+      required: true
+  - type: input
+    id: notice
+    attributes:
+      label: Official notice link
+      description: The notification that states the correct spec, if you have it.
+      placeholder: https://
+    validations:
+      required: false
