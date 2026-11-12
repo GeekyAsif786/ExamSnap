@@ -88,11 +88,13 @@ test("release notes: categories by label, in order", async () => {
   const labels = await known();
   const cats = [...text.matchAll(/- title: (.+)\n\s+labels: \[(.+)\]/g)].map((m) => [m[1], m[2].replace(/"/g, "")]);
   assert.deepEqual(cats, [
-    ["New exams", "preset"],
     ["Fixes", "bug"],
+    ["New exams", "preset"],
     ["Features", "enhancement"],
     ["Translations", "i18n"],
     ["Docs", "documentation"],
+    ["Dependencies", "dependencies"],
+    // The catch-all only takes PRs no earlier category matched, so it is last.
     ["Other changes", "*"],
   ]);
   for (const [, l] of cats) if (l !== "*") assert.ok(labels.has(l), l);
