@@ -386,3 +386,15 @@ test("works at 360 px wide without horizontal scrolling", async ({ browser, base
   }
   await context.close();
 });
+
+test("index.html carries the noscript message", async ({ request }) => {
+  // Playwright's javaScriptEnabled: false stops script execution but leaves
+  // the parser's scripting flag on, so <noscript> never renders in any engine
+  // under test. Check the served markup instead.
+  const html = await (await request.get("/")).text();
+  const noscript = html.match(/<noscript>([\s\S]*?)<\/noscript>/);
+  expect(noscript, "noscript element").not.toBeNull();
+  expect(noscript[1].replace(/\s+/g, " ").trim()).toBe(
+    "ExamSnap needs JavaScript to process your photo on your device. Please enable JavaScript for this page.",
+  );
+});

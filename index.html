@@ -13,6 +13,10 @@
   <script type="module" src="src/ui/app.js"></script>
 </head>
 <body>
+  <!-- The one exception to "every user-visible string lives in src/ui/strings.js":
+       without JavaScript, strings.js can never run, so this text has to be in the HTML. -->
+  <noscript>ExamSnap needs JavaScript to process your photo on your device.
+  Please enable JavaScript for this page.</noscript>
   <header class="site">
     <div class="wrap">
       <h1 class="brand" data-s="appName"></h1>
