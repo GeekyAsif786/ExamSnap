@@ -166,6 +166,7 @@ test("landingBelowHtml: spec table first (one row per document), then sources", 
 
 test("examLinksHtml links relatively to every preset", () => {
   const html = examLinksHtml(PRESETS, S);
+  assert.ok(html.includes('<ul role="list">'), "keeps list semantics without CSS markers");
   for (const p of PRESETS) assert.ok(html.includes(`<a href="${p.id}/">${esc(p.name)}</a>`), p.id);
 });
 

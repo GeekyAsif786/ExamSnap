@@ -233,12 +233,13 @@ export function landingBelowHtml(preset, S) {
     </section>`;
 }
 
-/** Root page: links to every exam page (relative). */
+/** Root page: links to every exam page (relative). role="list" because the
+    list has no markers in CSS, which makes Safari drop its list semantics. */
 export function examLinksHtml(presets, S) {
   const items = presets.map((p) => `\n        <li><a href="${esc(p.id)}/">${esc(p.name)}</a></li>`).join("");
   return `<section class="exam-links" aria-labelledby="exam-links-title">
       <h2 id="exam-links-title">${esc(S.examPagesHeading)}</h2>
-      <ul>${items}
+      <ul role="list">${items}
       </ul>
     </section>`;
 }

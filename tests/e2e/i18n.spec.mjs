@@ -222,6 +222,50 @@ test("on a 390×844 phone the tool starts on the first screen of every /hi/ page
   await context.close();
 });
 
+test("exam list at 390 px: each bullet sits on its exam name's first line, even when it wraps", async ({ newContext }) => {
+  const context = await newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  for (const path of ["./hi/", "./"]) {
+    await gotoReady(page, path);
+    const items = await page.locator(".exam-links li").evaluateAll((lis) =>
+      lis.map((li) => {
+        const a = li.querySelector("a");
+        const marker = getComputedStyle(li, "::before");
+        const link = getComputedStyle(a);
+        const liTop = li.getBoundingClientRect().top;
+        const aBox = a.getBoundingClientRect();
+        // Top of the first line box of the bullet and of the link text.
+        const markerLine = liTop + parseFloat(marker.paddingTop);
+        const textLine = aBox.top + parseFloat(link.paddingTop);
+        const firstGlyph = document.createRange();
+        firstGlyph.setStart(a.firstChild, 0);
+        firstGlyph.setEnd(a.firstChild, 1);
+        return {
+          name: a.textContent,
+          marker: marker.content,
+          markerLine,
+          textLine,
+          sameMetrics: marker.lineHeight === link.lineHeight && marker.fontSize === link.fontSize,
+          glyphTop: firstGlyph.getBoundingClientRect().top,
+          lineHeight: parseFloat(link.lineHeight),
+          lines: Math.round((aBox.height - parseFloat(link.paddingTop) - parseFloat(link.paddingBottom)) / parseFloat(link.lineHeight)),
+        };
+      }),
+    );
+    expect(items.length, path).toBe(PRESETS.length);
+    for (const it of items) {
+      expect(it.marker, it.name).toBe('"•"');
+      expect(Math.abs(it.markerLine - it.textLine), it.name).toBeLessThanOrEqual(0.5);
+      expect(it.sameMetrics, it.name).toBe(true);
+      // The first character is on that first line.
+      expect(it.glyphTop - it.textLine, it.name).toBeLessThan(it.lineHeight);
+    }
+    // The check means something: at least one name wraps at this width.
+    if (path === "./hi/") expect(Math.max(...items.map((it) => it.lines)), path).toBeGreaterThan(1);
+  }
+  await context.close();
+});
+
 test("Devanagari renders with system fonts: real, distinct glyphs (no tofu)", async ({ page }) => {
   await gotoReady(page, "./hi/");
   const result = await page.evaluate(() => {
