@@ -772,6 +772,40 @@ input[type="range"] {
   }
 }
 
+@media (min-width: 1024px) {
+  /* Widen desktop container to fit the two-column adjust view */
+  .wrap {
+    max-width: 960px;
+  }
+
+  /* Two-column layout: adjust preview beside its controls */
+  #adjust {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 32px;
+    align-items: start;
+  }
+
+  /* Preview on the left column spanning all control rows */
+  #preview-wrap {
+    grid-column: 1;
+    grid-row: 1 / 20;
+    position: sticky;
+    top: 16px;
+  }
+
+  /* Controls stack in the right column */
+  #adjust > :not(#preview-wrap) {
+    grid-column: 2;
+  }
+
+  /* Left-align adjust hint when beside the preview */
+  #adjust .hint {
+    text-align: left;
+    margin-top: 0;
+  }
+}
+
 /* Phones: tighter vertical rhythm so an exam page's tool starts on the
    first screen (390x844 is checked by e2e). Desktop is unchanged. */
 @media (max-width: 639px) {
