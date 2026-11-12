@@ -226,7 +226,11 @@ test("pasting an image loads it", async ({ page }) => {
     const bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
     const dt = new DataTransfer();
     dt.items.add(new File([bytes], "pasted.png", { type: "image/png" }));
-    document.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
+    // Firefox hides the DataTransfer of an untrusted (synthetic) ClipboardEvent,
+    // so attach it as an own property; the app's handler reads e.clipboardData.
+    const event = new ClipboardEvent("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "clipboardData", { value: dt });
+    document.dispatchEvent(event);
   }, b64);
   await expect(page.locator("#upload-msg")).toHaveText("Loaded pasted.png (30 × 20 px).");
 });
