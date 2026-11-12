@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "node --test \"tests/**/*.test.mjs\"",
-    "check": "node scripts/check-presets.mjs && node scripts/bundle-presets.mjs --check",
+    "check": "node scripts/check-presets.mjs && node scripts/bundle-presets.mjs --check && node scripts/check-size.mjs",
     "lint": "eslint .",
     "build:presets": "node scripts/bundle-presets.mjs",
     "dev": "node scripts/serve.mjs"
