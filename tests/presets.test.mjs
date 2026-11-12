@@ -80,11 +80,19 @@ test("every real preset document yields a usable byte range", async () => {
   const { readdir, readFile } = await import("node:fs/promises");
   const { byteRange } = await import("../src/core/size.js");
   const dir = new URL("../presets/", import.meta.url);
-  for (const name of (await readdir(dir)).filter((n) => n.endsWith(".json") && n !== "schema.json")) {
+  for (const name of (await readdir(dir)).filter((n) => n.endsWith(".json"))) {
     const preset = JSON.parse(await readFile(new URL(name, dir), "utf8"));
     for (const doc of preset.documents) {
       const r = byteRange(doc.min_kb, doc.max_kb);
       assert.ok(r.minBytes < r.maxBytes, `${preset.id}/${doc.id}`);
     }
   }
+});
+
+test("presets/ holds only preset JSON files and the CC0 LICENSE", async () => {
+  const { readdir } = await import("node:fs/promises");
+  const names = await readdir(new URL("../presets/", import.meta.url));
+  const unexpected = names.filter((n) => n !== "LICENSE" && !n.endsWith(".json"));
+  assert.deepEqual(unexpected, []);
+  assert.ok(!names.includes("schema.json"), "schema lives in schema/, not presets/");
 });

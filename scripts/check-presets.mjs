@@ -6,7 +6,7 @@ import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SCHEMA_PATH = join(ROOT, "presets", "schema.json");
+const SCHEMA_PATH = join(ROOT, "schema", "preset.schema.json");
 const STALE_DAYS = 365;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -36,7 +36,7 @@ function describe(err) {
 }
 
 /**
- * Validate every *.json preset in `dir` (except schema.json).
+ * Validate every *.json preset in `dir`.
  *
  * @param {string} dir
  * @param {{ now?: Date }} [options] `now` is used for the staleness warning.
@@ -49,7 +49,7 @@ export async function validatePresets(dir, { now = new Date() } = {}) {
   const warnings = [];
   const seenIds = new Map(); // preset id -> file
 
-  const names = (await readdir(dir)).filter((n) => n.endsWith(".json") && n !== "schema.json").sort();
+  const names = (await readdir(dir)).filter((n) => n.endsWith(".json")).sort();
 
   for (const name of names) {
     const path = join(dir, name);

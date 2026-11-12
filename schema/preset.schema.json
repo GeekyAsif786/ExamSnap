@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://examsnap.invalid/presets/schema.json",
+  "$id": "https://examsnap.invalid/schema/preset.schema.json",
   "title": "ExamSnap preset",
   "type": "object",
   "additionalProperties": false,
