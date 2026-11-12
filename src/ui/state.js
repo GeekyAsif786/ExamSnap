@@ -18,9 +18,10 @@ export const CUSTOM_MAX_PX = 4000;
 /**
  * @param {object[]} presets
  * @param {string} [search] location.search
+ * @param {string | null} [pageExam] exam a landing page is about (<body data-exam>)
  */
-export function createState(presets, search = "") {
-  const { examId, docId } = parseSelection(search, presets);
+export function createState(presets, search = "", pageExam = null) {
+  const { examId, docId } = parseSelection(search, presets, pageExam);
   const state = {
     examId,
     docId,
@@ -40,34 +41,41 @@ export function createState(presets, search = "") {
 }
 
 /**
- * Read ?exam=&doc= into a valid selection. Unknown ids fall back to the first
- * preset (and its first document); a known exam with an unknown doc falls
- * back to that exam's first document.
+ * Read ?exam=&doc= into a valid selection. With no ?exam=, a landing page's
+ * own exam (`pageExam`) is used. Unknown ids fall back silently: to the page's
+ * exam if it has one, else the first preset (and its first document); a known
+ * exam with an unknown doc falls back to that exam's first document.
  *
  * @param {string} search
  * @param {object[]} presets
+ * @param {string | null} [pageExam]
  * @returns {{ examId: string, docId: string | null }}
  */
-export function parseSelection(search, presets) {
+export function parseSelection(search, presets, pageExam = null) {
   const params = new URLSearchParams(search);
-  const exam = params.get("exam");
+  const exam = params.get("exam") ?? pageExam;
   if (exam === CUSTOM_ID) return { examId: CUSTOM_ID, docId: null };
+  const fallback = presets.find((p) => p.id === pageExam) ?? presets[0];
   const preset = presets.find((p) => p.id === exam);
-  if (!preset) return { examId: presets[0].id, docId: presets[0].documents[0].id };
+  if (!preset) return { examId: fallback.id, docId: fallback.documents[0].id };
   const doc = preset.documents.find((d) => d.id === params.get("doc")) ?? preset.documents[0];
   return { examId: preset.id, docId: doc.id };
 }
 
 /**
  * New query string with exam/doc set, keeping any other params (e.g. test=1).
+ * On a landing page, its own exam is implied by the path, so ?exam= is
+ * left out while that exam is selected.
  *
  * @param {string} search current location.search
  * @param {{ examId: string, docId: string | null }} selection
+ * @param {string | null} [pageExam]
  * @returns {string} "" or "?..."
  */
-export function selectionSearch(search, { examId, docId }) {
+export function selectionSearch(search, { examId, docId }, pageExam = null) {
   const params = new URLSearchParams(search);
-  params.set("exam", examId);
+  if (pageExam && examId === pageExam) params.delete("exam");
+  else params.set("exam", examId);
   if (examId === CUSTOM_ID || !docId) params.delete("doc");
   else params.set("doc", docId);
   const s = params.toString();

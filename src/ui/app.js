@@ -63,7 +63,9 @@ const el = {
   download: $("download"),
 };
 
-const state = createState(PRESETS, location.search);
+// Landing pages (dist/<exam>/) name their exam on <body data-exam>.
+const pageExam = document.body.dataset.exam || null;
+const state = createState(PRESETS, location.search, pageExam);
 const previewCtx = el.preview.getContext("2d", { willReadFrequently: true });
 let lastDoc = currentDoc(state, PRESETS); // last valid spec, keeps the preview up while custom input is invalid
 let view = { cssW: 0, cssH: 0 };
@@ -152,7 +154,7 @@ function renderSpec() {
 }
 
 function selectionChanged() {
-  const search = selectionSearch(location.search, state);
+  const search = selectionSearch(location.search, state, pageExam);
   history.replaceState(null, "", `${location.pathname}${search}${location.hash}`);
   resetAdjust(state, PRESETS);
   syncAdjustControls();
@@ -488,7 +490,7 @@ buildExamSelect();
 buildDocSelect();
 renderSpec();
 syncAdjustControls();
-history.replaceState(null, "", `${location.pathname}${selectionSearch(location.search, state)}${location.hash}`);
+history.replaceState(null, "", `${location.pathname}${selectionSearch(location.search, state, pageExam)}${location.hash}`);
 
 if (new URLSearchParams(location.search).get("test") === "1") {
   window.__examsnap = { state, loadFile, make };
