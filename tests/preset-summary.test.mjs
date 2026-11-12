@@ -44,7 +44,7 @@ test("changed presets come first and are marked; removed ones are listed", () =>
 test("preset text is escaped so it can't break the table or inject HTML", () => {
   const md = summaryMarkdown([preset("a", { name: "<script>|x", documents: [doc({ label: "a\nb" })] })], new Set());
   assert.match(md, /\| &lt;script&gt;\\\|x \(`a`\) \| a b \|/);
-  assert.doesNotMatch(md, /<script>/);
+  assert.ok(!md.includes("<"), "no raw angle brackets survive escaping");
 });
 
 test("changedPresetIds diffs presets/ against the merge base", async () => {
