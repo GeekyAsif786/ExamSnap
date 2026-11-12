@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 import { PRESETS } from "../src/generated/presets.js";
 import { readPresets } from "../scripts/bundle-presets.mjs";
-import { STRINGS as S } from "../src/ui/strings.js";
+import { STRINGS as S } from "../src/ui/i18n/en.js";
 import {
   CSP,
   cspMeta,
@@ -200,13 +200,25 @@ test("replaceOnce requires exactly one match", () => {
 test("sitemapXml, robotsTxt, latestDate", () => {
   const xml = sitemapXml([
     { loc: "https://x/ExamSnap/", lastmod: "2026-11-11" },
-    { loc: "https://x/ExamSnap/ssc/", lastmod: "2026-10-01" },
+    {
+      loc: "https://x/ExamSnap/hi/ssc/",
+      lastmod: "2026-10-01",
+      alternates: [
+        { hreflang: "en", href: "https://x/ExamSnap/ssc/" },
+        { hreflang: "hi", href: "https://x/ExamSnap/hi/ssc/" },
+        { hreflang: "x-default", href: "https://x/ExamSnap/ssc/" },
+      ],
+    },
   ]);
   assert.equal(
     xml,
-    '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' +
       "  <url>\n    <loc>https://x/ExamSnap/</loc>\n    <lastmod>2026-11-11</lastmod>\n  </url>\n" +
-      "  <url>\n    <loc>https://x/ExamSnap/ssc/</loc>\n    <lastmod>2026-10-01</lastmod>\n  </url>\n</urlset>\n",
+      "  <url>\n    <loc>https://x/ExamSnap/hi/ssc/</loc>\n    <lastmod>2026-10-01</lastmod>\n" +
+      '    <xhtml:link rel="alternate" hreflang="en" href="https://x/ExamSnap/ssc/"/>\n' +
+      '    <xhtml:link rel="alternate" hreflang="hi" href="https://x/ExamSnap/hi/ssc/"/>\n' +
+      '    <xhtml:link rel="alternate" hreflang="x-default" href="https://x/ExamSnap/ssc/"/>\n' +
+      "  </url>\n</urlset>\n",
   );
   assert.equal(robotsTxt("https://x/ExamSnap/sitemap.xml"), "User-agent: *\nAllow: /\n\nSitemap: https://x/ExamSnap/sitemap.xml\n");
   assert.equal(latestDate(["2026-01-02", "2026-11-11", "2025-12-31"]), "2026-11-11");

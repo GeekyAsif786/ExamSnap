@@ -23,8 +23,9 @@ import {
   requestExamUrl,
   resetAdjust,
   selectionSearch,
+  langSwitchSearch,
 } from "../src/ui/state.js";
-import { STRINGS } from "../src/ui/strings.js";
+import { STRINGS } from "../src/ui/i18n/en.js";
 
 test("parseSelection: known exam and doc", () => {
   assert.deepEqual(parseSelection("?exam=jee-main&doc=signature", PRESETS), { examId: "jee-main", docId: "signature" });
@@ -144,14 +145,31 @@ test("parseCustom: bad dimensions", () => {
   }
 });
 
-test("parseCustom: bad KB range carries the core RangeError message", () => {
-  assert.deepEqual(parseCustom({ width: "200", height: "200", minKb: "50", maxKb: "20" }), {
-    ok: false,
-    error: "range",
-    message: "maxKb must be > minKb (got 50–20)",
-  });
-  assert.equal(parseCustom({ width: "200", height: "200", minKb: "", maxKb: "20" }).message, "minKb must be > 0 (got NaN)");
-  assert.match(parseCustom({ width: "200", height: "200", minKb: "10", maxKb: "10.001" }).message, /bytes wide/);
+test("parseCustom: bad KB range carries a reason for the UI and the core RangeError message", () => {
+  const range = (minKb, maxKb) => parseCustom({ width: "200", height: "200", minKb, maxKb });
+  assert.deepEqual(range("50", "20"), { ok: false, error: "range", reason: "order", message: "maxKb must be > minKb (got 50–20)" });
+  assert.deepEqual(range("", "20"), { ok: false, error: "range", reason: "min", message: "minKb must be > 0 (got NaN)" });
+  assert.equal(range("0", "20").reason, "min");
+  assert.equal(range("-5", "20").reason, "min");
+  assert.equal(range("20", "20").reason, "order");
+  assert.equal(range("20", "").reason, "order");
+  const narrow = range("10", "10.001");
+  assert.equal(narrow.reason, "narrow");
+  assert.match(narrow.message, /bytes wide/);
+});
+
+test("every KB-range reason has a string in each locale", async () => {
+  const { STRINGS: HI } = await import("../src/ui/i18n/hi.js");
+  for (const S of [STRINGS, HI]) {
+    for (const key of ["customKbMin", "customKbOrder", "customKbNarrow"]) assert.equal(typeof S[key], "string", key);
+  }
+});
+
+test("langSwitchSearch keeps only ?exam= and ?doc=", () => {
+  assert.equal(langSwitchSearch(""), "");
+  assert.equal(langSwitchSearch("?doc=signature"), "?doc=signature");
+  assert.equal(langSwitchSearch("?test=1&exam=ssc&doc=photo&x=<y>"), "?exam=ssc&doc=photo");
+  assert.equal(langSwitchSearch("?test=1"), "");
 });
 
 test("currentDoc and resetAdjust follow the selection", () => {

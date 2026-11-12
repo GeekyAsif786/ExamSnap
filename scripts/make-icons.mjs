@@ -5,7 +5,7 @@ import { mkdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
-import { STRINGS } from "../src/ui/strings.js";
+import { STRINGS } from "../src/ui/i18n/en.js";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const OUT = join(ROOT, "icons");

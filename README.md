@@ -50,7 +50,7 @@ The ExamSnap name and logo are not covered by these licenses.
 - `npx playwright install --with-deps` — install the browsers for end-to-end tests.
 - `npm run dev` — serve the app at http://localhost:5173/.
 - `npm test` — run the unit tests.
-- `npm run build` — build the site into `dist/`.
+- `npm run build` — build the site into `dist/`: every published language (English at `/`, Hindi at `/hi/`). `INCLUDE_DRAFTS=1 npm run preview` also builds draft languages.
 - `npm run preview` — build, then serve `dist/` at http://localhost:4173/.
 - `npm run test:e2e` — run the Playwright tests on Chromium, Firefox and WebKit against the built site.
 - `npm run check` — validate presets, regenerate the presets module, check the README exams table is fresh (a warning on pull requests, an error locally and on main), and enforce the JS size budget.

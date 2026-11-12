@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Anti-framing: inside another page's iframe the app must not run.
-import { STRINGS as S } from "../../src/ui/strings.js";
+import { STRINGS as S } from "../../src/ui/i18n/en.js";
 import { test, expect } from "./helpers.mjs";
 
 test("framed: only a notice with a top-level link, no file input; the link opens the app", async ({ page, baseURL }) => {

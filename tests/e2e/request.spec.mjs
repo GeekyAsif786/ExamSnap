@@ -3,7 +3,7 @@
 // issue form, prefilled with the custom specs and nothing else. The fixtures
 // fail the test on any CSP violation, page error or external request.
 import { REQUEST_EXAM_URL } from "../../scripts/build-lib.mjs";
-import { STRINGS as S } from "../../src/ui/strings.js";
+import { STRINGS as S } from "../../src/ui/i18n/en.js";
 import { test, expect, openApp } from "./helpers.mjs";
 
 const requestLink = (page) => page.locator(".field .request a");

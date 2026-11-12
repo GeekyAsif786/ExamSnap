@@ -136,7 +136,7 @@ Coming soon. Hindi is first. Follow issues labelled [`i18n`](https://github.com/
 ## Code
 
 - **Setup and commands:** see [Development in the README](README.md#development).
-- **Style:** `npm run lint` (ESLint) must pass. Plain ES modules, no framework, no runtime dependencies. All user-visible text lives in `src/ui/strings.js`.
+- **Style:** `npm run lint` (ESLint) must pass. Plain ES modules, no framework, no runtime dependencies. All user-visible text lives in `src/ui/i18n/en.js` (and its translations next to it).
 - **Tests:** every behaviour change comes with tests in the same commit. `npm test` runs the unit tests; `npm run test:e2e` runs Playwright against the built site.
 - **Privacy rules:** no network requests at runtime, no analytics, no third-party scripts. The Content-Security-Policy enforces this and the tests check it.
 - Keep commits small and focused.

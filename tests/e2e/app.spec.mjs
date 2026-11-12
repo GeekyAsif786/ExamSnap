@@ -127,7 +127,7 @@ test("document notes stay visible; preset notes sit inside the sources section",
   expect(await page.locator("#sources #chips, #sources #warning").count()).toBe(0);
 });
 
-test("custom size with an invalid KB range shows the inline RangeError", async ({ page }) => {
+test("custom size with an invalid KB range shows an inline error", async ({ page }) => {
   await openApp(page);
   await loadImage(page, "photo");
   await page.locator("#exam").selectOption("custom");
@@ -136,11 +136,19 @@ test("custom size with an invalid KB range shows the inline RangeError", async (
 
   await page.getByLabel("Min KB").fill("50");
   await page.getByLabel("Max KB").fill("20");
-  await expect(page.locator("#custom-error")).toHaveText("maxKb must be > minKb (got 50–20)");
+  await expect(page.locator("#custom-error")).toHaveText("Max KB must be more than Min KB.");
   await expect(page.locator("#custom-error")).toHaveAttribute("aria-live", "polite");
   await expect(page.getByLabel("Max KB")).toHaveAttribute("aria-invalid", "true");
   await expect(page.getByRole("button", { name: "Make my file" })).toBeDisabled();
   await expect(page.locator("#chips li")).toHaveCount(0);
+
+  await page.getByLabel("Min KB").fill("0");
+  await expect(page.locator("#custom-error")).toHaveText("Min KB must be more than 0.");
+  await page.getByLabel("Min KB").fill("10");
+  await page.getByLabel("Max KB").fill("10.001");
+  await expect(page.locator("#custom-error")).toHaveText("The KB range is too narrow. Make Max KB a little larger.");
+  await page.getByLabel("Max KB").fill("20");
+  await page.getByLabel("Min KB").fill("50");
 
   await page.getByLabel("Width (px)").fill("10");
   await expect(page.locator("#custom-error")).toHaveText("Width and height must be whole numbers between 50 and 4000 px.");

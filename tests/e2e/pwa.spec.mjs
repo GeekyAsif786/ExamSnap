@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { build } from "../../scripts/build.mjs";
 import { createDevServer } from "../../scripts/serve.mjs";
 import { PRESETS } from "../../src/generated/presets.js";
-import { STRINGS as S } from "../../src/ui/strings.js";
+import { STRINGS as S } from "../../src/ui/i18n/en.js";
 import { test, expect, openApp, loadImage, readResult } from "./helpers.mjs";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Wiring only: DOM events -> state -> render.
-import { PRESETS } from "../generated/presets.js";
+import { PRESETS as ALL_PRESETS } from "../generated/presets.js";
 import { byteRange, cropRect, fitToRange, isJpeg } from "../core/index.js";
-import { STRINGS as S } from "./strings.js";
+import { LOCALE, STRINGS as S } from "./strings.js";
+import { localizePreset } from "./i18n/localize.js";
 import {
   CUSTOM_ID,
   CUSTOM_MAX_PX,
@@ -20,6 +21,7 @@ import {
   panBy,
   parseCustom,
   previewSize,
+  langSwitchSearch,
   requestExamUrl,
   resetAdjust,
   selectionSearch,
@@ -65,7 +67,12 @@ const el = {
   padded: $("padded"),
   download: $("download"),
   requestLinks: document.querySelectorAll("a[data-request]"),
+  // Built pages: links to this page in other languages, with their bare paths.
+  langLinks: [...document.querySelectorAll("a[data-lang-switch]")].map((a) => [a, a.getAttribute("href")]),
 };
+
+// Preset names, labels and notes in this page's language where translated.
+const PRESETS = ALL_PRESETS.map((p) => localizePreset(p, LOCALE));
 
 // Landing pages (dist/<exam>/) name their exam on <body data-exam>.
 const pageExam = document.body.dataset.exam || null;
@@ -93,7 +100,7 @@ function applyStrings() {
 
 function buildExamSelect() {
   for (const group of groupByCategory(PRESETS)) {
-    const og = make$("optgroup", { label: group.category });
+    const og = make$("optgroup", { label: S.categoryName[group.category] ?? group.category });
     for (const p of group.presets) og.append(make$("option", { value: p.id, textContent: p.name }));
     el.exam.append(og);
   }
@@ -118,7 +125,8 @@ function renderSpec() {
   let doc = currentDoc(state, PRESETS);
   if (isCustom) {
     const r = parseCustom(state.custom);
-    el.customError.textContent = r.ok ? "" : r.error === "size" ? S.customSizeError(CUSTOM_MIN_PX, CUSTOM_MAX_PX) : r.message;
+    const kbError = { min: S.customKbMin, order: S.customKbOrder, narrow: S.customKbNarrow };
+    el.customError.textContent = r.ok ? "" : r.error === "size" ? S.customSizeError(CUSTOM_MIN_PX, CUSTOM_MAX_PX) : kbError[r.reason];
     for (const input of Object.values(el.customInputs)) input.setAttribute("aria-invalid", String(!r.ok));
     doc = r.ok ? r.doc : null;
   }
@@ -159,9 +167,16 @@ function renderSpec() {
   updateMakeButton();
 }
 
+/** Keep the selection on the links to this page in other languages. */
+function updateLangLinks() {
+  const search = langSwitchSearch(location.search);
+  for (const [a, path] of el.langLinks) a.setAttribute("href", `${path}${search}`);
+}
+
 function selectionChanged() {
   const search = selectionSearch(location.search, state, pageExam);
   history.replaceState(null, "", `${location.pathname}${search}${location.hash}`);
+  updateLangLinks();
   resetAdjust(state, PRESETS);
   syncAdjustControls();
   invalidate();
@@ -497,6 +512,7 @@ buildDocSelect();
 renderSpec();
 syncAdjustControls();
 history.replaceState(null, "", `${location.pathname}${selectionSearch(location.search, state, pageExam)}${location.hash}`);
+updateLangLinks();
 
 // Built pages carry the service worker URL on <body data-sw>; dev pages don't.
 const swUrl = document.body.dataset.sw;

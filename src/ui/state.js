@@ -83,6 +83,21 @@ export function selectionSearch(search, { examId, docId }, pageExam = null) {
   return s ? `?${s}` : "";
 }
 
+/**
+ * Query string for a link to this page in another language: only the
+ * selection (?exam=, ?doc=), never anything else (e.g. test=1).
+ *
+ * @param {string} search current location.search
+ * @returns {string} "" or "?..."
+ */
+export function langSwitchSearch(search) {
+  const from = new URLSearchParams(search);
+  const params = new URLSearchParams();
+  for (const key of ["exam", "doc"]) if (from.has(key)) params.set(key, from.get(key));
+  const s = params.toString();
+  return s ? `?${s}` : "";
+}
+
 /** Clean background is on by default for signatures and thumb impressions. */
 export function defaultClean(kind) {
   return kind === "signature" || kind === "thumb";
@@ -110,10 +125,14 @@ export function groupByCategory(presets) {
 const INT_RE = /^\s*\d+\s*$/;
 
 /**
- * Validate the custom-size inputs (raw strings).
+ * Validate the custom-size inputs (raw strings). A bad KB range carries the
+ * core RangeError `message` and a `reason` the UI shows in the page's
+ * language: "min" (Min KB not above 0), "order" (Max KB not above Min KB) or
+ * "narrow" (too few bytes between them).
  *
  * @param {{ width: string, height: string, minKb: string, maxKb: string }} raw
- * @returns {{ ok: true, doc: object } | { ok: false, error: "size" } | { ok: false, error: "range", message: string }}
+ * @returns {{ ok: true, doc: object } | { ok: false, error: "size" }
+ *   | { ok: false, error: "range", reason: "min" | "order" | "narrow", message: string }}
  */
 export function parseCustom(raw) {
   const dims = [raw.width, raw.height].map((v) => (INT_RE.test(String(v)) ? Number(v) : NaN));
@@ -125,7 +144,8 @@ export function parseCustom(raw) {
   try {
     byteRange(minKb, maxKb);
   } catch (e) {
-    return { ok: false, error: "range", message: e.message };
+    const reason = !(minKb > 0) ? "min" : !(maxKb > minKb) ? "order" : "narrow";
+    return { ok: false, error: "range", reason, message: e.message };
   }
   return {
     ok: true,

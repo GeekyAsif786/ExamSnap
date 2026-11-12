@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // The built site: landing pages, crawlable links/assets, sitemap, robots, 404.
 import { PRESETS } from "../../src/generated/presets.js";
-import { STRINGS as S } from "../../src/ui/strings.js";
+import { STRINGS as S } from "../../src/ui/i18n/en.js";
 import { CSP, DEFAULT_ORIGIN, docSummary, pageDescription, pageTitle, siteUrl } from "../../scripts/build-lib.mjs";
 import { test, expect } from "./helpers.mjs";
 
@@ -141,7 +141,7 @@ test.describe("landing pages", () => {
 
 /** href/src URLs (and canonical/og:image mapped to the local server) in an HTML page. */
 function htmlRefs(html) {
-  const refs = [...html.matchAll(/\b(?:href|src|data-sw)="([^"]+)"/g)].map((m) => m[1]);
+  const refs = [...html.matchAll(/\b(?:href|src|data-sw|data-strings)="([^"]+)"/g)].map((m) => m[1]);
   const metas = [...html.matchAll(/<meta property="og:(?:image|url)" content="([^"]+)"/g)].map((m) => m[1]);
   return [...refs, ...metas].map((r) => r.replaceAll("&amp;", "&"));
 }
@@ -174,6 +174,10 @@ test("every internal link and asset returns 200 under BASE_PATH (crawl from the 
   // Sanity: the crawl reached every exam page, the app module and the stylesheet.
   const urls = [...seen.keys()];
   for (const p of PRESETS) expect(urls).toContain(`${origin}${base()}${p.id}/`);
+  // ...and every Hindi page, through the language switcher, with its own strings module.
+  for (const p of ["", ...PRESETS.map((x) => `${x.id}/`)]) expect(urls).toContain(`${origin}${base()}hi/${p}`);
+  expect(urls.some((u) => /\/src\/ui\/i18n\/hi\.[0-9a-f]{8}\.js$/.test(u))).toBe(true);
+  expect(urls.some((u) => /\/src\/ui\/i18n\/en\.[0-9a-f]{8}\.js$/.test(u))).toBe(true);
   expect(urls.some((u) => /\/src\/ui\/app\.[0-9a-f]{8}\.js$/.test(u))).toBe(true);
   expect(urls.some((u) => /\/src\/core\/jpeg\.[0-9a-f]{8}\.js$/.test(u))).toBe(true);
   expect(urls.some((u) => /\/src\/ui\/styles\.[0-9a-f]{8}\.css$/.test(u))).toBe(true);
@@ -183,12 +187,19 @@ test("every internal link and asset returns 200 under BASE_PATH (crawl from the 
   expect(urls.every((u) => u.startsWith(`${origin}${base()}`))).toBe(true);
 });
 
-test("sitemap lists the root and one URL per preset; robots points to it", async ({ request }) => {
+test("sitemap lists every page in every language, with alternates; robots points to it", async ({ request }) => {
   const xml = await (await request.get("./sitemap.xml")).text();
+  const pages = ["", ...PRESETS.map((p) => `${p.id}/`)];
   const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  expect(locs).toEqual([live(), ...PRESETS.map((p) => live(`${p.id}/`))]);
+  expect(locs).toEqual([...pages.map((p) => live(p)), ...pages.map((p) => live(`hi/${p}`))]);
   const lastmods = [...xml.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].map((m) => m[1]);
-  expect(lastmods.slice(1)).toEqual(PRESETS.map((p) => p.last_verified));
+  expect(lastmods.slice(1, 1 + PRESETS.length)).toEqual(PRESETS.map((p) => p.last_verified));
+  for (const p of pages) {
+    const block = xml.slice(xml.indexOf(`<loc>${live(`hi/${p}`)}</loc>`)).split("</url>")[0];
+    expect(block).toContain(`<xhtml:link rel="alternate" hreflang="en" href="${live(p)}"/>`);
+    expect(block).toContain(`<xhtml:link rel="alternate" hreflang="hi" href="${live(`hi/${p}`)}"/>`);
+    expect(block).toContain(`<xhtml:link rel="alternate" hreflang="x-default" href="${live(p)}"/>`);
+  }
   const robots = await (await request.get("./robots.txt")).text();
   expect(robots).toContain("User-agent: *\nAllow: /");
   expect(robots).toContain(`Sitemap: ${live("sitemap.xml")}`);
@@ -210,7 +221,8 @@ test("unknown paths get 404.html with status 404, and its assets load", async ({
 });
 
 test("every page carries the exact CSP and no-referrer meta tags", async ({ request }) => {
-  const paths = ["./", ...PRESETS.map((p) => `./${p.id}/`), "./404.html"];
+  const pages = ["", ...PRESETS.map((p) => `${p.id}/`)];
+  const paths = [...pages.map((p) => `./${p}`), ...pages.map((p) => `./hi/${p}`), "./404.html"];
   for (const path of paths) {
     const html = await (await request.get(path)).text();
     const csp = [...html.matchAll(/<meta http-equiv="Content-Security-Policy" content="([^"]*)">/g)].map((m) => m[1]);

@@ -21,6 +21,13 @@
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
+/* Hindi: name the Devanagari system fonts of Windows, Apple platforms and
+   Android/Linux after the UI font, so text never depends on a downloaded
+   font (font-src is 'none'). */
+:root:lang(hi) {
+  --font: system-ui, -apple-system, "Segoe UI", "Nirmala UI", "Kohinoor Devanagari", "Devanagari Sangam MN", "Noto Sans Devanagari", Roboto, "Noto Sans", sans-serif;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #111317;
@@ -108,6 +115,23 @@ header.site {
   font-size: 1.75rem;
   line-height: 1.2;
   letter-spacing: -0.01em;
+}
+
+.brand-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.lang {
+  font-weight: 600;
+}
+
+.lang a {
+  display: inline-block;
+  padding: 2px 0;
 }
 
 .tagline {
