@@ -27,7 +27,7 @@ function makePng(w, h, [r, g, b]) {
 }
 
 test("deep link preselects exam and document and is kept in the URL", async ({ page }) => {
-  await page.goto("/?exam=jee-main&doc=signature");
+  await page.goto("./?exam=jee-main&doc=signature");
   await expect(page.locator("#exam")).toHaveValue("jee-main");
   await expect(page.locator("#doc")).toHaveValue("signature");
   await expect(page.locator("#chips")).toContainText("276 × 118 px");
@@ -37,7 +37,7 @@ test("deep link preselects exam and document and is kept in the URL", async ({ p
 });
 
 test("unknown ids fall back to the first preset silently", async ({ page }) => {
-  await page.goto("/?exam=nope&doc=nope");
+  await page.goto("./?exam=nope&doc=nope");
   await expect(page.locator("#exam")).toHaveValue("banking-ibps");
   await expect(page.locator("#doc")).toHaveValue("photo");
   expect(new URL(page.url()).search).toBe("?exam=banking-ibps&doc=photo");
@@ -45,7 +45,7 @@ test("unknown ids fall back to the first preset silently", async ({ page }) => {
 });
 
 test("changing the selection updates the URL with replaceState", async ({ page }) => {
-  await page.goto("/?exam=banking-ibps&doc=photo");
+  await page.goto("./?exam=banking-ibps&doc=photo");
   const before = await page.evaluate(() => history.length);
   await page.locator("#exam").selectOption("ssc");
   await page.locator("#doc").selectOption("signature");
@@ -54,7 +54,7 @@ test("changing the selection updates the URL with replaceState", async ({ page }
 });
 
 test("exams are grouped by category, with Custom size last", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("./");
   const groups = await page.locator("#exam optgroup").evaluateAll((gs) =>
     gs.map((g) => [g.label, [...g.querySelectorAll("option")].map((o) => o.value)]),
   );
@@ -67,7 +67,7 @@ test("exams are grouped by category, with Custom size last", async ({ page }) =>
 });
 
 test("secondary-source warning shows only for presets without an official notice", async ({ page }) => {
-  await page.goto("/?exam=banking-ibps&doc=photo");
+  await page.goto("./?exam=banking-ibps&doc=photo");
   await expect(page.locator("#warning")).toBeHidden();
   await page.locator("#exam").selectOption("jee-main");
   await expect(page.locator("#warning")).toBeVisible();
@@ -77,7 +77,7 @@ test("secondary-source warning shows only for presets without an official notice
 });
 
 test("sources list: safe new-tab links with type badges and last verified", async ({ page }) => {
-  await page.goto("/?exam=jee-main&doc=photo");
+  await page.goto("./?exam=jee-main&doc=photo");
   await page.getByText("Where these numbers come from").click();
   const links = page.locator("#source-list a");
   await expect(links).toHaveCount(3);
@@ -92,7 +92,7 @@ test("sources list: safe new-tab links with type badges and last verified", asyn
 });
 
 test("document notes stay visible; preset notes sit inside the sources section", async ({ page }) => {
-  await page.goto("/?exam=banking-ibps&doc=signature");
+  await page.goto("./?exam=banking-ibps&doc=signature");
   await expect(page.locator("#notes p")).toHaveText([
     "Black ink on white paper. Signatures in CAPITAL LETTERS are not accepted.",
   ]);
@@ -380,7 +380,7 @@ test("result is announced and the download link saves the file", async ({ page }
 });
 
 test("no hard-coded text: every data-s key resolves to a string", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("./");
   const empty = await page.locator("[data-s]").evaluateAll((ns) => ns.filter((n) => !n.textContent.trim()).map((n) => n.dataset.s));
   expect(empty).toEqual([]);
   await expect(page).toHaveTitle("ExamSnap — exam photo & signature resizer");
@@ -389,7 +389,7 @@ test("no hard-coded text: every data-s key resolves to a string", async ({ page 
 });
 
 test("the test hook is absent without ?test=1", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("./");
   await expect(page.locator("#exam")).toHaveValue("banking-ibps");
   expect(await page.evaluate(() => "__examsnap" in window)).toBe(false);
 });
@@ -414,7 +414,7 @@ test("index.html carries the noscript message", async ({ request }) => {
   // Playwright's javaScriptEnabled: false stops script execution but leaves
   // the parser's scripting flag on, so <noscript> never renders in any engine
   // under test. Check the served markup instead.
-  const html = await (await request.get("/")).text();
+  const html = await (await request.get("./")).text();
   const noscript = html.match(/<noscript>([\s\S]*?)<\/noscript>/);
   expect(noscript, "noscript element").not.toBeNull();
   expect(noscript[1].replace(/\s+/g, " ").trim()).toBe(

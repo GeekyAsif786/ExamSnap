@@ -3,7 +3,7 @@ import js from "@eslint/js";
 import globals from "globals";
 
 export default [
-  { ignores: ["node_modules/", "playwright-report/", "test-results/"] },
+  { ignores: ["node_modules/", "playwright-report/", "test-results/", "dist/"] },
   js.configs.recommended,
   {
     // Pure logic: ES built-ins only. No browser or Node globals, so any DOM or

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 5173;
-const baseURL = `http://127.0.0.1:${PORT}`;
+// e2e runs against the BUILT site (npm run preview), under BASE_PATH.
+const PORT = 4173;
+const BASE = "/ExamSnap/";
+const baseURL = `http://127.0.0.1:${PORT}${BASE}`;
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -14,8 +16,8 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never" }]],
   use: { baseURL, trace: "retain-on-failure" },
   webServer: {
-    command: "npm run dev",
-    url: `${baseURL}/`,
+    command: "npm run preview",
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
   },
   // The JPEG encoders differ between engines; that is the point.

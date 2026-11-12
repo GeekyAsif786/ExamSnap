@@ -82,7 +82,6 @@ const make$ = (tag, props = {}, children = []) => {
 // ---- Step 1: exam & document -------------------------------------------
 
 function applyStrings() {
-  document.title = S.docTitle;
   for (const n of document.querySelectorAll("[data-s]")) n.textContent = S[n.dataset.s];
   el.preview.setAttribute("aria-label", S.previewLabel);
   el.chips.setAttribute("aria-label", S.chipsLabel);

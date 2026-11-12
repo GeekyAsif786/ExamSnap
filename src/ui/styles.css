@@ -513,6 +513,89 @@ input[type="range"] {
   color: var(--error);
 }
 
+/* ---- Built pages: landing intro, sources, exam links ---- */
+
+.brand a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.intro,
+.page-sources,
+.exam-links {
+  margin: 16px 0;
+}
+
+.intro h1 {
+  margin: 8px 0 12px;
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+.page-sources h2,
+.exam-links h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.spec-table caption {
+  padding: 10px 12px 0;
+  text-align: left;
+  font-weight: 650;
+}
+
+.spec-table th,
+.spec-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.spec-table tbody tr:last-child th,
+.spec-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.spec-table td:nth-child(2),
+.spec-table td:nth-child(3) {
+  white-space: nowrap;
+}
+
+.spec-table td:last-child {
+  color: var(--muted);
+  min-width: 12em;
+}
+
+.page-sources ul,
+.exam-links ul {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.page-sources li {
+  margin: 6px 0;
+}
+
+.exam-links a {
+  display: inline-block;
+  padding: 10px 0;
+  min-height: 44px;
+}
+
 @media (min-width: 640px) {
   .step {
     padding: 20px 24px;
