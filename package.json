@@ -12,7 +12,8 @@
     "test": "node --test \"tests/**/*.test.mjs\"",
     "check": "node scripts/check-presets.mjs && node scripts/bundle-presets.mjs --check",
     "lint": "eslint .",
-    "build:presets": "node scripts/bundle-presets.mjs"
+    "build:presets": "node scripts/bundle-presets.mjs",
+    "dev": "node scripts/serve.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
