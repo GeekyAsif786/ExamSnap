@@ -19,13 +19,14 @@ const ids = (text) => [...text.matchAll(/^ {4}id: (\S+)$/gm)].map((m) => m[1]);
 test("issue forms: names, labels from labels.yml, unique field ids", async () => {
   const labels = await known();
   const names = (await readdir(gh("ISSUE_TEMPLATE/"))).sort();
-  assert.deepEqual(names, ["add-preset.yml", "bug.yml", "config.yml", "feature.yml", "request-exam.yml", "wrong-spec.yml"]);
+  assert.deepEqual(names, ["add-preset.yml", "bug.yml", "config.yml", "feature.yml", "language.yml", "request-exam.yml", "wrong-spec.yml"]);
   const expected = {
     "request-exam.yml": ["preset", "needs-triage"],
     "add-preset.yml": ["preset"],
     "wrong-spec.yml": ["preset", "bug"],
     "bug.yml": ["bug", "needs-triage"],
     "feature.yml": ["enhancement", "needs-triage"],
+    "language.yml": ["i18n", "help wanted"],
   };
   for (const [name, want] of Object.entries(expected)) {
     const text = await read(`ISSUE_TEMPLATE/${name}`);
@@ -45,6 +46,15 @@ test("request-exam: [Exam] title, and the field ids the app prefills", async () 
   // The notice link is optional; the exam name is required.
   assert.match(text, /id: exam\n[\s\S]*?required: true/);
   assert.match(text, /id: notice\n[\s\S]*?required: false/);
+});
+
+test("language: [Language] title, required language name, translate/review offers", async () => {
+  const text = await read("ISSUE_TEMPLATE/language.yml");
+  assert.match(text, /^title: "\[Language\] "$/m);
+  assert.deepEqual(ids(text), ["language", "exams", "help"]);
+  assert.match(text, /id: language\n[\s\S]*?required: true/);
+  assert.match(text, /I can translate/);
+  assert.match(text, /I can review/);
 });
 
 test("add-preset requires the notice link; wrong-spec asks for the portal's message", async () => {

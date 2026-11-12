@@ -44,6 +44,17 @@ test("CONTRIBUTING: sections, anchors, review promise and licensing", async () =
   assert.match(md, /CC0-1\.0/);
   assert.match(md, /no CLA/);
   assert.match(md, /labels\/i18n/);
+  // Translations: the contributor path, start to finish.
+  const tr = md.slice(md.indexOf("## Translations"), md.indexOf("## Code"));
+  for (const s of [
+    "src/ui/i18n/en.js", "src/ui/i18n/<code>.js", "src/ui/i18n/locales.js", 'status: "draft"', "npm run check",
+    "INCLUDE_DRAFTS=1 npm run preview", "npm run i18n-review", "native speaker", "pull request", "translations.<code>",
+    "template=language.yml",
+  ]) {
+    assert.ok(tr.includes(s), s);
+  }
+  assert.match(tr, /optional/i);
+  assert.doesNotMatch(tr, /Coming soon/);
   assert.match(md, /README\.md#development/);
   // Stale README table: a PR warning; the maintainer regenerates it.
   assert.match(md, /maintainer regenerates the table before merging/);

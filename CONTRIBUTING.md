@@ -131,7 +131,34 @@ CI may show a warning that the README exams table is out of date. That's expecte
 
 ## Translations
 
-Coming soon. Hindi is first. Follow issues labelled [`i18n`](https://github.com/GeekyAsif786/ExamSnap/labels/i18n) to help when it opens.
+ExamSnap is in English and Hindi. Want it in your language? [Request a language](https://github.com/GeekyAsif786/ExamSnap/issues/new?template=language.yml&title=%5BLanguage%5D%20), or translate it yourself: about a hundred short lines, no app code. Issues labelled [`i18n`](https://github.com/GeekyAsif786/ExamSnap/labels/i18n) track the work.
+
+1. **Copy the English strings.** Every line of the interface is in `src/ui/i18n/en.js`. Copy it to `src/ui/i18n/<code>.js`, where `<code>` is the language's two-letter code (`ta` for Tamil, `bn` for Bengali).
+2. **Add the language as a draft** in `src/ui/i18n/locales.js`:
+   ```js
+   { code: "ta", name: "தமிழ்", dir: "ltr", status: "draft" },
+   ```
+   `name` is written in the language itself. Drafts are not on the live site.
+3. **Translate** the text inside the quotes; keep the keys (left of the `:`) as they are. Lines like ``(w, h) => `${w} × ${h} px` `` are templates: move the `${…}` parts wherever your grammar needs them, but keep every one. Keep "ExamSnap" as it is, keep numbers in 0–9 digits, and keep units such as KB and px. Use the words people see on exam forms in your language, not formal or literary ones.
+4. **See your coverage:**
+   ```sh
+   npm run check
+   ```
+   It prints each language's coverage and points out problems (a missing `${…}`, a translated "ExamSnap"). Missing lines show in English until you translate them. To see your language in the app, run `INCLUDE_DRAFTS=1 npm run preview` and open `http://localhost:4173/<code>/`.
+5. **Open a pull request.** Run `npm run i18n-review`, which writes `docs/i18n/<code>-review.md` with English next to your translation. A native speaker reviews it there before the language is published (its status becomes `"published"`, which needs 100% coverage).
+
+**Exam names and notes (optional).** A preset can carry its own translation under `translations.<code>` in `presets/<id>.json`, with any of `name`, `notes`, and per document `label` and `notes`:
+
+```json
+"translations": {
+  "hi": {
+    "notes": "…",
+    "documents": { "photo": { "label": "फोटो (3.5 × 4.5 cm)" } }
+  }
+}
+```
+
+Anything not translated is shown in English. Keep official exam names and abbreviations recognisable (SSC, JEE Main, IBPS). `npm run check` rejects unknown languages, unknown document ids and any other field.
 
 ## Code
 
