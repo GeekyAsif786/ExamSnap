@@ -4,6 +4,9 @@ import assert from "node:assert/strict";
 import { PRESETS } from "../src/generated/presets.js";
 import { STRINGS as S } from "../src/ui/strings.js";
 import {
+  CSP,
+  cspMeta,
+  findInsecureUrls,
   cacheName,
   docNoun,
   docSummary,
@@ -247,4 +250,31 @@ test("swSource prepends CACHE and PRECACHE to the worker body", () => {
   assert.ok(src.includes(`const PRECACHE = [\n  "./",\n  "a.js"\n];`));
   assert.equal(src.match(/SPDX-License-Identifier/g).length, 1);
   assert.ok(src.endsWith("self.x = 1;\n"));
+});
+
+test("CSP is exactly the agreed policy (no upgrade-insecure-requests)", () => {
+  assert.equal(
+    CSP,
+    "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'",
+  );
+  assert.equal(cspMeta(), `<meta http-equiv="Content-Security-Policy" content="${CSP}">`);
+});
+
+test("findInsecureUrls flags http:// in text outputs, allowing only the sitemap namespace", () => {
+  const files = [
+    { path: "index.html", text: '<a href="http://example.com/x">x</a> <link href="https://ok/">' },
+    { path: "src/ui/styles.css", text: "a { background: url(http://cdn.example/i.png) }" },
+    { path: "src/ui/app.js", text: 'fetch("HTTP://upper.example/")' },
+    { path: "manifest.webmanifest", text: '{"start_url": "http://x/"}' },
+    { path: "sitemap.xml", text: '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><loc>http://bad/</loc>' },
+    { path: "favicon.svg", text: '<svg xmlns="http://www.w3.org/2000/svg">' },
+  ];
+  assert.deepEqual(findInsecureUrls(files), [
+    "index.html: http://example.com/x",
+    "src/ui/styles.css: http://cdn.example/i.png",
+    "src/ui/app.js: HTTP://upper.example/",
+    "manifest.webmanifest: http://x/",
+    "sitemap.xml: http://bad/",
+  ]);
+  assert.deepEqual(findInsecureUrls([{ path: "sitemap.xml", text: 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' }]), []);
 });

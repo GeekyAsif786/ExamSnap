@@ -5,6 +5,9 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build, JS_BUDGET } from "../scripts/build.mjs";
+import { CSP } from "../scripts/build-lib.mjs";
+import { cp, writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { PRESETS } from "../src/generated/presets.js";
 
 const tmp = () => mkdtemp(join(tmpdir(), "examsnap-build-"));
@@ -126,4 +129,38 @@ test("the in-tool warning is left out exactly where the page-level warning is sh
     assert.equal(html.match(/class="warning"/g).length, 1, p.id);
   }
   assert.ok((await readFile(join(dir, "index.html"), "utf8")).includes('id="warning"'), "root keeps the in-tool warning");
+});
+
+const cspOf = (html) => [...html.matchAll(/<meta http-equiv="Content-Security-Policy" content="([^"]*)">/g)].map((m) => m[1]);
+
+test("production, preview and e2e (sub-path) builds emit the identical CSP on every page", async (t) => {
+  const configs = [
+    {}, // production defaults (also what npm run preview builds)
+    { base: "/ExamSnap/" }, // e2e chromium-subpath
+    { base: "/", origin: "https://examsnap.example" },
+  ];
+  for (const config of configs) {
+    const dir = await tmp();
+    t.after(() => rm(dir, { recursive: true, force: true }));
+    const r = await build({ outDir: dir, ...config });
+    for (const f of r.files.filter((f) => f.path.endsWith(".html"))) {
+      const html = await readFile(join(dir, f.path), "utf8");
+      assert.deepEqual(cspOf(html), [CSP], `${JSON.stringify(config)} ${f.path}`);
+      assert.ok(html.includes('<meta name="referrer" content="no-referrer">'), f.path);
+    }
+  }
+  // The dev template carries the same policy, so npm run dev behaves alike.
+  const template = await readFile(fileURLToPath(new URL("../index.html", import.meta.url)), "utf8");
+  assert.deepEqual(cspOf(template), [CSP]);
+});
+
+test("the build fails on any http:// URL in its output", async (t) => {
+  const src = await tmp();
+  const out = await tmp();
+  t.after(() => Promise.all([rm(src, { recursive: true, force: true }), rm(out, { recursive: true, force: true })]));
+  const root = fileURLToPath(new URL("..", import.meta.url));
+  for (const p of ["index.html", "favicon.svg", "icons", "src"]) await cp(join(root, p), join(src, p), { recursive: true });
+  const css = join(src, "src/ui/styles.css");
+  await writeFile(css, `${await readFile(css, "utf8")}\n.x { background: url(http://cdn.example/x.png); }\n`);
+  await assert.rejects(build({ root: src, outDir: out }), /http:\/\/ URLs in the build:\nsrc\/ui\/styles\.[0-9a-f]{8}\.css: http:\/\/cdn\.example\/x\.png/);
 });

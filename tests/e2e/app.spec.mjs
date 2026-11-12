@@ -313,8 +313,8 @@ test("dragging the preview pans; the wheel zooms", async ({ page }) => {
   await expect.poll(() => page.evaluate(() => window.__examsnap.state.zoom)).toBeGreaterThan(1);
 });
 
-test("preview is crisp on hi-DPI and at most 420 CSS px tall", async ({ browser, baseURL }) => {
-  const context = await browser.newContext({ deviceScaleFactor: 2, viewport: { width: 1280, height: 900 }, baseURL });
+test("preview is crisp on hi-DPI and at most 420 CSS px tall", async ({ newContext }) => {
+  const context = await newContext({ deviceScaleFactor: 2, viewport: { width: 1280, height: 900 } });
   const page = await context.newPage();
   await openApp(page, "exam=upsc-cse&doc=photo");
   await loadImage(page, "photo");
@@ -347,15 +347,21 @@ test("making again revokes the previous object URL; padded note shows when padde
   await expect(page.locator("#result")).toBeVisible();
   const second = await page.locator("#download").getAttribute("href");
   expect(second).not.toBe(first);
-  const firstAlive = await page.evaluate(async (url) => {
-    try {
-      await (await fetch(url)).arrayBuffer();
-      return true;
-    } catch {
-      return false;
-    }
-  }, first);
-  expect(firstAlive).toBe(false);
+  // Load each URL as an image (img-src allows blob:; fetch would be blocked by
+  // connect-src 'self'): the revoked one must fail, the current one load.
+  const loads = (url) =>
+    page.evaluate(
+      (u) =>
+        new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = u;
+        }),
+      url,
+    );
+  expect(await loads(first)).toBe(false);
+  expect(await loads(second)).toBe(true);
 });
 
 test("adjusting after making clears the stale result", async ({ page }) => {
@@ -394,8 +400,8 @@ test("the test hook is absent without ?test=1", async ({ page }) => {
   expect(await page.evaluate(() => "__examsnap" in window)).toBe(false);
 });
 
-test("works at 360 px wide without horizontal scrolling", async ({ browser, baseURL }) => {
-  const context = await browser.newContext({ viewport: { width: 360, height: 740 }, baseURL });
+test("works at 360 px wide without horizontal scrolling", async ({ newContext }) => {
+  const context = await newContext({ viewport: { width: 360, height: 740 } });
   const page = await context.newPage();
   await openApp(page, "exam=banking-ibps&doc=declaration");
   await loadImage(page, "photo");

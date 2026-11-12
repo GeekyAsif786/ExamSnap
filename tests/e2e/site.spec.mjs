@@ -2,7 +2,7 @@
 // The built site: landing pages, crawlable links/assets, sitemap, robots, 404.
 import { PRESETS } from "../../src/generated/presets.js";
 import { STRINGS as S } from "../../src/ui/strings.js";
-import { DEFAULT_ORIGIN, docSummary, pageDescription, pageTitle, siteUrl } from "../../scripts/build-lib.mjs";
+import { CSP, DEFAULT_ORIGIN, docSummary, pageDescription, pageTitle, siteUrl } from "../../scripts/build-lib.mjs";
 import { test, expect } from "./helpers.mjs";
 
 // The site's base path in this project ("/" or "/ExamSnap/").
@@ -79,8 +79,8 @@ test.describe("landing pages", () => {
     });
   }
 
-  test("on a 390×844 phone the tool starts on the first screen; the warning appears once", async ({ browser, baseURL }) => {
-    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, baseURL });
+  test("on a 390×844 phone the tool starts on the first screen; the warning appears once", async ({ newContext }) => {
+    const context = await newContext({ viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
     for (const preset of PRESETS) {
       await page.goto(`./${preset.id}/`);
@@ -97,8 +97,8 @@ test.describe("landing pages", () => {
     await context.close();
   });
 
-  test("landing pages fit 360 px without horizontal scrolling", async ({ browser, baseURL }) => {
-    const context = await browser.newContext({ viewport: { width: 360, height: 740 }, baseURL });
+  test("landing pages fit 360 px without horizontal scrolling", async ({ newContext }) => {
+    const context = await newContext({ viewport: { width: 360, height: 740 } });
     const page = await context.newPage();
     for (const preset of PRESETS) {
       await page.goto(`./${preset.id}/`);
@@ -207,4 +207,26 @@ test("unknown paths get 404.html with status 404, and its assets load", async ({
   await page.getByRole("link", { name: S.notFoundHome }).click();
   await expect(page).toHaveURL(new RegExp(`${base()}(\\?.*)?$`));
   await expect(page.locator("#exam")).toBeVisible();
+});
+
+test("every page carries the exact CSP and no-referrer meta tags", async ({ request }) => {
+  const paths = ["./", ...PRESETS.map((p) => `./${p.id}/`), "./404.html"];
+  for (const path of paths) {
+    const html = await (await request.get(path)).text();
+    const csp = [...html.matchAll(/<meta http-equiv="Content-Security-Policy" content="([^"]*)">/g)].map((m) => m[1]);
+    expect(csp, path).toEqual([CSP]);
+    expect(html, path).toContain('<meta name="referrer" content="no-referrer">');
+  }
+  expect(CSP).toBe(
+    "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'",
+  );
+});
+
+test("a CSP violation is reported (the e2e watcher itself works)", async ({ page, cspViolations }) => {
+  await page.goto("./");
+  // Blocked by connect-src 'self'. Drain the list so this test still passes.
+  await page.evaluate(() => fetch("blob:nope").catch(() => {}));
+  await expect.poll(() => cspViolations.length).toBeGreaterThan(0);
+  expect(cspViolations.join("\n")).toMatch(/connect-src/);
+  cspViolations.length = 0;
 });

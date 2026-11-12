@@ -51,7 +51,7 @@ async function copySource(dest) {
   }
 }
 
-test("update: a new build shows the banner, and Reload activates it once", async ({ browser }) => {
+test("update: a new build shows the banner, and Reload activates it once", async ({ newContext }) => {
   const site = await mkdtemp(join(tmpdir(), "examsnap-site-"));
   const src2 = await mkdtemp(join(tmpdir(), "examsnap-src-"));
   const BASE = base();
@@ -61,7 +61,7 @@ test("update: a new build shows the banner, and Reload activates it once", async
     await new Promise((r) => server.listen(0, "127.0.0.1", r));
     const url = `http://127.0.0.1:${server.address().port}${BASE}`;
 
-    const context = await browser.newContext();
+    const context = await newContext();
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
