@@ -61,3 +61,33 @@ test("CI uploads review screenshots on every PR (14 days)", async () => {
   assert.match(ci, /- run: npm run screenshots\n\s+if: github\.event_name == 'pull_request'/);
   assert.match(ci, /name: screenshots\n\s+path: screenshots\/\n\s+retention-days: 14/);
 });
+
+test("no workflow uses pull_request_target; CI explains why", async () => {
+  for (const { name, text } of await workflows()) {
+    const code = text.replace(/#.*$/gm, "");
+    assert.doesNotMatch(code, /pull_request_target/, name);
+  }
+  const ci = (await workflows()).find((w) => w.name === "ci.yml").text;
+  assert.match(ci, /^on:\n {2}push:\n {2}pull_request:\n/m);
+  assert.match(ci, /# Triggers stay push and pull_request\. Never use pull_request_target/);
+});
+
+test("CI test job writes the preset summary from full history, base ref via env", async () => {
+  const ci = (await workflows()).find((w) => w.name === "ci.yml").text;
+  const testJob = ci.slice(ci.indexOf("\n  test:"), ci.indexOf("\n  e2e:"));
+  assert.match(testJob, /persist-credentials: false\n(\s+#.*\n)*\s+fetch-depth: 0\n/);
+  assert.match(testJob, /BASE_REF: \$\{\{ github\.base_ref \|\| 'main' \}\}/);
+  assert.match(testJob, /run: node scripts\/preset-summary\.mjs --base "origin\/\$BASE_REF" >> "\$GITHUB_STEP_SUMMARY"/);
+  // No ${{ }} expression inside any run: line (script injection).
+  for (const m of ci.matchAll(/^\s+(?:- )?run: (.*)$/gm)) assert.doesNotMatch(m[1], /\$\{\{/, m[0]);
+});
+
+test("the required check names stay test, e2e and codeql", async () => {
+  const all = await workflows();
+  const jobs = (name) => {
+    const text = all.find((w) => w.name === name).text;
+    return [...text.slice(text.indexOf("\njobs:")).matchAll(/^ {2}([\w-]+):$/gm)].map((m) => m[1]);
+  };
+  assert.deepEqual(jobs("ci.yml"), ["test", "e2e"]);
+  assert.deepEqual(jobs("codeql.yml"), ["codeql"]);
+});
