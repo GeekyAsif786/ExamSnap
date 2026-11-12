@@ -59,6 +59,23 @@ test("reservedIdReason", async () => {
   for (const id of ["ssc", "jee-main", "a1", "h", "neet-ug", "ib"+"ps"]) assert.equal(reservedIdReason(id), null, id);
 });
 
+test("translations: valid ones pass", async () => {
+  assert.deepEqual((await validatePresets(fixture("translations-valid"), { now: NOW })).errors, []);
+});
+
+test("translations: unknown or default locale, unknown document, other fields, notes without English", async () => {
+  await expectOneError("translation-unknown-locale", /\/translations\/fr: unknown locale "fr" \(known: hi; see src\/ui\/i18n\/locales\.js\)/);
+  await expectOneError("translation-en", /\/translations\/en: unknown locale "en"/);
+  await expectOneError("translation-unknown-doc", /\/translations\/hi\/documents\/thumb: unknown document id "thumb"/);
+  await expectOneError("translation-extra-field", /\/translations\/hi: unknown property "category"/);
+  await expectOneError("translation-doc-extra-field", /\/translations\/hi\/documents\/photo: unknown property "width"/);
+  const { errors } = await validatePresets(fixture("translation-notes-without-english"), { now: NOW });
+  assert.deepEqual(errors.map((e) => e.replace(/^\S+: /, "")), [
+    "/translations/hi/notes: translated notes, but the English preset has no notes",
+    "/translations/hi/documents/signature/notes: translated notes, but the English document has no notes",
+  ]);
+});
+
 test("extra property", async () => {
   await expectOneError("extra-property", /sample\.json: \/: unknown property "website"/);
 });

@@ -4,6 +4,7 @@ import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import { DEFAULT_LOCALE, LOCALES } from "../src/ui/i18n/locales.js";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SCHEMA_PATH = join(ROOT, "schema", "preset.schema.json");
@@ -114,6 +115,26 @@ export async function validatePresets(dir, { now = new Date() } = {}) {
           err(`/documents/${i}/max_kb`, `max_kb (${doc.max_kb}) must be greater than min_kb (${doc.min_kb})`);
         }
       });
+    }
+
+    // Translations: known locales (not the default), known document ids, and
+    // no translated notes where the English has none.
+    if (data.translations && typeof data.translations === "object") {
+      const codes = LOCALES.filter((l) => l.code !== DEFAULT_LOCALE).map((l) => l.code);
+      const docs = new Map((Array.isArray(data.documents) ? data.documents : []).map((d) => [d?.id, d]));
+      for (const [code, t] of Object.entries(data.translations)) {
+        const at = `/translations/${code}`;
+        if (!codes.includes(code)) {
+          err(at, `unknown locale "${code}" (known: ${codes.join(", ")}; see src/ui/i18n/locales.js)`);
+          continue;
+        }
+        if (!t || typeof t !== "object") continue;
+        if (t.notes && !data.notes) err(`${at}/notes`, "translated notes, but the English preset has no notes");
+        for (const [docId, dt] of Object.entries(t.documents ?? {})) {
+          if (!docs.has(docId)) err(`${at}/documents/${docId}`, `unknown document id "${docId}"`);
+          else if (dt?.notes && !docs.get(docId).notes) err(`${at}/documents/${docId}/notes`, "translated notes, but the English document has no notes");
+        }
+      }
     }
 
     const label = typeof id === "string" ? id : file;
