@@ -331,6 +331,16 @@ test("preview is crisp on hi-DPI and at most 420 CSS px tall", async ({ newConte
 });
 
 test("making again revokes the previous object URL; padded note shows when padded", async ({ page }) => {
+  // Record revocations. (Loading a revoked URL isn't a reliable probe: Firefox
+  // can still serve it from its image cache, and connect-src blocks fetch.)
+  await page.addInitScript(() => {
+    window.__revoked = [];
+    const revoke = URL.revokeObjectURL.bind(URL);
+    URL.revokeObjectURL = (url) => {
+      window.__revoked.push(url);
+      revoke(url);
+    };
+  });
   await openApp(page, "exam=jee-main&doc=signature");
   await loadImage(page, "signature");
   const make = page.getByRole("button", { name: "Make my file" });
@@ -347,21 +357,21 @@ test("making again revokes the previous object URL; padded note shows when padde
   await expect(page.locator("#result")).toBeVisible();
   const second = await page.locator("#download").getAttribute("href");
   expect(second).not.toBe(first);
-  // Load each URL as an image (img-src allows blob:; fetch would be blocked by
-  // connect-src 'self'): the revoked one must fail, the current one load.
-  const loads = (url) =>
-    page.evaluate(
-      (u) =>
-        new Promise((resolve) => {
-          const img = new Image();
-          img.onload = () => resolve(true);
-          img.onerror = () => resolve(false);
-          img.src = u;
-        }),
-      url,
-    );
-  expect(await loads(first)).toBe(false);
-  expect(await loads(second)).toBe(true);
+  // The first URL was revoked; the current one wasn't and still loads.
+  const revoked = await page.evaluate(() => window.__revoked);
+  expect(revoked).toContain(first);
+  expect(revoked).not.toContain(second);
+  const loads = await page.evaluate(
+    (u) =>
+      new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = u;
+      }),
+    second,
+  );
+  expect(loads).toBe(true);
 });
 
 test("adjusting after making clears the stale result", async ({ page }) => {

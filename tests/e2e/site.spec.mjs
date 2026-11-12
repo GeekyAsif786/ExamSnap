@@ -222,11 +222,18 @@ test("every page carries the exact CSP and no-referrer meta tags", async ({ requ
   );
 });
 
-test("a CSP violation is reported (the e2e watcher itself works)", async ({ page, cspViolations }) => {
+test("a CSP violation is reported (the e2e watcher itself works)", async ({ newContext, cspViolations }) => {
+  // A separate watched context: Chromium reports the blocked image as a
+  // request, which the default page fixture would flag as external.
+  const page = await (await newContext()).newPage();
   await page.goto("./");
-  // Blocked by connect-src 'self'. Drain the list so this test still passes.
-  await page.evaluate(() => fetch("blob:nope").catch(() => {}));
+  // Blocked by img-src 'self' in every engine.
+  await page.evaluate(() => {
+    const img = new Image();
+    img.src = "https://example.invalid/x.png";
+    document.body.append(img);
+  });
   await expect.poll(() => cspViolations.length).toBeGreaterThan(0);
-  expect(cspViolations.join("\n")).toMatch(/connect-src/);
-  cspViolations.length = 0;
+  expect(cspViolations.join("\n")).toMatch(/img-src/);
+  cspViolations.length = 0; // drain so this test itself passes
 });

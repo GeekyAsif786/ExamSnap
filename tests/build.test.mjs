@@ -173,8 +173,8 @@ test("XSS fixture: every preset value is escaped in pages, attributes and JSON-L
     const html = await readFile(join(outDir, page), "utf8");
     // Only the two scripts we put there; no injected tags or handlers.
     assert.deepEqual(
-      [...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]),
-      [/<script type="module" src="[^"]+">/.exec(html)[0], '<script type="application/ld+json">'],
+      [...html.matchAll(/<script\b[^>]*>/gi)].map((m) => m[0]),
+      [/<script type="module" src="[^"]+">/i.exec(html)[0], '<script type="application/ld+json">'],
       page,
     );
     // The only <img> tag is the app's result image; no tag has an event handler.
@@ -185,7 +185,7 @@ test("XSS fixture: every preset value is escaped in pages, attributes and JSON-L
     );
     assert.deepEqual(attrNames.filter((n) => n.startsWith("on")), [], page);
     // JSON-LD can't be closed early and still round-trips the raw text.
-    const ld = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1];
+    const ld = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script\s*>/i)[1];
     assert.doesNotMatch(ld, /</, page);
     const data = JSON.parse(ld);
     if (page !== "index.html") for (const p of PAYLOADS) assert.ok(data.description.includes(p), `${page} JSON-LD keeps ${p}`);
