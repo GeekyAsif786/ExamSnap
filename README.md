@@ -6,6 +6,13 @@ Turn a photo or signature into a JPEG with the exact pixel size and KB range Ind
 
 Works offline after your first visit, and you can install it from your browser menu ("Install app" / "Add to Home Screen").
 
+## Security & privacy
+
+- Your photo never leaves your device: all processing happens in the browser, and nothing is uploaded.
+- No analytics, no tracking, no third-party requests. A strict Content-Security-Policy (`default-src 'none'`, scripts and styles from the site only) is on every page, and the app refuses to run inside another site's frame.
+- Output JPEGs carry no EXIF, XMP, IPTC or comment metadata.
+- Found a security problem? Please report it privately; see [SECURITY.md](SECURITY.md).
+
 ## Licensing
 
 - Code: [AGPL-3.0-or-later](LICENSE)
