@@ -1,0 +1,37 @@
+{
+  "id": "xss-test",
+  "name": "XSS test <script>alert(1)</script> \"><img src=x onerror=alert(1)> </script>",
+  "category": "Other",
+  "notes": "Preset notes <script>alert(1)</script> \"><img src=x onerror=alert(1)> </script>",
+  "last_verified": "2026-11-01",
+  "sources": [
+    {
+      "title": "Source title <script>alert(1)</script> \"><img src=x onerror=alert(1)> </script>",
+      "url": "https://example.org/notice?a=1&b=2",
+      "type": "secondary"
+    }
+  ],
+  "documents": [
+    {
+      "id": "photo",
+      "label": "Photo label <script>alert(1)</script> \"><img src=x onerror=alert(1)> </script>",
+      "kind": "photo",
+      "width": 200,
+      "height": 230,
+      "min_kb": 20,
+      "max_kb": 50,
+      "filename": "photo.jpg",
+      "notes": "Doc notes <script>alert(1)</script> \"><img src=x onerror=alert(1)> </script>"
+    },
+    {
+      "id": "signature",
+      "label": "Signature",
+      "kind": "signature",
+      "width": 140,
+      "height": 60,
+      "min_kb": 10,
+      "max_kb": 20,
+      "filename": "signature.jpg"
+    }
+  ]
+}

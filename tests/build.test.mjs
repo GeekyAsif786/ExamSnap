@@ -164,3 +164,34 @@ test("the build fails on any http:// URL in its output", async (t) => {
   await writeFile(css, `${await readFile(css, "utf8")}\n.x { background: url(http://cdn.example/x.png); }\n`);
   await assert.rejects(build({ root: src, outDir: out }), /http:\/\/ URLs in the build:\nsrc\/ui\/styles\.[0-9a-f]{8}\.css: http:\/\/cdn\.example\/x\.png/);
 });
+
+test("XSS fixture: every preset value is escaped in pages, attributes and JSON-LD", async (t) => {
+  const { buildXssSite, PAYLOADS } = await import("./support/xss-site.mjs");
+  const { outDir, cleanup } = await buildXssSite();
+  t.after(cleanup);
+  for (const page of ["xss-test/index.html", "index.html"]) {
+    const html = await readFile(join(outDir, page), "utf8");
+    // Only the two scripts we put there; no injected tags or handlers.
+    assert.deepEqual(
+      [...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]),
+      [/<script type="module" src="[^"]+">/.exec(html)[0], '<script type="application/ld+json">'],
+      page,
+    );
+    // The only <img> tag is the app's result image; no tag has an event handler.
+    assert.deepEqual([...html.matchAll(/<img\b[^>]*>/gi)].map((m) => m[0]), ['<img id="result-img" class="result-img" alt="">'], page);
+    // Attribute *names* only: quoted values may legitimately contain the escaped payload text.
+    const attrNames = [...html.matchAll(/<[a-z][^>]*>/gi)].flatMap((m) =>
+      [...m[0].replace(/"[^"]*"/g, '""').matchAll(/\s([a-z-:]+)=/gi)].map((a) => a[1].toLowerCase()),
+    );
+    assert.deepEqual(attrNames.filter((n) => n.startsWith("on")), [], page);
+    // JSON-LD can't be closed early and still round-trips the raw text.
+    const ld = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1];
+    assert.doesNotMatch(ld, /</, page);
+    const data = JSON.parse(ld);
+    if (page !== "index.html") for (const p of PAYLOADS) assert.ok(data.description.includes(p), `${page} JSON-LD keeps ${p}`);
+  }
+  const landing = await readFile(join(outDir, "xss-test/index.html"), "utf8");
+  assert.ok(landing.includes("&lt;script&gt;alert(1)&lt;/script&gt; &quot;&gt;&lt;img src=x onerror=alert(1)&gt; &lt;/script&gt;"));
+  assert.ok(landing.includes('href="https://example.org/notice?a=1&amp;b=2"'), "attribute values are escaped");
+  assert.match(landing, /<title>XSS test &lt;script&gt;/);
+});

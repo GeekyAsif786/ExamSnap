@@ -261,3 +261,25 @@ test("canUseServiceWorker: https or localhost only", () => {
   assert.equal(canUseServiceWorker({ protocol: "http:", hostname: "192.168.1.5" }), false);
   assert.equal(canUseServiceWorker({ protocol: "file:", hostname: "" }), false);
 });
+
+test("URL params: anything that isn't a known id is ignored", () => {
+  const first = { examId: PRESETS[0].id, docId: PRESETS[0].documents[0].id };
+  for (const exam of ["<script>alert(1)</script>", '"><img src=x onerror=alert(1)>', "__proto__", "constructor", "toString", "SSC", " ssc", "ssc/", "", "javascript:alert(1)"]) {
+    assert.deepEqual(parseSelection(`?exam=${encodeURIComponent(exam)}`, PRESETS), first, JSON.stringify(exam));
+  }
+  for (const doc of ["<script>", "__proto__", "Photo", "signature "]) {
+    assert.deepEqual(parseSelection(`?exam=ssc&doc=${encodeURIComponent(doc)}`, PRESETS), { examId: "ssc", docId: "photo" }, doc);
+  }
+  // Repeated params: the first wins and must still be valid.
+  assert.deepEqual(parseSelection("?exam=nope&exam=ssc", PRESETS), first);
+});
+
+test("URL params: custom sizes are never read from the URL", () => {
+  const state = createState(PRESETS, "?exam=custom&width=99999&height=<script>&minKb=-1&maxKb=1e9&w=1&h=1");
+  assert.equal(state.examId, CUSTOM_ID);
+  assert.deepEqual(state.custom, { width: "200", height: "230", minKb: "20", maxKb: "50" });
+  // And typed values are validated by parseCustom (whole px in range, KB via byteRange).
+  assert.equal(parseCustom({ width: "<script>", height: "100", minKb: "20", maxKb: "50" }).ok, false);
+  assert.equal(parseCustom({ width: "1e3", height: "100", minKb: "20", maxKb: "50" }).ok, false);
+  assert.equal(parseCustom({ width: "200", height: "200", minKb: "Infinity", maxKb: "Infinity" }).ok, false);
+});
