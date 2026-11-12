@@ -4,6 +4,7 @@
 // fail the test on any CSP violation, page error or external request.
 import { REQUEST_EXAM_URL } from "../../scripts/build-lib.mjs";
 import { STRINGS as S } from "../../src/ui/i18n/en.js";
+import { requestSpecsText } from "../../src/ui/state.js";
 import { test, expect, openApp, gotoReady } from "./helpers.mjs";
 
 const requestLink = (page) => page.locator(".field .request a");
@@ -42,7 +43,7 @@ test("on Custom size, the link carries only width, height and KB range", async (
   await page.getByLabel("Min KB").fill("15");
   await page.getByLabel("Max KB").fill("40");
 
-  const href = `${REQUEST_EXAM_URL}&specs=${encodeURIComponent(S.requestSpecs(320, 240, 15, 40))}`;
+  const href = `${REQUEST_EXAM_URL}&specs=${encodeURIComponent(requestSpecsText(320, 240, 15, 40))}`;
   await expectHref(page, href);
   const url = new URL(href);
   expect([...url.searchParams.keys()]).toEqual(["template", "title", "specs"]);

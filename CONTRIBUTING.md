@@ -153,7 +153,7 @@ ExamSnap is in English and Hindi. Want it in your language? [Request a language]
 "translations": {
   "hi": {
     "notes": "…",
-    "documents": { "photo": { "label": "फोटो (3.5 × 4.5 cm)" } }
+    "documents": { "photo": { "label": "फ़ोटो (3.5 × 4.5 cm)" } }
   }
 }
 ```

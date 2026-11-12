@@ -30,7 +30,6 @@ export const STRINGS = {
   customKbNarrow: "The KB range is too narrow. Make Max KB a little larger.",
   customLabel: "Custom size",
   requestExam: "Don't see your exam? Request it",
-  requestSpecs: (w, h, min, max) => `Custom size I used in ExamSnap: ${w} × ${h} px, ${min}–${max} KB`,
 
   chipPixels: (w, h) => `${w} × ${h} px`,
   chipKb: (min, max) => `${min}–${max} KB`,

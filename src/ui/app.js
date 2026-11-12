@@ -162,7 +162,7 @@ function renderSpec() {
     ),
   );
   el.verified.textContent = preset ? S.lastVerified(preset.last_verified) : "";
-  const requestUrl = requestExamUrl(isCustom ? doc : null, S.requestSpecs);
+  const requestUrl = requestExamUrl(isCustom ? doc : null);
   for (const a of el.requestLinks) a.href = requestUrl;
   updateMakeButton();
 }

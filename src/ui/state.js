@@ -299,13 +299,19 @@ export function canUseServiceWorker(loc) {
 }
 
 /**
+ * The custom-size line prefilled into the "request an exam" issue. Always
+ * English, whatever the page's language: issues are read in English.
+ */
+export const requestSpecsText = (w, h, min, max) => `Custom size I used in ExamSnap: ${w} × ${h} px, ${min}–${max} KB`;
+
+/**
  * The "request an exam" issue form URL. Given a custom-size doc, prefills
  * only its width, height and KB range (via `specsText`); nothing else.
  *
  * @param {{ width: number, height: number, min_kb: number, max_kb: number } | null} customDoc
- * @param {(w: number, h: number, min: number, max: number) => string} specsText
+ * @param {(w: number, h: number, min: number, max: number) => string} [specsText]
  */
-export function requestExamUrl(customDoc, specsText) {
+export function requestExamUrl(customDoc, specsText = requestSpecsText) {
   let url = `${ISSUES_URL}?template=request-exam.yml&title=${encodeURIComponent("[Exam] ")}`;
   if (customDoc) {
     const { width, height, min_kb: min, max_kb: max } = customDoc;

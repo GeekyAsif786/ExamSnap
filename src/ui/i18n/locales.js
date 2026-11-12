@@ -8,5 +8,5 @@ export const DEFAULT_LOCALE = "en";
 
 export const LOCALES = [
   { code: "en", name: "English", dir: "ltr", status: "published" },
-  { code: "hi", name: "हिन्दी", dir: "ltr", status: "published" },
+  { code: "hi", name: "हिंदी", dir: "ltr", status: "published" },
 ];

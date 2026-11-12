@@ -252,8 +252,8 @@ test("language switcher: a plain link to the same page in the other language", a
   t.after(() => rm(dir, { recursive: true, force: true }));
   await build({ outDir: dir });
   const nav = async (page) => (await readFile(join(dir, page, "index.html"), "utf8")).match(/<nav class="lang"[^>]*>.*?<\/nav>/)[0];
-  assert.equal(await nav(""), '<nav class="lang" aria-label="Language"><a href="hi/" hreflang="hi" lang="hi" data-lang-switch>हिन्दी</a></nav>');
-  assert.equal(await nav("ssc/"), '<nav class="lang" aria-label="Language"><a href="../hi/ssc/" hreflang="hi" lang="hi" data-lang-switch>हिन्दी</a></nav>');
+  assert.equal(await nav(""), '<nav class="lang" aria-label="Language"><a href="hi/" hreflang="hi" lang="hi" data-lang-switch>हिंदी</a></nav>');
+  assert.equal(await nav("ssc/"), '<nav class="lang" aria-label="Language"><a href="../hi/ssc/" hreflang="hi" lang="hi" data-lang-switch>हिंदी</a></nav>');
   assert.equal(await nav("hi/"), '<nav class="lang" aria-label="भाषा"><a href="../" hreflang="en" lang="en" data-lang-switch>English</a></nav>');
   assert.equal(await nav("hi/ssc/"), '<nav class="lang" aria-label="भाषा"><a href="../../ssc/" hreflang="en" lang="en" data-lang-switch>English</a></nav>');
 });
@@ -299,8 +299,8 @@ test("draft locales are not built (unless INCLUDE_DRAFTS), and fall back to Engl
   await writeFile(
     locales,
     (await readFile(locales, "utf8")).replace(
-      '{ code: "hi", name: "हिन्दी", dir: "ltr", status: "published" },',
-      '{ code: "hi", name: "हिन्दी", dir: "ltr", status: "published" },\n  { code: "ta", name: "தமிழ்", dir: "ltr", status: "draft" },',
+      '{ code: "hi", name: "हिंदी", dir: "ltr", status: "published" },',
+      '{ code: "hi", name: "हिंदी", dir: "ltr", status: "published" },\n  { code: "ta", name: "தமிழ்", dir: "ltr", status: "draft" },',
     ),
   );
   await writeFile(join(src, "src/ui/i18n/ta.js"), 'export const STRINGS = { makeButton: "கோப்பை உருவாக்கு" };\n');

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Hindi (हिन्दी). Same keys as en.js; see the rules there. Plain, everyday
-// Hindi as used on Indian exam websites: common English words (फोटो, फ़ाइल,
+// Hindi (हिंदी). Same keys as en.js; see the rules there. Plain, everyday
+// Hindi as used on Indian exam websites: common English words (फ़ोटो, फ़ाइल,
 // KB, JPG) stay where Hindi forms use them. Review: docs/i18n/hi-review.md.
 
 export const STRINGS = {
   appName: "ExamSnap",
-  tagline: "सही पिक्सेल। सही KB। आपकी फोटो आपके डिवाइस से बाहर नहीं जाती।",
-  docTitle: "ExamSnap — परीक्षा फॉर्म के लिए फोटो और हस्ताक्षर का साइज़ बदलें",
+  tagline: "सही पिक्सेल। सही KB। आपकी फ़ोटो आपके डिवाइस से बाहर नहीं जाती।",
+  docTitle: "ExamSnap — परीक्षा फॉर्म के लिए फ़ोटो और हस्ताक्षर का साइज़ बदलें",
 
   stepSpec: "परीक्षा और दस्तावेज़",
   stepUpload: "अपलोड",
@@ -27,14 +27,13 @@ export const STRINGS = {
   customKbNarrow: "KB की रेंज बहुत छोटी है। अधिकतम KB थोड़ा बढ़ाएँ।",
   customLabel: "कस्टम साइज़",
   requestExam: "आपकी परीक्षा लिस्ट में नहीं है? हमें बताएँ",
-  requestSpecs: (w, h, min, max) => `ExamSnap में इस्तेमाल किया गया कस्टम साइज़: ${w} × ${h} px, ${min}–${max} KB`,
 
   chipPixels: (w, h) => `${w} × ${h} px`,
   chipKb: (min, max) => `${min}–${max} KB`,
   chipFormat: "JPG",
   chipsLabel: "ज़रूरी फ़ाइल",
 
-  secondaryWarning: "ये साइज़ दूसरी वेबसाइटों से लिए गए हैं। फॉर्म जमा करने से पहले ऑफिशियल नोटिफिकेशन ज़रूर देखें।",
+  secondaryWarning: "यह जानकारी अनौपचारिक स्रोतों से है। जमा करने से पहले आधिकारिक अधिसूचना ज़रूर देखें।",
   sourcesSummary: "ये नंबर कहाँ से लिए गए हैं",
   categoryName: {
     Banking: "बैंकिंग",
@@ -45,29 +44,29 @@ export const STRINGS = {
   sourceType: {
     notice: "ऑफिशियल नोटिस",
     portal: "ऑफिशियल वेबसाइट",
-    secondary: "दूसरी वेबसाइट",
+    secondary: "अनौपचारिक स्रोत",
   },
   lastVerified: (date) => `आख़िरी बार जाँचा गया: ${date}`,
   opensInNewTab: "(नए टैब में खुलेगा)",
 
-  chooseFile: "फोटो चुनें",
-  dropHint: "या फोटो यहाँ खींचकर छोड़ें, या पेस्ट करें (Ctrl+V / ⌘V)।",
+  chooseFile: "फ़ोटो चुनें",
+  dropHint: "या फ़ोटो यहाँ खींचकर छोड़ें, या पेस्ट करें (Ctrl+V / ⌘V)।",
   loaded: (name, w, h) => `${name} लोड हो गई (${w} × ${h} px)।`,
-  loadedNoName: (w, h) => `फोटो लोड हो गई (${w} × ${h} px)।`,
-  decodeError: "यह ब्राउज़र इस फोटो को नहीं खोल पाया। अगर यह iPhone की HEIC फोटो है, तो पहले उसे JPG में एक्सपोर्ट करें।",
-  notAnImage: "यह फोटो नहीं लगती। JPG या PNG फ़ाइल चुनें।",
+  loadedNoName: (w, h) => `फ़ोटो लोड हो गई (${w} × ${h} px)।`,
+  decodeError: "यह ब्राउज़र इस फ़ोटो को नहीं खोल पाया। अगर यह iPhone की HEIC फ़ोटो है, तो पहले उसे JPG में एक्सपोर्ट करें।",
+  notAnImage: "यह फ़ोटो नहीं लगती। JPG या PNG फ़ाइल चुनें।",
 
-  adjustEmpty: "क्रॉप सेट करने के लिए स्टेप 2 में फोटो जोड़ें।",
+  adjustEmpty: "क्रॉप सेट करने के लिए स्टेप 2 में फ़ोटो जोड़ें।",
   previewLabel: "क्रॉप का प्रीव्यू। खिसकाने के लिए ड्रैग करें। ऐरो की से खिसकाएँ, प्लस और माइनस से ज़ूम करें।",
   adjustHint: "खिसकाने के लिए ड्रैग करें · ज़ूम के लिए पिंच, स्क्रॉल या स्लाइडर इस्तेमाल करें।",
   zoomLabel: "ज़ूम",
   cleanLabel: "बैकग्राउंड साफ़ करें",
   cleanHint: "काग़ज़ को एकदम सफ़ेद और स्याही को गहरा कर देता है।",
-  thresholdLabel: "काग़ज़ की सफ़ेदी का स्तर",
+  thresholdLabel: "बैकग्राउंड सफ़ेद करने का स्तर",
 
   makeButton: "मेरी फ़ाइल बनाएँ",
   working: "बन रही है…",
-  needImage: "पहले फोटो जोड़ें।",
+  needImage: "पहले फ़ोटो जोड़ें।",
   needValidSpec: "पहले कस्टम साइज़ ठीक करें।",
   tooLarge: (kb, maxKb) =>
     `सबसे कम क्वालिटी पर भी फ़ाइल ${kb} KB की है, जो ${maxKb} KB की सीमा से ज़्यादा है। क्रॉप छोटा करें (ज़ूम इन करें) या "बैकग्राउंड साफ़ करें" चालू करें।`,
@@ -82,24 +81,24 @@ export const STRINGS = {
   checkMetadata: "लोकेशन और कैमरे की जानकारी हटा दी गई",
   checkPass: "सही:",
   checkFail: "गलत:",
-  padded: "फ़ाइल को न्यूनतम साइज़ तक बढ़ाया गया है; फोटो में कोई बदलाव नहीं हुआ।",
+  padded: "फ़ाइल को न्यूनतम साइज़ तक बढ़ाया गया है; फ़ोटो में कोई बदलाव नहीं हुआ।",
   download: (filename) => `${filename} डाउनलोड करें`,
 
   // ---- Built pages (scripts/build.mjs): titles, meta, landing sections ----
   rootDescription:
-    "अपनी फोटो और हस्ताक्षर को परीक्षा पोर्टल के लिए ज़रूरी सही पिक्सेल साइज़ और KB रेंज में बदलें। मुफ़्त, ऑफ़लाइन भी चलता है, कुछ भी अपलोड नहीं होता।",
-  pageTitle: (name) => `${name} फोटो और हस्ताक्षर: सही साइज़ और KB | ExamSnap`,
-  pageTitleShort: (name) => `${name} फोटो और हस्ताक्षर साइज़ | ExamSnap`,
+    "अपनी फ़ोटो और हस्ताक्षर को परीक्षा पोर्टल के लिए ज़रूरी सही पिक्सेल साइज़ और KB रेंज में बदलें। मुफ़्त, ऑफ़लाइन भी चलता है, कुछ भी अपलोड नहीं होता।",
+  pageTitle: (name) => `${name} फ़ोटो और हस्ताक्षर: सही साइज़ और KB | ExamSnap`,
+  pageTitleShort: (name) => `${name} फ़ोटो और हस्ताक्षर साइज़ | ExamSnap`,
   pageDescription: (exam, parts) => `${exam} के लिए ${parts} में बदलें। मुफ़्त, ऑफ़लाइन भी चलता है, कुछ भी अपलोड नहीं होता।`,
   descPart: (noun, w, h, min, max) => `${noun} को ${w}×${h} px, ${min}–${max} KB`,
   listAnd: " और ",
   listComma: ", ",
   kindNoun: {
-    photo: "फोटो",
+    photo: "फ़ोटो",
     signature: "हस्ताक्षर",
     thumb: "अंगूठे का निशान",
   },
-  landingHeading: (name) => `${name}: फोटो और हस्ताक्षर का साइज़ बदलें`,
+  landingHeading: (name) => `${name}: फ़ोटो और हस्ताक्षर का साइज़ बदलें`,
   summaryPart: (noun, w, h, min, max) => `${noun} ${w}×${h} px, ${min}–${max} KB`,
   summarySep: " · ",
   specTableCaption: "ज़रूरी फ़ाइलें",
@@ -110,7 +109,7 @@ export const STRINGS = {
   emptyCell: "—",
   examPagesHeading: "परीक्षाओं के पेज",
   homeLink: "ExamSnap होम",
-  ogImageAlt: "ExamSnap: सही पिक्सेल। सही KB। आपकी फोटो आपके डिवाइस से बाहर नहीं जाती।",
+  ogImageAlt: "ExamSnap: सही पिक्सेल। सही KB। आपकी फ़ोटो आपके डिवाइस से बाहर नहीं जाती।",
   notFoundTitle: "पेज नहीं मिला | ExamSnap",
   notFoundHeading: "पेज नहीं मिला",
   notFoundBody: "इस पते पर कुछ नहीं है।",
@@ -127,5 +126,5 @@ export const STRINGS = {
   footerPrivacy: "मुफ़्त और ओपन सोर्स। कोई अपलोड नहीं, कोई ट्रैकिंग नहीं।",
 
   languageNav: "भाषा",
-  noscript: "ExamSnap आपकी फोटो को आपके डिवाइस पर ही प्रोसेस करता है, इसके लिए JavaScript ज़रूरी है। कृपया इस पेज के लिए JavaScript चालू करें।",
+  noscript: "ExamSnap आपकी फ़ोटो को आपके डिवाइस पर ही प्रोसेस करता है, इसके लिए JavaScript ज़रूरी है। कृपया इस पेज के लिए JavaScript चालू करें।",
 };

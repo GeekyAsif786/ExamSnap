@@ -103,7 +103,7 @@ test("/hi/jee-main/: make a signature end to end, in Hindi", async ({ page }) =>
 
 test("language switcher: same page, keeps ?doc= (and ?exam=), round-trips", async ({ page }) => {
   await gotoReady(page, "./ssc/?doc=signature&test=1");
-  await page.getByRole("link", { name: "हिन्दी" }).click();
+  await page.getByRole("link", { name: "हिंदी" }).click();
   await waitReady(page);
   await expect(page).toHaveURL(new RegExp(`${base()}hi/ssc/\\?doc=signature$`));
   await expect(page.locator("html")).toHaveAttribute("lang", "hi");
@@ -120,7 +120,7 @@ test("language switcher: same page, keeps ?doc= (and ?exam=), round-trips", asyn
 
   // Root page: ?exam= and ?doc= both survive.
   await gotoReady(page, "./?exam=jee-main&doc=signature");
-  const link = page.getByRole("link", { name: "हिन्दी" });
+  const link = page.getByRole("link", { name: "हिंदी" });
   await expect(link).toHaveAttribute("lang", "hi");
   await expect(link).toHaveAttribute("hreflang", "hi");
   await link.click();
@@ -204,7 +204,7 @@ test("no English UI string on /hi/ pages, in every state", async ({ page }) => {
 });
 
 test("the English-leftover check catches English (self-test)", async () => {
-  expect(englishLeft("फोटो चुनें Make my file")).toEqual(["Make my file"]);
+  expect(englishLeft("फ़ोटो चुनें Make my file")).toEqual(["Make my file"]);
   expect(englishLeft("Loaded x.jpg (1 × 2 px).")).toContain("Loaded");
   expect(englishLeft("photo.jpg डाउनलोड करें · 20–50 KB · JPG · ExamSnap · English")).toEqual([]);
 });

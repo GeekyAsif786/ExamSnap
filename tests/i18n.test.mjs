@@ -57,7 +57,7 @@ test("localeReport: missing, extra, wrong type, unused argument, brand, digits, 
 test("checkLocaleList: codes, fields, files", () => {
   const ok = [
     { code: "en", name: "English", dir: "ltr", status: "published" },
-    { code: "hi", name: "हिन्दी", dir: "ltr", status: "draft" },
+    { code: "hi", name: "हिंदी", dir: "ltr", status: "draft" },
   ];
   assert.deepEqual(checkLocaleList(ok, "en", ["en.js", "hi.js", "locales.js", "localize.js"]), []);
   assert.deepEqual(
@@ -123,7 +123,7 @@ test("the real locales: en and hi published at 100% with no problems", async () 
   assert.equal(reports.hi.translated, reports.hi.total);
   assert.deepEqual(LOCALES.map((l) => [l.code, l.name, l.dir, l.status]), [
     ["en", "English", "ltr", "published"],
-    ["hi", "हिन्दी", "ltr", "published"],
+    ["hi", "हिंदी", "ltr", "published"],
   ]);
   assert.equal(DEFAULT_LOCALE, "en");
 });
@@ -149,13 +149,13 @@ test("localizePreset: translated text replaces English, the rest falls back", ()
       { id: "photo", label: "Photograph", notes: "White background" },
       { id: "signature", label: "Signature" },
     ],
-    translations: { hi: { name: "X परीक्षा", documents: { photo: { label: "फोटो" }, signature: { label: "हस्ताक्षर" } } } },
+    translations: { hi: { name: "X परीक्षा", documents: { photo: { label: "फ़ोटो" }, signature: { label: "हस्ताक्षर" } } } },
   };
   const hi = localizePreset(preset, "hi");
   assert.equal(hi.name, "X परीक्षा");
   assert.equal(hi.notes, "English notes", "untranslated notes stay English");
   assert.deepEqual(hi.documents, [
-    { id: "photo", label: "फोटो", notes: "White background" },
+    { id: "photo", label: "फ़ोटो", notes: "White background" },
     { id: "signature", label: "हस्ताक्षर" },
   ]);
   assert.equal("translations" in hi, false);
@@ -181,8 +181,8 @@ test("Hindi titles, descriptions and summaries: real specs only, titles within t
     assert.match(desc, /मुफ़्त, ऑफ़लाइन भी चलता है, कुछ भी अपलोड नहीं होता।$/);
     assert.doesNotMatch(desc + summary + title, /[०-९]/, "Western digits");
   }
-  assert.equal(pageTitle({ name: "JEE Main (NTA)", documents: [] }, HI), "JEE Main (NTA) फोटो और हस्ताक्षर: सही साइज़ और KB | ExamSnap");
-  assert.equal(pageTitle({ name: "SSC — CGL / CHSL / MTS / GD / CPO" }, HI), "SSC फोटो और हस्ताक्षर: सही साइज़ और KB | ExamSnap");
+  assert.equal(pageTitle({ name: "JEE Main (NTA)", documents: [] }, HI), "JEE Main (NTA) फ़ोटो और हस्ताक्षर: सही साइज़ और KB | ExamSnap");
+  assert.equal(pageTitle({ name: "SSC — CGL / CHSL / MTS / GD / CPO" }, HI), "SSC फ़ोटो और हस्ताक्षर: सही साइज़ और KB | ExamSnap");
 });
 
 // ---- docs/i18n/<code>-review.md ------------------------------------------------
@@ -190,7 +190,7 @@ test("Hindi titles, descriptions and summaries: real specs only, titles within t
 test("review markdown: every key with English and the translation; preset fields; missing marked", async () => {
   const { reviewMarkdown } = await import("../scripts/i18n-review.mjs");
   const md = reviewMarkdown(
-    { code: "hi", name: "हिन्दी", status: "draft" },
+    { code: "hi", name: "हिंदी", status: "draft" },
     { a: "A | b", f: (w, h) => `${w} × ${h} px`, g: { x: "X" } },
     { a: "अ", f: (w, h) => `${w} × ${h} px` },
     [
@@ -199,12 +199,12 @@ test("review markdown: every key with English and the translation; preset fields
         name: "X exam",
         notes: "Notes",
         documents: [{ id: "photo", label: "Photo", notes: "N" }, { id: "sig", label: "Signature" }],
-        translations: { hi: { name: "X परीक्षा", documents: { photo: { label: "फोटो" } } } },
+        translations: { hi: { name: "X परीक्षा", documents: { photo: { label: "फ़ोटो" } } } },
       },
     ],
     "Hindi",
   );
-  assert.match(md, /^# Hindi \(हिन्दी\) translation review\n/);
+  assert.match(md, /^# Hindi \(हिंदी\) translation review\n/);
   assert.ok(md.includes("| Key | English | Hindi |"));
   assert.ok(md.includes("| `a` | A \\| b | अ |"), "pipes escaped");
   assert.ok(md.includes("| `f` | {w} × {h} px | {w} × {h} px |"), "templates shown with placeholders");
@@ -212,7 +212,7 @@ test("review markdown: every key with English and the translation; preset fields
   assert.ok(md.includes("### `x`"));
   assert.ok(md.includes("| `name` | X exam | X परीक्षा |"));
   assert.ok(md.includes("| `notes` | Notes | _(English)_ |"));
-  assert.ok(md.includes("| `documents.photo.label` | Photo | फोटो |"));
+  assert.ok(md.includes("| `documents.photo.label` | Photo | फ़ोटो |"));
   assert.ok(md.includes("| `documents.photo.notes` | N | _(English)_ |"));
   assert.ok(md.includes("| `documents.sig.label` | Signature | _(English)_ |"));
   assert.ok(!md.includes("documents.sig.notes"), "no row for notes English doesn't have");
@@ -238,4 +238,23 @@ test("i18n-review run(): writes missing or stale files, --check only reports", a
   assert.deepEqual(await run({ check: true, outDir }), [file]);
   assert.deepEqual(await run({ outDir }), [file]);
   assert.deepEqual(await run({ check: true, outDir }), []);
+});
+
+test("Hindi wording decided in review (PR #9)", async () => {
+  assert.equal(HI.secondaryWarning, "यह जानकारी अनौपचारिक स्रोतों से है। जमा करने से पहले आधिकारिक अधिसूचना ज़रूर देखें।");
+  assert.equal(HI.sourceType.secondary, "अनौपचारिक स्रोत");
+  assert.equal(HI.thresholdLabel, "बैकग्राउंड सफ़ेद करने का स्तर");
+  // Kept as they were.
+  assert.equal(HI.customMinKb, "न्यूनतम KB");
+  assert.equal(HI.customMaxKb, "अधिकतम KB");
+  assert.equal(HI.stepAdjust, "एडजस्ट करें");
+  assert.deepEqual([HI.checkPass, HI.checkFail], ["सही:", "गलत:"]);
+  // The GitHub issue prefill is English in every locale: it is not a locale string.
+  for (const S of [EN, HI]) assert.equal("requestSpecs" in S, false);
+  // Spelling: फ़ोटो with nukta everywhere (UI, templates, presets); हिंदी as the language name.
+  assert.equal(LOCALES.find((l) => l.code === "hi").name, "हिंदी");
+  const everything = [...flatten(HI).map(([, v]) => String(typeof v === "function" ? v("a", "b", "c", "d", "e") : v)), JSON.stringify(PRESETS)].join("\n");
+  assert.doesNotMatch(everything, /फोटो/, "फ़ोटो needs the nukta");
+  assert.doesNotMatch(everything, /हिन्दी/);
+  assert.match(everything, /फ़ोटो/);
 });
