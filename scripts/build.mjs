@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Build the deployable site into dist/: content-hashed assets, one landing
 // page per preset, sitemap, robots, 404. No bundler, no minifier.
-//   BASE_PATH   URL prefix the site is served under (default /ExamSnap/)
-//   SITE_ORIGIN origin for absolute URLs (default https://geekyasif786.github.io)
+//   BASE_PATH   URL prefix the site is served under (default /)
+//   SITE_ORIGIN origin for absolute URLs (default https://examsnap.asifurrahaman.com)
 // Deterministic: same inputs, byte-identical output.
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative, sep } from "node:path";

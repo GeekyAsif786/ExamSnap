@@ -10,7 +10,8 @@ import { STRINGS as S } from "../../src/ui/strings.js";
 import { test, expect, openApp, loadImage, readResult } from "./helpers.mjs";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
-const BASE = "/ExamSnap/";
+// Same base path as the project under test ("/" or "/ExamSnap/").
+const base = () => new URL(test.info().project.use.baseURL).pathname;
 
 /** Wait until a service worker controls the page and has finished precaching. */
 async function waitForControl(page) {
@@ -53,6 +54,7 @@ async function copySource(dest) {
 test("update: a new build shows the banner, and Reload activates it once", async ({ browser }) => {
   const site = await mkdtemp(join(tmpdir(), "examsnap-site-"));
   const src2 = await mkdtemp(join(tmpdir(), "examsnap-src-"));
+  const BASE = base();
   const server = createDevServer({ root: site, base: BASE, notFound: "404.html" });
   try {
     await build({ outDir: site, base: BASE });

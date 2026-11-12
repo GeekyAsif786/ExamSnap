@@ -6,8 +6,8 @@ import { normalizeBase } from "./serve.mjs";
 import { hasNotice } from "../src/ui/state.js";
 
 export { normalizeBase };
-export const DEFAULT_BASE = "/ExamSnap/";
-export const DEFAULT_ORIGIN = "https://geekyasif786.github.io";
+export const DEFAULT_BASE = "/";
+export const DEFAULT_ORIGIN = "https://examsnap.asifurrahaman.com";
 export const TITLE_MAX = 65;
 export const OG_IMAGE_SIZE = { width: 1200, height: 630 };
 

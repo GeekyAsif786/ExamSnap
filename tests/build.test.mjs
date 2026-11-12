@@ -36,7 +36,32 @@ test("output layout: pages, crawl files, hashed assets, budget", async (t) => {
   assert.deepEqual(r.pages, ["", ...PRESETS.map((p) => `${p.id}/`)]);
 });
 
-test("BASE_PATH and SITE_ORIGIN: a custom domain only needs base '/' and a new origin", async (t) => {
+test("defaults: the custom domain at the root", async (t) => {
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await build({ outDir: dir });
+  const ssc = await readFile(join(dir, "ssc/index.html"), "utf8");
+  assert.match(ssc, /<link rel="canonical" href="https:\/\/examsnap\.asifurrahaman\.com\/ssc\/">/);
+  assert.equal(await readFile(join(dir, "robots.txt"), "utf8"), "User-agent: *\nAllow: /\n\nSitemap: https://examsnap.asifurrahaman.com/sitemap.xml\n");
+  const manifest = JSON.parse(await readFile(join(dir, "manifest.webmanifest"), "utf8"));
+  assert.deepEqual([manifest.id, manifest.start_url, manifest.scope], ["/", "/", "/"]);
+  assert.match(await readFile(join(dir, "sitemap.xml"), "utf8"), /<loc>https:\/\/examsnap\.asifurrahaman\.com\/<\/loc>/);
+  assert.match(await readFile(join(dir, "404.html"), "utf8"), /href="\/src\/ui\/styles\.[0-9a-f]{8}\.css"/);
+});
+
+test("BASE_PATH still works: a GitHub Pages project site under /ExamSnap/", async (t) => {
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await build({ outDir: dir, base: "/ExamSnap/", origin: "https://geekyasif786.github.io" });
+  const ssc = await readFile(join(dir, "ssc/index.html"), "utf8");
+  assert.match(ssc, /<link rel="canonical" href="https:\/\/geekyasif786\.github\.io\/ExamSnap\/ssc\/">/);
+  assert.match(ssc, /src="\.\.\/src\/ui\/app\.[0-9a-f]{8}\.js"/, "assets stay relative");
+  assert.match(await readFile(join(dir, "404.html"), "utf8"), /href="\/ExamSnap\/src\/ui\/styles\.[0-9a-f]{8}\.css"/);
+  const manifest = JSON.parse(await readFile(join(dir, "manifest.webmanifest"), "utf8"));
+  assert.deepEqual([manifest.id, manifest.start_url, manifest.scope], ["/ExamSnap/", "/ExamSnap/", "/ExamSnap/"]);
+});
+
+test("BASE_PATH and SITE_ORIGIN: another custom domain only needs base '/' and a new origin", async (t) => {
   const dir = await tmp();
   t.after(() => rm(dir, { recursive: true, force: true }));
   await build({ outDir: dir, base: "/", origin: "https://examsnap.example" });

@@ -18,10 +18,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      # Override with repository variables for a custom domain:
-      # BASE_PATH=/ and SITE_ORIGIN=https://your.domain
-      BASE_PATH: ${{ vars.BASE_PATH || '/ExamSnap/' }}
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://geekyasif786.github.io' }}
+      # Served at the root of the custom domain. Repository variables can
+      # override these (e.g. BASE_PATH=/ExamSnap/ for a project-site URL).
+      # Pages deploys via Actions don't need a CNAME file: the custom domain
+      # is set in the repository's Pages settings instead.
+      BASE_PATH: ${{ vars.BASE_PATH || '/' }}
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://examsnap.asifurrahaman.com' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

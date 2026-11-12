@@ -5,8 +5,9 @@ import { STRINGS as S } from "../../src/ui/strings.js";
 import { DEFAULT_ORIGIN, docSummary, pageDescription, pageTitle, siteUrl } from "../../scripts/build-lib.mjs";
 import { test, expect } from "./helpers.mjs";
 
-const BASE = "/ExamSnap/";
-const live = (path = "") => siteUrl(DEFAULT_ORIGIN, BASE, path);
+// The site's base path in this project ("/" or "/ExamSnap/").
+const base = () => new URL(test.info().project.use.baseURL).pathname;
+const live = (path = "") => siteUrl(DEFAULT_ORIGIN, base(), path);
 const hasNotice = (p) => p.sources.some((s) => s.type === "notice");
 
 test.describe("landing pages", () => {
@@ -148,7 +149,7 @@ function htmlRefs(html) {
 test("every internal link and asset returns 200 under BASE_PATH (crawl from the root)", async ({ request, baseURL }) => {
   const origin = new URL(baseURL).origin;
   const liveBase = live();
-  const toLocal = (abs) => (abs.startsWith(liveBase) ? `${origin}${BASE}${abs.slice(liveBase.length)}` : abs);
+  const toLocal = (abs) => (abs.startsWith(liveBase) ? `${origin}${base()}${abs.slice(liveBase.length)}` : abs);
   const seen = new Map(); // url -> status
   const queue = [new URL("./", baseURL).href];
   while (queue.length) {
@@ -172,14 +173,14 @@ test("every internal link and asset returns 200 under BASE_PATH (crawl from the 
   expect(bad).toEqual([]);
   // Sanity: the crawl reached every exam page, the app module and the stylesheet.
   const urls = [...seen.keys()];
-  for (const p of PRESETS) expect(urls).toContain(`${origin}${BASE}${p.id}/`);
+  for (const p of PRESETS) expect(urls).toContain(`${origin}${base()}${p.id}/`);
   expect(urls.some((u) => /\/src\/ui\/app\.[0-9a-f]{8}\.js$/.test(u))).toBe(true);
   expect(urls.some((u) => /\/src\/core\/jpeg\.[0-9a-f]{8}\.js$/.test(u))).toBe(true);
   expect(urls.some((u) => /\/src\/ui\/styles\.[0-9a-f]{8}\.css$/.test(u))).toBe(true);
-  expect(urls).toContain(`${origin}${BASE}sw.js`);
-  expect(urls).toContain(`${origin}${BASE}manifest.webmanifest`);
+  expect(urls).toContain(`${origin}${base()}sw.js`);
+  expect(urls).toContain(`${origin}${base()}manifest.webmanifest`);
   expect(urls.some((u) => /\/icons\/icon-512-maskable\.[0-9a-f]{8}\.png$/.test(u))).toBe(true);
-  expect(urls.every((u) => u.startsWith(`${origin}${BASE}`))).toBe(true);
+  expect(urls.every((u) => u.startsWith(`${origin}${base()}`))).toBe(true);
 });
 
 test("sitemap lists the root and one URL per preset; robots points to it", async ({ request }) => {
@@ -204,6 +205,6 @@ test("unknown paths get 404.html with status 404, and its assets load", async ({
   await page.goto("./no/such/page/");
   await expect(page.locator("h1")).toHaveText(S.notFoundHeading);
   await page.getByRole("link", { name: S.notFoundHome }).click();
-  await expect(page).toHaveURL(new RegExp(`${BASE}(\\?.*)?$`));
+  await expect(page).toHaveURL(new RegExp(`${base()}(\\?.*)?$`));
   await expect(page.locator("#exam")).toBeVisible();
 });

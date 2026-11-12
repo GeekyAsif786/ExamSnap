@@ -56,7 +56,7 @@ export function normalizeBase(base = "/") {
 /**
  * @param {{ root?: string, base?: string, notFound?: string | null }} [options]
  *   root: directory to serve. base: URL prefix it is served under (e.g.
- *   "/ExamSnap/"). notFound: file (relative to root) sent with status 404
+ *   "/ExamSnap/" for a GitHub Pages project site). notFound: file (relative to root) sent with status 404
  *   for unknown paths, like GitHub Pages' 404.html.
  * @returns {import("node:http").Server}
  */
