@@ -14,7 +14,7 @@ const HEADER = `// SPDX-License-Identifier: CC0-1.0
 // \`npm run check\` fails if this file is out of date.
 `;
 
-const byCategoryThenName = (a, b) =>
+export const byCategoryThenName = (a, b) =>
   a.category < b.category ? -1 : a.category > b.category ? 1 : a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
 
 /**
@@ -29,11 +29,21 @@ export async function bundlePresets(dir = PRESETS_DIR) {
   if (errors.length) {
     throw new Error(`invalid presets, run npm run check:\n${errors.join("\n")}`);
   }
+  return `${HEADER}\nexport const PRESETS = ${JSON.stringify(await readPresets(dir), null, 2)};\n`;
+}
+
+/**
+ * Every *.json preset in `dir`, parsed, in bundle order (category, then name).
+ * Does not validate.
+ *
+ * @param {string} [dir]
+ * @returns {Promise<object[]>}
+ */
+export async function readPresets(dir = PRESETS_DIR) {
   const names = (await readdir(dir)).filter((n) => n.endsWith(".json")).sort();
   const presets = [];
   for (const name of names) presets.push(JSON.parse(await readFile(join(dir, name), "utf8")));
-  presets.sort(byCategoryThenName);
-  return `${HEADER}\nexport const PRESETS = ${JSON.stringify(presets, null, 2)};\n`;
+  return presets.sort(byCategoryThenName);
 }
 
 /**

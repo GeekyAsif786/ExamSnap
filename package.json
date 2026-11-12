@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "node --test \"tests/**/*.test.mjs\"",
-    "check": "node scripts/check-presets.mjs && node scripts/bundle-presets.mjs --check && node scripts/check-size.mjs && node scripts/check-docs-size.mjs",
+    "check": "node scripts/check-presets.mjs && node scripts/bundle-presets.mjs --check && node scripts/update-readme.mjs --check && node scripts/check-size.mjs && node scripts/check-docs-size.mjs",
     "lint": "eslint .",
     "build:presets": "node scripts/bundle-presets.mjs",
     "dev": "node scripts/serve.mjs",
@@ -19,7 +19,8 @@
     "icons": "node scripts/make-icons.mjs",
     "build": "node scripts/build.mjs",
     "preview": "node scripts/preview.mjs",
-    "labels": "node scripts/sync-labels.mjs"
+    "labels": "node scripts/sync-labels.mjs",
+    "update-readme": "node scripts/update-readme.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
