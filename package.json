@@ -18,7 +18,8 @@
     "screenshots": "node scripts/screenshots.mjs",
     "icons": "node scripts/make-icons.mjs",
     "build": "node scripts/build.mjs",
-    "preview": "node scripts/preview.mjs"
+    "preview": "node scripts/preview.mjs",
+    "labels": "node scripts/sync-labels.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

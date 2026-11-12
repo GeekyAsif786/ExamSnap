@@ -1,0 +1,70 @@
+# Every label this repository uses. Edit here, then run
+#   node scripts/sync-labels.mjs          (dry run: prints the plan)
+#   node scripts/sync-labels.mjs --apply  (creates/updates labels via gh)
+# The sync never deletes labels. It runs by hand, never in CI.
+# Colours are 6-digit hex without "#".
+
+- name: good first issue
+  color: 7057ff
+  description: Small, well-scoped task that is a good first contribution
+
+- name: help wanted
+  color: 008672
+  description: Extra attention is needed; contributions welcome
+
+- name: preset
+  color: 1d4ed8
+  description: Adding or changing an exam preset
+
+- name: verify-preset
+  color: fbca04
+  description: Preset needs checking against the official notification
+
+- name: needs-notice
+  color: e99695
+  description: Waiting for a link to the official notification
+
+- name: needs-triage
+  color: ededed
+  description: Not yet reviewed by a maintainer
+
+- name: i18n
+  color: 5319e7
+  description: Translations and language support
+
+- name: bug
+  color: d73a4a
+  description: Something isn't working
+
+- name: enhancement
+  color: a2eeef
+  description: New feature or request
+
+- name: performance
+  color: f9d0c4
+  description: Speed, memory use or download size
+
+- name: documentation
+  color: 0075ca
+  description: Improvements or additions to documentation
+
+- name: accessibility
+  color: f143ab
+  description: Barrier affecting people with disabilities
+
+- name: wontfix
+  color: ffffff
+  description: This will not be worked on
+
+- name: duplicate
+  color: cfd3d7
+  description: This issue or pull request already exists
+
+# Applied by Dependabot; keep these names.
+- name: dependencies
+  color: 0366d6
+  description: Pull requests that update a dependency file
+
+- name: github_actions
+  color: "000000"
+  description: Pull requests that update GitHub Actions code
