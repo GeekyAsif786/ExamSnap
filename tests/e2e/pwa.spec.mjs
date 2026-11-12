@@ -6,8 +6,9 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "../../scripts/build.mjs";
 import { createDevServer } from "../../scripts/serve.mjs";
-import { STRINGS as S } from "../../src/ui/strings.js";
-import { test, expect, openApp, loadImage, readResult } from "./helpers.mjs";
+import { PRESETS } from "../../src/generated/presets.js";
+import { STRINGS as S } from "../../src/ui/i18n/en.js";
+import { test, expect, openApp, loadImage, readResult, gotoReady, reloadReady } from "./helpers.mjs";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 // Same base path as the project under test ("/" or "/ExamSnap/").
@@ -26,19 +27,21 @@ test("offline: reload, make a photo, and open an exam page", async ({ page, cont
 
   await context.setOffline(true);
   try {
-    await page.reload();
+    await reloadReady(page);
     await page.waitForFunction(() => window.__examsnap);
     await expect(page.locator("#exam")).toHaveValue("jee-main");
     await loadImage(page, "photo");
     await page.getByRole("button", { name: "Make my file" }).click();
     await expect(page.locator("#result")).toBeVisible();
     const out = await readResult(page);
-    expect(out.decoded).toEqual({ width: 276, height: 354 });
+    const photo = PRESETS.find((p) => p.id === "jee-main").documents.find((d) => d.id === "photo");
+    expect(out.decoded).toEqual({ width: photo.width, height: photo.height });
 
-    await page.goto("./ssc/");
-    await expect(page.locator("h1")).toHaveText(S.landingHeading("SSC — CGL / CHSL / MTS / GD / CPO"));
+    const ssc = PRESETS.find((p) => p.id === "ssc");
+    await gotoReady(page, "./ssc/");
+    await expect(page.locator("h1")).toHaveText(S.landingHeading(ssc.name));
     await expect(page.locator("#exam")).toHaveValue("ssc");
-    await expect(page.locator(".spec-table tbody tr")).toHaveCount(2);
+    await expect(page.locator(".spec-table tbody tr")).toHaveCount(ssc.documents.length);
   } finally {
     await context.setOffline(false);
   }
@@ -65,7 +68,7 @@ test("update: a new build shows the banner, and Reload activates it once", async
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    await page.goto(`${url}?test=1`);
+    await gotoReady(page, `${url}?test=1`);
     await waitForControl(page);
     const cssV1 = await page.locator('link[rel="stylesheet"]').getAttribute("href");
     const cacheV1 = await page.evaluate(() => caches.keys());

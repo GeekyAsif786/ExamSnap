@@ -13,6 +13,6 @@
 ## Adding or changing an exam preset
 
 - [ ] The official notification is linked in `sources` with type `notice` (or this PR says why there isn't one)
-- [ ] `npm run check` passes, including the README exams table
+- [ ] `npm run check` passes (a stale README exams table is only a warning on PRs; the maintainer regenerates it)
 - [ ] Tried in `npm run preview` with a real photo: the file was made at the right size and KB
 - [ ] `last_verified` is today's date

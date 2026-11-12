@@ -1,0 +1,36 @@
+name: Request a language
+description: Ask for ExamSnap in your language, or offer to translate it.
+title: "[Language] "
+labels: [i18n, help wanted]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! ExamSnap is in English and Hindi. Each new language needs a native speaker to translate about a hundred short lines and another to review them.
+
+        See "Translations" in CONTRIBUTING.md for how it works.
+  - type: input
+    id: language
+    attributes:
+      label: Language
+      description: Its name in English and in the language itself.
+      placeholder: e.g. Tamil (தமிழ்)
+    validations:
+      required: true
+  - type: input
+    id: exams
+    attributes:
+      label: Exams that would use it
+      description: Optional. State or national exams whose candidates would read ExamSnap in this language.
+      placeholder: e.g. TNPSC Group 4, TN TRB
+    validations:
+      required: false
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Can you help?
+      options:
+        - label: I can translate (I'm a native or fluent speaker).
+          required: false
+        - label: I can review someone else's translation.
+          required: false

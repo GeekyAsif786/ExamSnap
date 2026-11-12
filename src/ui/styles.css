@@ -21,6 +21,13 @@
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial, sans-serif;
 }
 
+/* Hindi: name the Devanagari system fonts of Windows, Apple platforms and
+   Android/Linux after the UI font, so text never depends on a downloaded
+   font (font-src is 'none'). */
+:root:lang(hi) {
+  --font: system-ui, -apple-system, "Segoe UI", "Nirmala UI", "Kohinoor Devanagari", "Devanagari Sangam MN", "Noto Sans Devanagari", Roboto, "Noto Sans", sans-serif;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #111317;
@@ -108,6 +115,23 @@ header.site {
   font-size: 1.75rem;
   line-height: 1.2;
   letter-spacing: -0.01em;
+}
+
+.brand-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.lang {
+  font-weight: 600;
+}
+
+.lang a {
+  display: inline-block;
+  padding: 2px 0;
 }
 
 .tagline {
@@ -675,9 +699,25 @@ input[type="range"] {
 }
 
 .page-sources ul,
+/* Bullet and link share one grid row that starts at the top, with the same
+   padding and line height, so a long exam name that wraps keeps its bullet
+   on the first line (an inline-block link puts the bullet on the last). */
 .exam-links ul {
   margin: 4px 0;
-  padding-left: 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.exam-links li {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  align-items: start;
+}
+
+.exam-links li::before {
+  content: "•";
+  padding: 10px 0;
+  line-height: inherit;
 }
 
 .page-sources li {
@@ -685,7 +725,8 @@ input[type="range"] {
 }
 
 .exam-links a {
-  display: inline-block;
+  display: block;
+  justify-self: start;
   padding: 10px 0;
   min-height: 44px;
 }

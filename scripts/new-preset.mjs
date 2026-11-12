@@ -10,7 +10,7 @@ import { basename, join, relative } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import { byteRange } from "../src/core/size.js";
-import { validatePresets } from "./check-presets.mjs";
+import { RESERVED_IDS, reservedIdReason, validatePresets } from "./check-presets.mjs";
 import { OUT_PATH, PRESETS_DIR, run as bundle } from "./bundle-presets.mjs";
 import { README_PATH, run as updateReadme } from "./update-readme.mjs";
 
@@ -25,8 +25,7 @@ export const KINDS = SCHEMA.$defs.document.properties.kind.enum;
 const DOC = SCHEMA.$defs.document.properties;
 const SLUG_RE = new RegExp(SCHEMA.$defs.slug.pattern);
 const FILENAME_RE = new RegExp(DOC.filename.pattern);
-/** Ids that would clash with the app ("custom") or with built site folders. */
-export const RESERVED_IDS = new Set(["custom", "icons", "src"]);
+export { RESERVED_IDS };
 
 export const SOURCE_HELP = {
   notice: "the official notification or information bulletin that states the sizes (best)",
@@ -48,7 +47,8 @@ export function checkId(v, taken = new Set()) {
   const id = text(v);
   if (!id) return fail("required");
   if (!SLUG_RE.test(id)) return fail("use lowercase letters, digits and single hyphens (kebab-case), e.g. neet-ug");
-  if (RESERVED_IDS.has(id)) return fail(`"${id}" is reserved; choose another id`);
+  const reserved = reservedIdReason(id);
+  if (reserved) return fail(`${reserved}; choose another id`);
   if (taken.has(id)) return fail(`"${id}" is already taken by presets/${id}.json`);
   return ok(id);
 }
@@ -396,8 +396,9 @@ async function main() {
   }
   const { file, warnings } = await createPreset(preset, { dir, out, readme });
   const rel = (p) => relative(process.cwd(), p) || p;
-  const files = [rel(file), rel(out), rel(readme)];
-  console.log(`\nCreated ${files[0]}; updated ${files[1]} and ${files[2]}.`);
+  // The presets module is generated and gitignored; only these get committed.
+  const files = [rel(file), rel(readme)];
+  console.log(`\nCreated ${files[0]}; updated ${files[1]} (and regenerated ${rel(out)}).`);
   for (const w of warnings) console.warn(`WARN  ${w}`);
   console.log(nextSteps(preset.id, files));
 }

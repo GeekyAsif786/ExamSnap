@@ -62,6 +62,13 @@ test("CI uploads review screenshots on every PR (14 days)", async () => {
   assert.match(ci, /name: screenshots\n\s+path: screenshots\/\n\s+retention-days: 14/);
 });
 
+test("review screenshots include the Hindi pages (artifact only, not git)", async () => {
+  const { readFile: rf } = await import("node:fs/promises");
+  const script = await rf(new URL("../scripts/screenshots.mjs", import.meta.url), "utf8");
+  assert.match(script, /const PAGES = \{ root: "", ssc: "ssc\/", "hi-root": "hi\/", "hi-ssc": "hi\/ssc\/" \};/);
+  assert.match(await rf(new URL("../.gitignore", import.meta.url), "utf8"), /^\/screenshots\/$/m);
+});
+
 test("no workflow uses pull_request_target; CI explains why", async () => {
   for (const { name, text } of await workflows()) {
     const code = text.replace(/#.*$/gm, "");

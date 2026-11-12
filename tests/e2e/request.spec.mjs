@@ -3,8 +3,9 @@
 // issue form, prefilled with the custom specs and nothing else. The fixtures
 // fail the test on any CSP violation, page error or external request.
 import { REQUEST_EXAM_URL } from "../../scripts/build-lib.mjs";
-import { STRINGS as S } from "../../src/ui/strings.js";
-import { test, expect, openApp } from "./helpers.mjs";
+import { STRINGS as S } from "../../src/ui/i18n/en.js";
+import { requestSpecsText } from "../../src/ui/state.js";
+import { test, expect, openApp, gotoReady } from "./helpers.mjs";
 
 const requestLink = (page) => page.locator(".field .request a");
 const footerLink = (page) => page.locator("footer a[data-request]");
@@ -42,7 +43,7 @@ test("on Custom size, the link carries only width, height and KB range", async (
   await page.getByLabel("Min KB").fill("15");
   await page.getByLabel("Max KB").fill("40");
 
-  const href = `${REQUEST_EXAM_URL}&specs=${encodeURIComponent(S.requestSpecs(320, 240, 15, 40))}`;
+  const href = `${REQUEST_EXAM_URL}&specs=${encodeURIComponent(requestSpecsText(320, 240, 15, 40))}`;
   await expectHref(page, href);
   const url = new URL(href);
   expect([...url.searchParams.keys()]).toEqual(["template", "title", "specs"]);
@@ -63,7 +64,7 @@ test("on Custom size, the link carries only width, height and KB range", async (
 });
 
 test("landing pages and the 404 page carry the footer request link", async ({ page }) => {
-  await page.goto("./ssc/");
+  await gotoReady(page, "./ssc/");
   await expectHref(page, REQUEST_EXAM_URL);
   await page.goto("./no-such-page/");
   const link = page.locator("footer a", { hasText: S.footerRequest });

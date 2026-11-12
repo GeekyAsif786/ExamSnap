@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// Build the deployable site into dist/: content-hashed assets, one landing
-// page per preset, sitemap, robots, 404. No bundler, no minifier.
-//   BASE_PATH   URL prefix the site is served under (default /)
-//   SITE_ORIGIN origin for absolute URLs (default https://examsnap.asifurrahaman.com)
+// Build the deployable site into dist/: content-hashed assets, for every
+// published language a root page and one landing page per preset (English
+// at /, others under /<code>/), sitemap, robots, 404. No bundler and no
+// minifier; comment-only lines are dropped from shipped JS.
+//   BASE_PATH      URL prefix the site is served under (default /)
+//   SITE_ORIGIN    origin for absolute URLs (default https://examsnap.asifurrahaman.com)
+//   INCLUDE_DRAFTS 1 also builds draft locales (for translators' previews;
+//                  never set by CI or deploy)
 // Deterministic: same inputs, byte-identical output.
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative, sep } from "node:path";
@@ -17,13 +21,18 @@ import {
   findImports,
   hashName,
   headTags,
-  jsBytes,
   landingAboveHtml,
   landingBelowHtml,
   cacheName,
   cspMeta,
   findInsecureUrls,
   latestDate,
+  alternatesFor,
+  jsBytesByLocale,
+  langSwitchHtml,
+  localeDir,
+  LOCALE_MODULE_RE,
+  stripComments,
   manifestJson,
   normalizeBase,
   swSource,
@@ -57,14 +66,24 @@ async function walk(dir, root) {
 }
 
 /**
- * @param {{ root?: string, outDir?: string, base?: string, origin?: string }} [options]
- * @returns {Promise<{ files: { path: string, size: number }[], totalBytes: number, jsBytes: number, pages: string[], assets: Record<string, string> }>}
+ * @param {{ root?: string, outDir?: string, base?: string, origin?: string, includeDrafts?: boolean }} [options]
+ * @returns {Promise<{ files: { path: string, size: number }[], totalBytes: number, jsBytes: number,
+ *   jsByLocale: Record<string, number>, locales: string[], pages: string[], assets: Record<string, string> }>}
+ *   jsBytes is the largest per-page figure; pages are paths like "", "ssc/", "hi/", "hi/ssc/".
  */
-export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin = DEFAULT_ORIGIN } = {}) {
+export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin = DEFAULT_ORIGIN, includeDrafts = false } = {}) {
   base = normalizeBase(base);
   outDir ??= join(root, "dist");
-  const { PRESETS } = await import(pathToFileURL(join(root, "src/generated/presets.js")).href);
-  const { STRINGS: S } = await import(pathToFileURL(join(root, "src/ui/strings.js")).href);
+  const mod = (p) => import(pathToFileURL(join(root, p)).href);
+  const { PRESETS } = await mod("src/generated/presets.js");
+  const { LOCALES, DEFAULT_LOCALE } = await mod("src/ui/i18n/locales.js");
+  const { localizePreset, withFallback } = await mod("src/ui/i18n/localize.js");
+  const locales = LOCALES.filter((l) => l.status === "published" || includeDrafts);
+  const built = new Set(locales.map((l) => l.code));
+  const { STRINGS: EN } = await mod(`src/ui/i18n/${DEFAULT_LOCALE}.js`);
+  /** code -> strings (published locales are complete; drafts fall back to English) */
+  const strings = {};
+  for (const l of locales) strings[l.code] = withFallback((await mod(`src/ui/i18n/${l.code}.js`)).STRINGS, EN);
 
   /** @type {Map<string, Uint8Array | string>} output path -> content */
   const out = new Map();
@@ -81,11 +100,18 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
 
   // JS modules: rewrite relative imports to hashed names, leaves first.
   // src/sw/ is the service worker source, emitted separately as dist/sw.js.
-  const jsPaths = (await walk(join(root, "src"), root)).filter((p) => p.endsWith(".js") && !p.startsWith("src/sw/"));
+  // Locale modules that aren't built (drafts) are left out entirely.
+  const jsPaths = (await walk(join(root, "src"), root)).filter((p) => {
+    if (!p.endsWith(".js") || p.startsWith("src/sw/")) return false;
+    const locale = LOCALE_MODULE_RE.exec(p)?.[1];
+    return !locale || built.has(locale);
+  });
   const code = {};
   const deps = {};
   for (const p of jsPaths) {
-    code[p] = await readFile(join(root, p), "utf8");
+    const source = await readFile(join(root, p), "utf8");
+    // The generated presets module ships as generated (CC0 header included).
+    code[p] = p.startsWith("src/generated/") ? source : stripComments(source);
     deps[p] = findImports(code[p]).map((spec) => resolveSpecifier(p, spec));
   }
   for (const p of topoSort(deps)) {
@@ -103,9 +129,26 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
   }
   const ogImage = siteUrl(origin, base, assets["icons/og-image.png"]);
 
-  const renderPage = ({ prefix, title, description, canonical, above = "", below = "", exam = null, pageWarning = false }) => {
+  const renderPage = ({ locale, page, title, description, above = "", below = "", exam = null, pageWarning = false }) => {
+    const S = strings[locale.code];
+    const dir = localeDir(locale.code, DEFAULT_LOCALE);
+    // Relative path from this page back to the site root.
+    const prefix = "../".repeat(`${dir}${page}`.split("/").filter(Boolean).length);
+    const canonical = siteUrl(origin, base, `${dir}${page}`);
     // The build owns the CSP: whatever the dev template says is replaced.
     let html = replaceOnce(template, cspInTemplate, cspMeta());
+    // Language: <html lang>, and the one strings module this page loads.
+    html = replaceOnce(
+      html,
+      '<html lang="en">',
+      `<html lang="${esc(locale.code)}" dir="${esc(locale.dir)}" data-strings="${prefix}${assets[`src/ui/i18n/${locale.code}.js`]}">`,
+    );
+    html = html.replace(/<noscript>[\s\S]*?<\/noscript>/, () => `<noscript>${esc(S.noscript)}</noscript>`);
+    html = replaceOnce(
+      html,
+      "<!-- build:lang -->",
+      langSwitchHtml({ current: locale.code, locales, page, prefix, S, defaultCode: DEFAULT_LOCALE }),
+    );
     html = replaceOnce(html, 'href="src/ui/styles.css"', `href="${prefix}${assets["src/ui/styles.css"]}"`);
     html = replaceOnce(html, 'src="src/ui/main.js"', `src="${prefix}${assets["src/ui/main.js"]}"`);
     html = replaceOnce(html, 'href="favicon.svg"', `href="${prefix}${assets["favicon.svg"]}"`);
@@ -119,6 +162,8 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
         canonical,
         ogImage,
         S,
+        lang: locale.code,
+        alternates: alternatesFor(page, { locales, origin, base, defaultCode: DEFAULT_LOCALE }),
         extra: [
           `<link rel="manifest" href="${prefix}manifest.webmanifest">`,
           `<meta name="theme-color" content="${THEME_COLOR}">`,
@@ -139,47 +184,52 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
       html = replaceOnce(
         html,
         '<h1 class="brand" data-s="appName"></h1>',
-        `<p class="brand"><a href="${prefix}" data-s="appName"></a></p>`,
+        `<p class="brand"><a href="${prefix}${dir}" data-s="appName"></a></p>`,
       );
     }
     return fillDataStrings(html, S);
   };
 
-  const pages = [""];
-  out.set(
-    "index.html",
-    renderPage({
-      prefix: "",
-      title: S.docTitle,
-      description: S.rootDescription,
-      canonical: siteUrl(origin, base),
-      below: examLinksHtml(PRESETS, S),
-    }),
-  );
-  for (const p of PRESETS) {
-    pages.push(`${p.id}/`);
-    out.set(
-      `${p.id}/index.html`,
-      renderPage({
-        prefix: "../",
+  // Every page in every built language: "" (root) and "<id>/" inside the
+  // locale's folder. pages lists paths from the site root.
+  const pages = [];
+  const sitemap = [];
+  const lastmod = Object.fromEntries(PRESETS.map((p) => [`${p.id}/`, p.last_verified]));
+  lastmod[""] = latestDate(PRESETS.map((p) => p.last_verified));
+  for (const locale of locales) {
+    const S = strings[locale.code];
+    const presets = PRESETS.map((p) => localizePreset(p, locale.code));
+    const dir = localeDir(locale.code, DEFAULT_LOCALE);
+    const add = (page, options) => {
+      pages.push(`${dir}${page}`);
+      out.set(`${dir}${page}index.html`, renderPage({ locale, page, ...options }));
+      sitemap.push({
+        loc: siteUrl(origin, base, `${dir}${page}`),
+        lastmod: lastmod[page],
+        alternates: alternatesFor(page, { locales, origin, base, defaultCode: DEFAULT_LOCALE }),
+      });
+    };
+    add("", { title: S.docTitle, description: S.rootDescription, below: examLinksHtml(presets, S) });
+    for (const p of presets) {
+      add(`${p.id}/`, {
         title: pageTitle(p, S),
         description: pageDescription(p, S),
-        canonical: siteUrl(origin, base, `${p.id}/`),
         above: landingAboveHtml(p, S),
         below: landingBelowHtml(p, S),
         exam: p.id,
         pageWarning: hasPageWarning(p),
-      }),
-    );
+      });
+    }
   }
-  out.set("404.html", notFoundHtml({ base, css: assets["src/ui/styles.css"], favicon: assets["favicon.svg"], S }));
+  // One 404 page (GitHub Pages serves a single 404.html), in the default language.
+  out.set("404.html", notFoundHtml({ base, css: assets["src/ui/styles.css"], favicon: assets["favicon.svg"], S: strings[DEFAULT_LOCALE] }));
 
   // PWA: manifest, then a service worker precaching every page and asset
   // (not the Open Graph image, which only crawlers fetch).
   out.set(
     "manifest.webmanifest",
     manifestJson({
-      S,
+      S: strings[DEFAULT_LOCALE],
       base,
       icons: {
         any192: assets["icons/icon-192.png"],
@@ -198,14 +248,12 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
     swSource({
       cache: cacheName(precacheFiles.map((p) => [toUrl(p), out.get(p)])),
       precache,
-      body: await readFile(join(root, "src/sw/sw.js"), "utf8"),
+      body: stripComments(await readFile(join(root, "src/sw/sw.js"), "utf8")),
     }),
   );
 
   // Crawling.
-  const lastmod = Object.fromEntries(PRESETS.map((p) => [`${p.id}/`, p.last_verified]));
-  lastmod[""] = latestDate(PRESETS.map((p) => p.last_verified));
-  out.set("sitemap.xml", sitemapXml(pages.map((pg) => ({ loc: siteUrl(origin, base, pg), lastmod: lastmod[pg] }))));
+  out.set("sitemap.xml", sitemapXml(sitemap));
   out.set("robots.txt", robotsTxt(siteUrl(origin, base, "sitemap.xml")));
 
   // No http:// URLs anywhere (compensates for omitting upgrade-insecure-requests).
@@ -225,16 +273,22 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
     await writeFile(join(outDir, path), buf);
     files.push({ path, size: buf.length });
   }
-  const js = jsBytes(files);
-  if (js >= JS_BUDGET) throw new Error(`shipped JS is ${js} bytes (budget ${JS_BUDGET}, excluding src/generated/)`);
-  return { files, totalBytes: files.reduce((n, f) => n + f.size, 0), jsBytes: js, pages, assets };
+  // Budget per page: a page ships the shared modules plus its own language.
+  const jsByLocale = jsBytesByLocale(files, locales.map((l) => l.code));
+  for (const [code, bytes] of Object.entries(jsByLocale)) {
+    if (bytes >= JS_BUDGET) throw new Error(`shipped JS on ${code} pages is ${bytes} bytes (budget ${JS_BUDGET}, excluding src/generated/)`);
+  }
+  const js = Math.max(...Object.values(jsByLocale));
+  return { files, totalBytes: files.reduce((n, f) => n + f.size, 0), jsBytes: js, jsByLocale, locales: locales.map((l) => l.code), pages, assets };
 }
 
 if (process.argv[1] && basename(process.argv[1]) === basename(fileURLToPath(import.meta.url))) {
   const base = process.env.BASE_PATH || DEFAULT_BASE;
   const origin = process.env.SITE_ORIGIN || DEFAULT_ORIGIN;
-  const { files, totalBytes, jsBytes: js, pages } = await build({ base, origin });
+  const includeDrafts = process.env.INCLUDE_DRAFTS === "1";
+  const { files, totalBytes, jsByLocale, pages } = await build({ base, origin, includeDrafts });
   for (const f of files) console.log(`${String(f.size).padStart(8)}  dist/${f.path}`);
-  console.log(`\n${files.length} files, ${totalBytes} bytes. Shipped JS (excl. presets): ${js} bytes.`);
-  console.log(`Pages: ${pages.map((p) => `${normalizeBase(base)}${p}`).join(", ")}`);
+  console.log(`\n${files.length} files, ${totalBytes} bytes.`);
+  console.log(`Shipped JS per page (excl. presets): ${Object.entries(jsByLocale).map(([c, n]) => `${c} ${n} bytes`).join(", ")}.`);
+  console.log(`Pages (${pages.length}): ${pages.map((p) => `${normalizeBase(base)}${p}`).join(", ")}`);
 }

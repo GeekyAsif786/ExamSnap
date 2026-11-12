@@ -233,24 +233,26 @@ export function landingBelowHtml(preset, S) {
     </section>`;
 }
 
-/** Root page: links to every exam page (relative). */
+/** Root page: links to every exam page (relative). role="list" because the
+    list has no markers in CSS, which makes Safari drop its list semantics. */
 export function examLinksHtml(presets, S) {
   const items = presets.map((p) => `\n        <li><a href="${esc(p.id)}/">${esc(p.name)}</a></li>`).join("");
   return `<section class="exam-links" aria-labelledby="exam-links-title">
       <h2 id="exam-links-title">${esc(S.examPagesHeading)}</h2>
-      <ul>${items}
+      <ul role="list">${items}
       </ul>
     </section>`;
 }
 
 /** JSON-LD WebApplication, safe to embed in a <script> element. */
-export function jsonLd({ name, url, description }) {
+export function jsonLd({ name, url, description, inLanguage }) {
   const data = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name,
     url,
     description,
+    inLanguage,
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Any",
     isAccessibleForFree: true,
@@ -260,14 +262,18 @@ export function jsonLd({ name, url, description }) {
 }
 
 /**
- * Meta tags for a page. `canonical` and `ogImage` are absolute URLs.
+ * Meta tags for a page. `canonical`, `ogImage` and alternate hrefs are
+ * absolute URLs; `alternates` lists the same page in every language.
+ * @param {{ description: string, canonical: string, title: string, ogImage: string, S: object, lang: string,
+ *   alternates?: { hreflang: string, href: string }[], extra?: string[] }} o
  * @returns {string}
  */
-export function headTags({ description, canonical, title, ogImage, S, extra = [] }) {
+export function headTags({ description, canonical, title, ogImage, S, lang, alternates = [], extra = [] }) {
   const meta = (attr, key, value) => `<meta ${attr}="${key}" content="${esc(value)}">`;
   return [
     meta("name", "description", description),
     `<link rel="canonical" href="${esc(canonical)}">`,
+    ...alternates.map((a) => `<link rel="alternate" hreflang="${esc(a.hreflang)}" href="${esc(a.href)}">`),
     meta("property", "og:type", "website"),
     meta("property", "og:site_name", S.appName),
     meta("property", "og:title", title),
@@ -283,7 +289,7 @@ export function headTags({ description, canonical, title, ogImage, S, extra = []
     meta("name", "twitter:image", ogImage),
     meta("name", "twitter:image:alt", S.ogImageAlt),
     ...extra,
-    `<script type="application/ld+json">\n${jsonLd({ name: S.appName, url: canonical, description })}\n  </script>`,
+    `<script type="application/ld+json">\n${jsonLd({ name: S.appName, url: canonical, description, inLanguage: lang })}\n  </script>`,
   ].join("\n  ");
 }
 
@@ -291,7 +297,7 @@ export function headTags({ description, canonical, title, ogImage, S, extra = []
 export function fillDataStrings(html, S) {
   return html.replace(/(<(\w+)\b[^>]*\bdata-s="(\w+)"[^>]*>)(<\/\2>)/g, (all, open, tag, key, close) => {
     const v = S[key];
-    if (typeof v !== "string") throw new Error(`data-s="${key}" is not a plain string in strings.js`);
+    if (typeof v !== "string") throw new Error(`data-s="${key}" is not a plain string in the locale strings`);
     return `${open}${esc(v)}${close}`;
   });
 }
@@ -305,12 +311,24 @@ export function replaceOnce(html, find, replacement) {
   return html.slice(0, i) + replacement + html.slice(i + find.length);
 }
 
-/** sitemap.xml for [{ loc, lastmod }]. */
+export const SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9";
+export const XHTML_NS = "http://www.w3.org/1999/xhtml";
+
+/**
+ * sitemap.xml for [{ loc, lastmod, alternates? }]; each alternate
+ * ({ hreflang, href }) becomes an xhtml:link, the format search engines read
+ * for language versions.
+ */
 export function sitemapXml(entries) {
   const urls = entries
-    .map((e) => `  <url>\n    <loc>${esc(e.loc)}</loc>\n    <lastmod>${esc(e.lastmod)}</lastmod>\n  </url>`)
+    .map((e) => {
+      const links = (e.alternates ?? [])
+        .map((a) => `\n    <xhtml:link rel="alternate" hreflang="${esc(a.hreflang)}" href="${esc(a.href)}"/>`)
+        .join("");
+      return `  <url>\n    <loc>${esc(e.loc)}</loc>\n    <lastmod>${esc(e.lastmod)}</lastmod>${links}\n  </url>`;
+    })
     .join("\n");
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="${SITEMAP_NS}" xmlns:xhtml="${XHTML_NS}">\n${urls}\n</urlset>\n`;
 }
 
 export function robotsTxt(sitemapUrl) {
@@ -444,7 +462,7 @@ export function cspMeta() {
 // xmlns="http://www.w3.org/2000/svg" is a namespace name, not a fetch.)
 const URL_SCANNED = /\.(html|css|js|webmanifest|xml|txt|json)$/;
 // Namespace identifiers that are never fetched.
-const ALLOWED_HTTP = { "sitemap.xml": ["http://www.sitemaps.org/schemas/sitemap/0.9"] };
+const ALLOWED_HTTP = { "sitemap.xml": [SITEMAP_NS, XHTML_NS] };
 
 /**
  * Every http:// URL in the built text files, except allowed namespaces.
@@ -461,4 +479,71 @@ export function findInsecureUrls(files) {
     }
   }
   return found;
+}
+
+// ---- Languages -----------------------------------------------------------
+
+/** A locale's strings module: src/ui/i18n/<two letters>.js. */
+export const LOCALE_MODULE_RE = /^src\/ui\/i18n\/([a-z]{2})\.js$/;
+
+/** URL folder of a locale relative to the site root: "" for the default, "hi/" otherwise. */
+export function localeDir(code, defaultCode = "en") {
+  return code === defaultCode ? "" : `${code}/`;
+}
+
+/**
+ * The same page in every built locale, plus x-default (the default locale),
+ * as absolute URLs. `page` is the page's path inside a locale folder ("" or "ssc/").
+ * @returns {{ hreflang: string, href: string }[]}
+ */
+export function alternatesFor(page, { locales, origin, base, defaultCode = "en" }) {
+  const href = (code) => siteUrl(origin, base, `${localeDir(code, defaultCode)}${page}`);
+  return [...locales.map((l) => ({ hreflang: l.code, href: href(l.code) })), { hreflang: "x-default", href: href(defaultCode) }];
+}
+
+/**
+ * Header links to the same page in each other language. Plain relative links
+ * (`prefix` leads back to the site root); the app keeps ?exam=/?doc= on them.
+ * @param {{ current: string, locales: { code: string, name: string }[], page: string, prefix: string, S: object, defaultCode?: string }} o
+ */
+export function langSwitchHtml({ current, locales, page, prefix, S, defaultCode = "en" }) {
+  const others = locales.filter((l) => l.code !== current);
+  if (!others.length) return "";
+  const links = others
+    .map((l) => `<a href="${esc(`${prefix}${localeDir(l.code, defaultCode)}${page}` || "./")}" hreflang="${esc(l.code)}" lang="${esc(l.code)}" data-lang-switch>${esc(l.name)}</a>`)
+    .join(" ");
+  return `<nav class="lang" aria-label="${esc(S.languageNav)}">${links}</nav>`;
+}
+
+/**
+ * Shipped JS per page, by locale: every .js file except src/generated/ and
+ * the locale modules, plus that locale's own module (a page loads only its
+ * own language).
+ * @param {{ path: string, size: number }[]} files
+ * @param {string[]} codes
+ * @returns {Record<string, number>}
+ */
+export function jsBytesByLocale(files, codes) {
+  const locale = (f) => LOCALE_MODULE_RE.exec(f.path.replace(/\.[0-9a-f]{8}\.js$/, ".js"))?.[1];
+  const common = jsBytes(files.filter((f) => !locale(f)));
+  return Object.fromEntries(codes.map((c) => [c, common + jsBytes(files.filter((f) => locale(f) === c))]));
+}
+
+/**
+ * Remove comment-only lines from shipped JS: lines that are just a // comment,
+ * and /* … *\/ blocks that start a line and end one. Comments after code
+ * stay. The first line is kept if it is the SPDX licence header. A line can
+ * only start with // or /* outside a comment inside a multi-line template
+ * literal, which src/ never has (tests/build.test.mjs compares tokens).
+ * @param {string} code
+ */
+export function stripComments(code) {
+  const spdx = /^\/\/ SPDX-License-Identifier:.*\n/.exec(code)?.[0] ?? "";
+  return (
+    spdx +
+    code
+      .slice(spdx.length)
+      .replace(/^[ \t]*\/\*(?:[^*]|\*(?!\/))*\*\/[ \t]*\n/gm, "")
+      .replace(/^[ \t]*\/\/.*\n/gm, "")
+  );
 }

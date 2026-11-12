@@ -3,6 +3,7 @@
 // (404.html for unknown paths). Port: PORT or --port, default 4173.
 // Output directory: --out DIR (default dist), so several previews (e.g. a
 // sub-path build for e2e) can run side by side.
+// INCLUDE_DRAFTS=1 adds draft languages (never used by CI or deploy).
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "./build.mjs";
@@ -17,8 +18,10 @@ const origin = process.env.SITE_ORIGIN || DEFAULT_ORIGIN;
 const args = parseArgs(process.argv, { PORT: process.env.PORT ?? String(PREVIEW_PORT) });
 const outIndex = process.argv.indexOf("--out");
 const outDir = join(ROOT, outIndex >= 0 ? process.argv[outIndex + 1] : "dist");
-const { files, jsBytes } = await build({ base, origin, outDir });
-console.log(`Built ${files.length} files (shipped JS ${jsBytes} bytes).`);
+// INCLUDE_DRAFTS=1 also builds draft languages, so translators can see theirs.
+const { files, jsByLocale, locales } = await build({ base, origin, outDir, includeDrafts: process.env.INCLUDE_DRAFTS === "1" });
+const js = Object.entries(jsByLocale).map(([c, n]) => `${c} ${n}`).join(", ");
+console.log(`Built ${files.length} files in ${locales.join(", ")} (shipped JS per page: ${js} bytes).`);
 createDevServer({ root: outDir, base, notFound: "404.html" }).listen(args.port, "127.0.0.1", () => {
   console.log(`ExamSnap preview: http://localhost:${args.port}${base}`);
 });

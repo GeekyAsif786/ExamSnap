@@ -53,6 +53,9 @@ test("checkId: kebab-case, not reserved, not taken", () => {
   assert.match(checkId("Neet").error, /kebab-case/);
   assert.match(checkId("custom").error, /reserved/);
   assert.match(checkId("icons").error, /reserved/);
+  assert.match(checkId("src").error, /reserved/);
+  for (const lang of ["hi", "en", "ta", "zz"]) assert.match(checkId(lang).error, /two-letter ids are language folders/, lang);
+  assert.equal(checkId("hindi").ok, true, "only exactly two letters");
   assert.match(checkId("ssc", new Set(["ssc"])).error, /already taken by presets\/ssc\.json/);
 });
 

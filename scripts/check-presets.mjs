@@ -4,10 +4,27 @@ import { basename, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+import { DEFAULT_LOCALE, LOCALES } from "../src/ui/i18n/locales.js";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SCHEMA_PATH = join(ROOT, "schema", "preset.schema.json");
 const STALE_DAYS = 365;
+
+/** Ids that would clash with the app ("custom") or with built site folders. */
+export const RESERVED_IDS = new Set(["custom", "icons", "src"]);
+/** Two lowercase letters: the folder of a language (e.g. /hi/), now or later. */
+export const LANGUAGE_ID_RE = /^[a-z]{2}$/;
+
+/**
+ * Why a preset id can't be used, or null if it can.
+ * @param {string} id
+ * @returns {string | null}
+ */
+export function reservedIdReason(id) {
+  if (RESERVED_IDS.has(id)) return `"${id}" is reserved`;
+  if (LANGUAGE_ID_RE.test(id)) return `"${id}" is reserved: two-letter ids are language folders (like /hi/)`;
+  return null;
+}
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 let validateSchema;
@@ -71,6 +88,8 @@ export async function validatePresets(dir, { now = new Date() } = {}) {
 
     const { id } = data;
     if (typeof id === "string") {
+      const reserved = reservedIdReason(id);
+      if (reserved) err("/id", `${reserved}; choose another id`);
       if (name !== `${id}.json`) {
         err("/id", `file name must be "${id}.json" to match the id`);
       }
@@ -96,6 +115,26 @@ export async function validatePresets(dir, { now = new Date() } = {}) {
           err(`/documents/${i}/max_kb`, `max_kb (${doc.max_kb}) must be greater than min_kb (${doc.min_kb})`);
         }
       });
+    }
+
+    // Translations: known locales (not the default), known document ids, and
+    // no translated notes where the English has none.
+    if (data.translations && typeof data.translations === "object") {
+      const codes = LOCALES.filter((l) => l.code !== DEFAULT_LOCALE).map((l) => l.code);
+      const docs = new Map((Array.isArray(data.documents) ? data.documents : []).map((d) => [d?.id, d]));
+      for (const [code, t] of Object.entries(data.translations)) {
+        const at = `/translations/${code}`;
+        if (!codes.includes(code)) {
+          err(at, `unknown locale "${code}" (known: ${codes.join(", ")}; see src/ui/i18n/locales.js)`);
+          continue;
+        }
+        if (!t || typeof t !== "object") continue;
+        if (t.notes && !data.notes) err(`${at}/notes`, "translated notes, but the English preset has no notes");
+        for (const [docId, dt] of Object.entries(t.documents ?? {})) {
+          if (!docs.has(docId)) err(`${at}/documents/${docId}`, `unknown document id "${docId}"`);
+          else if (dt?.notes && !docs.get(docId).notes) err(`${at}/documents/${docId}/notes`, "translated notes, but the English document has no notes");
+        }
+      }
     }
 
     const label = typeof id === "string" ? id : file;

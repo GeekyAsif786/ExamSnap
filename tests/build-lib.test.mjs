@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { fileURLToPath } from "node:url";
 import { PRESETS } from "../src/generated/presets.js";
-import { STRINGS as S } from "../src/ui/strings.js";
+import { readPresets } from "../scripts/bundle-presets.mjs";
+import { STRINGS as S } from "../src/ui/i18n/en.js";
 import {
   CSP,
   cspMeta,
@@ -40,7 +42,11 @@ import {
   truncateWords,
 } from "../scripts/build-lib.mjs";
 
-const byId = Object.fromEntries(PRESETS.map((p) => [p.id, p]));
+// Exact-output examples use a frozen copy of the presets (tests/fixtures/
+// presets/snapshot/), so editing a real preset never breaks these tests;
+// properties every real preset must have still loop over PRESETS.
+const SNAPSHOT = await readPresets(fileURLToPath(new URL("./fixtures/presets/snapshot/", import.meta.url)));
+const byId = Object.fromEntries(SNAPSHOT.map((p) => [p.id, p]));
 
 test("siteUrl: origin + base + path; custom domain only needs base '/' and a new origin", () => {
   assert.equal(siteUrl("https://geekyasif786.github.io", "/ExamSnap/", "ssc/"), "https://geekyasif786.github.io/ExamSnap/ssc/");
@@ -160,6 +166,7 @@ test("landingBelowHtml: spec table first (one row per document), then sources", 
 
 test("examLinksHtml links relatively to every preset", () => {
   const html = examLinksHtml(PRESETS, S);
+  assert.ok(html.includes('<ul role="list">'), "keeps list semantics without CSS markers");
   for (const p of PRESETS) assert.ok(html.includes(`<a href="${p.id}/">${esc(p.name)}</a>`), p.id);
 });
 
@@ -194,13 +201,25 @@ test("replaceOnce requires exactly one match", () => {
 test("sitemapXml, robotsTxt, latestDate", () => {
   const xml = sitemapXml([
     { loc: "https://x/ExamSnap/", lastmod: "2026-11-11" },
-    { loc: "https://x/ExamSnap/ssc/", lastmod: "2026-10-01" },
+    {
+      loc: "https://x/ExamSnap/hi/ssc/",
+      lastmod: "2026-10-01",
+      alternates: [
+        { hreflang: "en", href: "https://x/ExamSnap/ssc/" },
+        { hreflang: "hi", href: "https://x/ExamSnap/hi/ssc/" },
+        { hreflang: "x-default", href: "https://x/ExamSnap/ssc/" },
+      ],
+    },
   ]);
   assert.equal(
     xml,
-    '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' +
       "  <url>\n    <loc>https://x/ExamSnap/</loc>\n    <lastmod>2026-11-11</lastmod>\n  </url>\n" +
-      "  <url>\n    <loc>https://x/ExamSnap/ssc/</loc>\n    <lastmod>2026-10-01</lastmod>\n  </url>\n</urlset>\n",
+      "  <url>\n    <loc>https://x/ExamSnap/hi/ssc/</loc>\n    <lastmod>2026-10-01</lastmod>\n" +
+      '    <xhtml:link rel="alternate" hreflang="en" href="https://x/ExamSnap/ssc/"/>\n' +
+      '    <xhtml:link rel="alternate" hreflang="hi" href="https://x/ExamSnap/hi/ssc/"/>\n' +
+      '    <xhtml:link rel="alternate" hreflang="x-default" href="https://x/ExamSnap/ssc/"/>\n' +
+      "  </url>\n</urlset>\n",
   );
   assert.equal(robotsTxt("https://x/ExamSnap/sitemap.xml"), "User-agent: *\nAllow: /\n\nSitemap: https://x/ExamSnap/sitemap.xml\n");
   assert.equal(latestDate(["2026-01-02", "2026-11-11", "2025-12-31"]), "2026-11-11");

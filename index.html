@@ -14,13 +14,16 @@
   <!-- build:head -->
 </head>
 <body>
-  <!-- The one exception to "every user-visible string lives in src/ui/strings.js":
-       without JavaScript, strings.js can never run, so this text has to be in the HTML. -->
+  <!-- Without JavaScript no strings module can run, so this text has to be in the
+       HTML. The build replaces it with the page language's "noscript" string. -->
   <noscript>ExamSnap needs JavaScript to process your photo on your device.
   Please enable JavaScript for this page.</noscript>
   <header class="site">
     <div class="wrap">
-      <h1 class="brand" data-s="appName"></h1>
+      <div class="brand-row">
+        <h1 class="brand" data-s="appName"></h1>
+        <!-- build:lang -->
+      </div>
       <p class="tagline" data-s="tagline"></p>
     </div>
   </header>

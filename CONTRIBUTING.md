@@ -18,7 +18,7 @@ You need [Node.js 22+](https://nodejs.org/) and git. First time only: fork the r
    ```sh
    npm run new-preset
    ```
-   It asks for the exam id, name, category, source, then each document (label, kind, size, KB range, file name). Sizes can be typed in pixels, or in centimetres like `3.5cm` and it converts them for you. It writes `presets/<id>.json`, checks it, and updates the generated files.
+   It asks for the exam id, name, category, source, then each document (label, kind, size, KB range, file name). Sizes can be typed in pixels, or in centimetres like `3.5cm` and it converts them for you. It writes `presets/<id>.json`, checks it, and updates the README exams table.
 3. **Check everything:**
    ```sh
    npm run check
@@ -28,7 +28,9 @@ You need [Node.js 22+](https://nodejs.org/) and git. First time only: fork the r
    npm run preview
    ```
    Open `http://localhost:4173/<id>/`, upload a real photo (yours is fine, it never leaves your computer), and make a file for each document. Check the size and KB in the result.
-5. **Open a pull request.** Commit the files the scaffolder lists, push to your fork, and open a PR. The PR template has a short checklist.
+5. **Open a pull request.** Commit the files the scaffolder lists, push to your fork, and open a PR. The PR template has a short checklist. Keep **"Allow edits by maintainers"** ticked.
+
+The README "Supported exams" table is generated from `presets/`. If it is out of date in your PR, CI shows a warning, not a failure: the maintainer regenerates the table before merging (that's why "Allow edits by maintainers" matters).
 
 Opening an issue with the ["I'm adding an exam"](https://github.com/GeekyAsif786/ExamSnap/issues/new?template=add-preset.yml&title=%5BExam%5D%20) form first lets others know you're on it.
 
@@ -125,16 +127,43 @@ Presets marked "⚠ Needs verification" in the [README](README.md#supported-exam
 3. Add the notice to `sources` with type `notice`. Fix any number that doesn't match it. Set `last_verified` to today's date.
 4. Commit to a new branch and open a pull request, and say you edited on GitHub.
 
-CI will report that the generated files (`src/generated/presets.js`, the README table) are out of date. That's expected for edits made on GitHub: the maintainer regenerates them before merging, so leave "Allow edits by maintainers" ticked. If you have the repo cloned, `npm run build:presets && npm run update-readme` fixes it yourself.
+CI may show a warning that the README exams table is out of date. That's expected for edits made on GitHub, and it doesn't fail your PR: the maintainer regenerates the table before merging, so leave "Allow edits by maintainers" ticked. If you have the repo cloned, `npm run update-readme` fixes it yourself.
 
 ## Translations
 
-Coming soon. Hindi is first. Follow issues labelled [`i18n`](https://github.com/GeekyAsif786/ExamSnap/labels/i18n) to help when it opens.
+ExamSnap is in English and Hindi. Want it in your language? [Request a language](https://github.com/GeekyAsif786/ExamSnap/issues/new?template=language.yml&title=%5BLanguage%5D%20), or translate it yourself: about a hundred short lines, no app code. Issues labelled [`i18n`](https://github.com/GeekyAsif786/ExamSnap/labels/i18n) track the work.
+
+1. **Copy the English strings.** Every line of the interface is in `src/ui/i18n/en.js`. Copy it to `src/ui/i18n/<code>.js`, where `<code>` is the language's two-letter code (`ta` for Tamil, `bn` for Bengali).
+2. **Add the language as a draft** in `src/ui/i18n/locales.js`:
+   ```js
+   { code: "ta", name: "தமிழ்", dir: "ltr", status: "draft" },
+   ```
+   `name` is written in the language itself. Drafts are not on the live site.
+3. **Translate** the text inside the quotes; keep the keys (left of the `:`) as they are. Lines like ``(w, h) => `${w} × ${h} px` `` are templates: move the `${…}` parts wherever your grammar needs them, but keep every one. Keep "ExamSnap" as it is, keep numbers in 0–9 digits, and keep units such as KB and px. Use the words people see on exam forms in your language, not formal or literary ones.
+4. **See your coverage:**
+   ```sh
+   npm run check
+   ```
+   It prints each language's coverage and points out problems (a missing `${…}`, a translated "ExamSnap"). Missing lines show in English until you translate them. To see your language in the app, run `INCLUDE_DRAFTS=1 npm run preview` and open `http://localhost:4173/<code>/`.
+5. **Open a pull request.** Run `npm run i18n-review`, which writes `docs/i18n/<code>-review.md` with English next to your translation. A native speaker reviews it there before the language is published (its status becomes `"published"`, which needs 100% coverage).
+
+**Exam names and notes (optional).** A preset can carry its own translation under `translations.<code>` in `presets/<id>.json`, with any of `name`, `notes`, and per document `label` and `notes`:
+
+```json
+"translations": {
+  "hi": {
+    "notes": "…",
+    "documents": { "photo": { "label": "फ़ोटो (3.5 × 4.5 cm)" } }
+  }
+}
+```
+
+Anything not translated is shown in English. Keep official exam names and abbreviations recognisable (SSC, JEE Main, IBPS). `npm run check` rejects unknown languages, unknown document ids and any other field.
 
 ## Code
 
 - **Setup and commands:** see [Development in the README](README.md#development).
-- **Style:** `npm run lint` (ESLint) must pass. Plain ES modules, no framework, no runtime dependencies. All user-visible text lives in `src/ui/strings.js`.
+- **Style:** `npm run lint` (ESLint) must pass. Plain ES modules, no framework, no runtime dependencies. All user-visible text lives in `src/ui/i18n/en.js` (and its translations next to it).
 - **Tests:** every behaviour change comes with tests in the same commit. `npm test` runs the unit tests; `npm run test:e2e` runs Playwright against the built site.
 - **Privacy rules:** no network requests at runtime, no analytics, no third-party scripts. The Content-Security-Policy enforces this and the tests check it.
 - Keep commits small and focused.

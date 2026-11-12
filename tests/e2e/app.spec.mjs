@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { crc32, deflateSync } from "node:zlib";
-import { test, expect, openApp, loadImage, readResult } from "./helpers.mjs";
+import { PRESETS } from "../../src/generated/presets.js";
+import { test, expect, openApp, loadImage, readResult, gotoReady } from "./helpers.mjs";
+
+// Expectations about real presets come from the preset data, so a
+// preset-only PR (new numbers, new sources, new date) keeps e2e green.
+const preset = (id) => PRESETS.find((p) => p.id === id);
+const doc = (id, docId) => preset(id).documents.find((d) => d.id === docId);
+const SOURCE_BADGE = { notice: "Official notice", portal: "Official site", secondary: "Secondary" };
 
 /** Minimal RGB PNG built in Node (no binary fixtures). */
 function makePng(w, h, [r, g, b]) {
@@ -27,17 +34,37 @@ function makePng(w, h, [r, g, b]) {
 }
 
 test("deep link preselects exam and document and is kept in the URL", async ({ page }) => {
-  await page.goto("./?exam=jee-main&doc=signature");
+  await gotoReady(page, "./?exam=jee-main&doc=signature");
   await expect(page.locator("#exam")).toHaveValue("jee-main");
   await expect(page.locator("#doc")).toHaveValue("signature");
-  await expect(page.locator("#chips")).toContainText("276 × 118 px");
-  await expect(page.locator("#chips")).toContainText("10–30 KB");
+  const sig = doc("jee-main", "signature");
+  await expect(page.locator("#chips")).toContainText(`${sig.width} × ${sig.height} px`);
+  await expect(page.locator("#chips")).toContainText(`${sig.min_kb}–${sig.max_kb} KB`);
   await expect(page.locator("#clean")).toBeHidden(); // adjust step waits for an image
   expect(new URL(page.url()).search).toBe("?exam=jee-main&doc=signature");
 });
 
+test("data-ready is set only once the selects are built and the URL is synced", async ({ page }) => {
+  await gotoReady(page, "./?exam=ssc&doc=signature");
+  // One-shot reads, deliberately: ready means they are safe.
+  const state = await page.evaluate(() => ({
+    exams: document.querySelectorAll("#exam option").length,
+    docs: document.querySelectorAll("#doc option").length,
+    exam: document.querySelector("#exam").value,
+    search: location.search,
+    make: document.querySelector("#make").textContent,
+  }));
+  expect(state).toEqual({
+    exams: PRESETS.length + 1,
+    docs: preset("ssc").documents.length,
+    exam: "ssc",
+    search: "?exam=ssc&doc=signature",
+    make: "Make my file",
+  });
+});
+
 test("unknown ids fall back to the first preset silently", async ({ page }) => {
-  await page.goto("./?exam=nope&doc=nope");
+  await gotoReady(page, "./?exam=nope&doc=nope");
   await expect(page.locator("#exam")).toHaveValue("banking-ibps");
   await expect(page.locator("#doc")).toHaveValue("photo");
   expect(new URL(page.url()).search).toBe("?exam=banking-ibps&doc=photo");
@@ -45,7 +72,7 @@ test("unknown ids fall back to the first preset silently", async ({ page }) => {
 });
 
 test("changing the selection updates the URL with replaceState", async ({ page }) => {
-  await page.goto("./?exam=banking-ibps&doc=photo");
+  await gotoReady(page, "./?exam=banking-ibps&doc=photo");
   const before = await page.evaluate(() => history.length);
   await page.locator("#exam").selectOption("ssc");
   await page.locator("#doc").selectOption("signature");
@@ -54,7 +81,7 @@ test("changing the selection updates the URL with replaceState", async ({ page }
 });
 
 test("exams are grouped by category, with Custom size last", async ({ page }) => {
-  await page.goto("./");
+  await gotoReady(page, "./");
   const groups = await page.locator("#exam optgroup").evaluateAll((gs) =>
     gs.map((g) => [g.label, [...g.querySelectorAll("option")].map((o) => o.value)]),
   );
@@ -67,7 +94,7 @@ test("exams are grouped by category, with Custom size last", async ({ page }) =>
 });
 
 test("secondary-source warning shows only for presets without an official notice", async ({ page }) => {
-  await page.goto("./?exam=banking-ibps&doc=photo");
+  await gotoReady(page, "./?exam=banking-ibps&doc=photo");
   await expect(page.locator("#warning")).toBeHidden();
   await page.locator("#exam").selectOption("jee-main");
   await expect(page.locator("#warning")).toBeVisible();
@@ -77,22 +104,23 @@ test("secondary-source warning shows only for presets without an official notice
 });
 
 test("sources list: safe new-tab links with type badges and last verified", async ({ page }) => {
-  await page.goto("./?exam=jee-main&doc=photo");
+  await gotoReady(page, "./?exam=jee-main&doc=photo");
   await page.getByText("Where these numbers come from").click();
   const links = page.locator("#source-list a");
-  await expect(links).toHaveCount(3);
+  const jee = preset("jee-main");
+  await expect(links).toHaveCount(jee.sources.length);
   for (const a of await links.all()) {
     await expect(a).toHaveAttribute("target", "_blank");
     await expect(a).toHaveAttribute("rel", "noopener noreferrer");
   }
-  await expect(page.locator("#source-list .badge")).toHaveText(["Secondary", "Secondary", "Official site"]);
-  await expect(page.locator("#verified")).toHaveText("Last verified: 2026-11-11");
+  await expect(page.locator("#source-list .badge")).toHaveText(jee.sources.map((s) => SOURCE_BADGE[s.type]));
+  await expect(page.locator("#verified")).toHaveText(`Last verified: ${jee.last_verified}`);
   await page.locator("#exam").selectOption("banking-ibps");
   await expect(page.locator("#source-list .badge").first()).toHaveText("Official notice");
 });
 
 test("document notes stay visible; preset notes sit inside the sources section", async ({ page }) => {
-  await page.goto("./?exam=banking-ibps&doc=signature");
+  await gotoReady(page, "./?exam=banking-ibps&doc=signature");
   await expect(page.locator("#notes p")).toHaveText([
     "Black ink on white paper. Signatures in CAPITAL LETTERS are not accepted.",
   ]);
@@ -118,7 +146,7 @@ test("document notes stay visible; preset notes sit inside the sources section",
   expect(await page.locator("#sources #chips, #sources #warning").count()).toBe(0);
 });
 
-test("custom size with an invalid KB range shows the inline RangeError", async ({ page }) => {
+test("custom size with an invalid KB range shows an inline error", async ({ page }) => {
   await openApp(page);
   await loadImage(page, "photo");
   await page.locator("#exam").selectOption("custom");
@@ -127,11 +155,19 @@ test("custom size with an invalid KB range shows the inline RangeError", async (
 
   await page.getByLabel("Min KB").fill("50");
   await page.getByLabel("Max KB").fill("20");
-  await expect(page.locator("#custom-error")).toHaveText("maxKb must be > minKb (got 50–20)");
+  await expect(page.locator("#custom-error")).toHaveText("Max KB must be more than Min KB.");
   await expect(page.locator("#custom-error")).toHaveAttribute("aria-live", "polite");
   await expect(page.getByLabel("Max KB")).toHaveAttribute("aria-invalid", "true");
   await expect(page.getByRole("button", { name: "Make my file" })).toBeDisabled();
   await expect(page.locator("#chips li")).toHaveCount(0);
+
+  await page.getByLabel("Min KB").fill("0");
+  await expect(page.locator("#custom-error")).toHaveText("Min KB must be more than 0.");
+  await page.getByLabel("Min KB").fill("10");
+  await page.getByLabel("Max KB").fill("10.001");
+  await expect(page.locator("#custom-error")).toHaveText("The KB range is too narrow. Make Max KB a little larger.");
+  await page.getByLabel("Max KB").fill("20");
+  await page.getByLabel("Min KB").fill("50");
 
   await page.getByLabel("Width (px)").fill("10");
   await expect(page.locator("#custom-error")).toHaveText("Width and height must be whole numbers between 50 and 4000 px.");
@@ -390,13 +426,14 @@ test("result is announced and the download link saves the file", async ({ page }
   await expect(page.locator("#result-status")).toHaveText(/^Your file is ready: signature\.jpg, \d+\.\d KB\.$/);
   await expect(page.locator("#result-status")).toHaveAttribute("aria-live", "polite");
   await expect(page.locator("#checklist")).toContainText("Location & camera data removed");
-  await expect(page.locator("#checklist")).toContainText(/\d+\.\d KB \(allowed 10–20 KB\)/);
+  const sig = doc("ssc", "signature");
+  await expect(page.locator("#checklist")).toContainText(new RegExp(`\\d+\\.\\d KB \\(allowed ${sig.min_kb}–${sig.max_kb} KB\\)`));
   const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#download").click()]);
   expect(download.suggestedFilename()).toBe("signature.jpg");
 });
 
 test("no hard-coded text: every data-s key resolves to a string", async ({ page }) => {
-  await page.goto("./");
+  await gotoReady(page, "./");
   const empty = await page.locator("[data-s]").evaluateAll((ns) => ns.filter((n) => !n.textContent.trim()).map((n) => n.dataset.s));
   expect(empty).toEqual([]);
   await expect(page).toHaveTitle("ExamSnap — exam photo & signature resizer");
@@ -405,7 +442,7 @@ test("no hard-coded text: every data-s key resolves to a string", async ({ page 
 });
 
 test("the test hook is absent without ?test=1", async ({ page }) => {
-  await page.goto("./");
+  await gotoReady(page, "./");
   await expect(page.locator("#exam")).toHaveValue("banking-ibps");
   expect(await page.evaluate(() => "__examsnap" in window)).toBe(false);
 });

@@ -1,0 +1,67 @@
+{
+  "id": "banking-ibps",
+  "name": "Banking — IBPS PO / Clerk / RRB / SO, RBI, PSU banks",
+  "category": "Banking",
+  "notes": "Standard IBPS-style annex used by most bank recruitments. Some individual banks allow a wider signature range; 10–20 KB is accepted by all of them.",
+  "last_verified": "2026-11-11",
+  "sources": [
+    {
+      "title": "RBI recruitment Annex I — guidelines for scanning photograph & signature",
+      "url": "https://website.rbi.org.in/documents/87730/39016390/RPJECE07012019_AN1.pdf",
+      "type": "notice"
+    },
+    {
+      "title": "Punjab & Sind Bank — upload guidelines (declaration spec)",
+      "url": "https://punjabandsind.bank.in/system/uploads/document/2150_2024101518104187881.pdf",
+      "type": "notice"
+    },
+    {
+      "title": "PracticeMock — IBPS RRB photo & signature size 2026",
+      "url": "https://www.practicemock.com/blog/ibps-rrb-photo-and-signature-size/",
+      "type": "secondary"
+    }
+  ],
+  "documents": [
+    {
+      "id": "photo",
+      "label": "Photograph",
+      "kind": "photo",
+      "width": 200,
+      "height": 230,
+      "min_kb": 20,
+      "max_kb": 50,
+      "filename": "photo.jpg"
+    },
+    {
+      "id": "signature",
+      "label": "Signature",
+      "kind": "signature",
+      "width": 140,
+      "height": 60,
+      "min_kb": 10,
+      "max_kb": 20,
+      "filename": "signature.jpg",
+      "notes": "Black ink on white paper. Signatures in CAPITAL LETTERS are not accepted."
+    },
+    {
+      "id": "thumb",
+      "label": "Left thumb impression",
+      "kind": "thumb",
+      "width": 240,
+      "height": 240,
+      "min_kb": 20,
+      "max_kb": 50,
+      "filename": "thumb.jpg"
+    },
+    {
+      "id": "declaration",
+      "label": "Handwritten declaration",
+      "kind": "document",
+      "width": 800,
+      "height": 400,
+      "min_kb": 50,
+      "max_kb": 100,
+      "filename": "declaration.jpg"
+    }
+  ]
+}

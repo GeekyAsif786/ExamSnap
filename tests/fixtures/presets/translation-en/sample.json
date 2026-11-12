@@ -1,0 +1,40 @@
+{
+  "id": "sample",
+  "name": "Sample exam",
+  "category": "Other",
+  "last_verified": "2026-11-01",
+  "sources": [
+    {
+      "title": "Official notice",
+      "url": "https://example.org/notice.pdf",
+      "type": "notice"
+    }
+  ],
+  "documents": [
+    {
+      "id": "photo",
+      "label": "Photograph",
+      "kind": "photo",
+      "width": 200,
+      "height": 230,
+      "min_kb": 20,
+      "max_kb": 50,
+      "filename": "photo.jpg"
+    },
+    {
+      "id": "signature",
+      "label": "Signature",
+      "kind": "signature",
+      "width": 140,
+      "height": 60,
+      "min_kb": 10,
+      "max_kb": 20,
+      "filename": "signature.jpg"
+    }
+  ],
+  "translations": {
+    "en": {
+      "name": "Sample exam again"
+    }
+  }
+}

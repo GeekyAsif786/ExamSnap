@@ -23,8 +23,10 @@ import {
   requestExamUrl,
   resetAdjust,
   selectionSearch,
+  langSwitchSearch,
+  requestSpecsText,
 } from "../src/ui/state.js";
-import { STRINGS } from "../src/ui/strings.js";
+import { STRINGS } from "../src/ui/i18n/en.js";
 
 test("parseSelection: known exam and doc", () => {
   assert.deepEqual(parseSelection("?exam=jee-main&doc=signature", PRESETS), { examId: "jee-main", docId: "signature" });
@@ -144,14 +146,31 @@ test("parseCustom: bad dimensions", () => {
   }
 });
 
-test("parseCustom: bad KB range carries the core RangeError message", () => {
-  assert.deepEqual(parseCustom({ width: "200", height: "200", minKb: "50", maxKb: "20" }), {
-    ok: false,
-    error: "range",
-    message: "maxKb must be > minKb (got 50–20)",
-  });
-  assert.equal(parseCustom({ width: "200", height: "200", minKb: "", maxKb: "20" }).message, "minKb must be > 0 (got NaN)");
-  assert.match(parseCustom({ width: "200", height: "200", minKb: "10", maxKb: "10.001" }).message, /bytes wide/);
+test("parseCustom: bad KB range carries a reason for the UI and the core RangeError message", () => {
+  const range = (minKb, maxKb) => parseCustom({ width: "200", height: "200", minKb, maxKb });
+  assert.deepEqual(range("50", "20"), { ok: false, error: "range", reason: "order", message: "maxKb must be > minKb (got 50–20)" });
+  assert.deepEqual(range("", "20"), { ok: false, error: "range", reason: "min", message: "minKb must be > 0 (got NaN)" });
+  assert.equal(range("0", "20").reason, "min");
+  assert.equal(range("-5", "20").reason, "min");
+  assert.equal(range("20", "20").reason, "order");
+  assert.equal(range("20", "").reason, "order");
+  const narrow = range("10", "10.001");
+  assert.equal(narrow.reason, "narrow");
+  assert.match(narrow.message, /bytes wide/);
+});
+
+test("every KB-range reason has a string in each locale", async () => {
+  const { STRINGS: HI } = await import("../src/ui/i18n/hi.js");
+  for (const S of [STRINGS, HI]) {
+    for (const key of ["customKbMin", "customKbOrder", "customKbNarrow"]) assert.equal(typeof S[key], "string", key);
+  }
+});
+
+test("langSwitchSearch keeps only ?exam= and ?doc=", () => {
+  assert.equal(langSwitchSearch(""), "");
+  assert.equal(langSwitchSearch("?doc=signature"), "?doc=signature");
+  assert.equal(langSwitchSearch("?test=1&exam=ssc&doc=photo&x=<y>"), "?exam=ssc&doc=photo");
+  assert.equal(langSwitchSearch("?test=1"), "");
 });
 
 test("currentDoc and resetAdjust follow the selection", () => {
@@ -302,20 +321,20 @@ test("isFramed", () => {
 });
 
 test("requestExamUrl: request-exam form, [Exam] title, no other data", () => {
-  const url = new URL(requestExamUrl(null, STRINGS.requestSpecs));
+  const url = new URL(requestExamUrl(null, requestSpecsText));
   assert.equal(`${url.origin}${url.pathname}`, "https://github.com/GeekyAsif786/ExamSnap/issues/new");
   assert.deepEqual([...url.searchParams], [["template", "request-exam.yml"], ["title", "[Exam] "]]);
-  assert.equal(requestExamUrl(null, STRINGS.requestSpecs), "https://github.com/GeekyAsif786/ExamSnap/issues/new?template=request-exam.yml&title=%5BExam%5D%20");
+  assert.equal(requestExamUrl(null, requestSpecsText), "https://github.com/GeekyAsif786/ExamSnap/issues/new?template=request-exam.yml&title=%5BExam%5D%20");
 });
 
 test("requestExamUrl: a custom doc adds only width, height and KB range to specs", () => {
   const r = parseCustom({ width: "300", height: "400", minKb: "12.5", maxKb: "40" });
   assert.equal(r.ok, true);
-  const raw = requestExamUrl(r.doc, STRINGS.requestSpecs);
+  const raw = requestExamUrl(r.doc, requestSpecsText);
   const url = new URL(raw);
   assert.deepEqual([...url.searchParams.keys()], ["template", "title", "specs"]);
   assert.equal(url.searchParams.get("specs"), "Custom size I used in ExamSnap: 300 × 400 px, 12.5–40 KB");
-  assert.equal(url.searchParams.get("specs"), STRINGS.requestSpecs(300, 400, 12.5, 40));
+  assert.equal(url.searchParams.get("specs"), requestSpecsText(300, 400, 12.5, 40));
   // Spaces are %20 (not +) so GitHub shows them as typed; × and – are UTF-8 encoded.
   assert.match(raw, /&specs=Custom%20size%20I%20used%20in%20ExamSnap%3A%20300%20%C3%97%20400%20px%2C%2012\.5%E2%80%9340%20KB$/);
   // The filename and other doc fields never leak into the URL.

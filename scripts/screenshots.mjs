@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Full-page review screenshots of the BUILT site (as npm run preview serves
-// it): {root, ssc} × {empty, adjust, result} × {desktop 1280, mobile 390} ×
-// {light, dark} -> screenshots/ (gitignored; CI uploads them on PRs).
+// it): {root, ssc, hi-root, hi-ssc} × {empty, adjust, result} × {desktop 1280,
+// mobile 390} × {light, dark} -> screenshots/ (gitignored; CI uploads them
+// on PRs). The hi-* shots are the Hindi pages.
 //
-//   npm run screenshots              all 24 shots into screenshots/
+//   npm run screenshots              all 48 shots into screenshots/
 //   npm run screenshots -- --readme  only the two README images, at device
 //                                    scale factor 1, as lossy WebP (q 0.85,
 //                                    each <= 150 KB), into docs/screenshots/
@@ -44,7 +45,7 @@ async function toWebp(browser, png) {
 }
 const VIEWPORTS = { desktop: { width: 1280, height: 900 }, mobile: { width: 390, height: 844 } };
 const SCHEMES = ["light", "dark"];
-const PAGES = { root: "", ssc: "ssc/" };
+const PAGES = { root: "", ssc: "ssc/", "hi-root": "hi/", "hi-ssc": "hi/ssc/" };
 
 /** A synthetic head-and-shoulders portrait, drawn in the page. */
 async function loadPortrait() {
@@ -120,6 +121,7 @@ try {
         };
 
         await page.goto(`${site}${path}?test=1`);
+        await page.locator('html[data-ready="1"]').waitFor({ state: "attached" });
         await page.waitForFunction(() => window.__examsnap);
         await shot("empty");
 

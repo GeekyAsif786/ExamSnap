@@ -22,9 +22,34 @@
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/$defs/document" }
+    },
+    "translations": {
+      "description": "Optional text in other languages, keyed by a locale code from src/ui/i18n/locales.js (not en). Anything left out falls back to the English text. Locale codes and document ids are checked by scripts/check-presets.mjs.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z]{2}$" },
+      "additionalProperties": { "$ref": "#/$defs/translation" }
     }
   },
   "$defs": {
+    "translation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 3 },
+        "notes": { "type": "string", "minLength": 1 },
+        "documents": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "label": { "type": "string", "minLength": 1 },
+              "notes": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
     "slug": {
       "type": "string",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"

@@ -4,7 +4,7 @@
 // the live app: no extra elements, no dialog, no console error.
 import { createDevServer } from "../../scripts/serve.mjs";
 import { buildXssSite, PAYLOADS } from "../support/xss-site.mjs";
-import { test, expect } from "./helpers.mjs";
+import { test, expect, gotoReady } from "./helpers.mjs";
 
 const base = () => new URL(test.info().project.use.baseURL).pathname;
 
@@ -36,7 +36,7 @@ test("XSS fixture renders as inert text: landing page, then the live app", async
     page.on("pageerror", (e) => errors.push(e.message));
 
     // Generated landing page.
-    await page.goto(`${site}xss-test/?test=1`);
+    await gotoReady(page, `${site}xss-test/?test=1`);
     await page.waitForFunction(() => window.__examsnap);
     const expectInert = async () =>
       expect(await page.evaluate(inertness)).toEqual({
@@ -67,13 +67,13 @@ test("XSS fixture renders as inert text: landing page, then the live app", async
     await expectInert();
 
     // Root page: the exam list and the app's default selection.
-    await page.goto(`${site}?test=1`);
+    await gotoReady(page, `${site}?test=1`);
     await page.waitForFunction(() => window.__examsnap);
     await expect(page.locator(".exam-links a")).toContainText("<script>alert(1)</script>");
     await expectInert();
 
     // Hostile query strings are ignored, not reflected.
-    await page.goto(`${site}?exam=${encodeURIComponent('"><img src=x onerror=alert(1)>')}&doc=${encodeURIComponent("<script>alert(1)</script>")}`);
+    await gotoReady(page, `${site}?exam=${encodeURIComponent('"><img src=x onerror=alert(1)>')}&doc=${encodeURIComponent("<script>alert(1)</script>")}`);
     await expect(page.locator("#exam")).toHaveValue("xss-test");
     await expect(page.locator("#doc")).toHaveValue("photo");
     await expectInert();

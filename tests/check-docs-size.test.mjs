@@ -18,12 +18,12 @@ test("scanDocs flags files over the limit, recursively", async (t) => {
   assert.deepEqual(oversized, [{ path: join("screenshots", "big.png"), size: LIMIT_BYTES + 1 }]);
 });
 
-test("the real docs/ is within the limit and holds only the two README screenshots", async () => {
+test("the real docs/ is within the limit: the two README screenshots and translation reviews", async () => {
   const { files, oversized } = await scanDocs(fileURLToPath(new URL("../docs/", import.meta.url)));
   assert.deepEqual(oversized, []);
   assert.deepEqual(
     files.map((f) => f.path),
-    [join("screenshots", "root-empty-desktop-light.webp"), join("screenshots", "ssc-result-mobile-light.webp")],
+    [join("i18n", "hi-review.md"), join("screenshots", "root-empty-desktop-light.webp"), join("screenshots", "ssc-result-mobile-light.webp")],
   );
   for (const f of files) assert.ok(f.size <= 150_000, `${f.path} is ${f.size} bytes`);
 });

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Anti-framing: inside another page's iframe the app must not run.
-import { STRINGS as S } from "../../src/ui/strings.js";
-import { test, expect } from "./helpers.mjs";
+import { STRINGS as S } from "../../src/ui/i18n/en.js";
+import { test, expect, gotoReady, waitReady } from "./helpers.mjs";
 
 test("framed: only a notice with a top-level link, no file input; the link opens the app", async ({ page, baseURL }) => {
   const url = new URL("./ssc/", baseURL).href;
@@ -20,6 +20,7 @@ test("framed: only a notice with a top-level link, no file input; the link opens
   expect(await inner.evaluate(() => "__examsnap" in window || document.querySelector("#file") !== null)).toBe(false);
 
   await link.click();
+  await waitReady(page);
   // The app then records the selected document in the query string.
   const escaped = url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   await expect(page).toHaveURL(new RegExp(`^${escaped}(\\?doc=photo)?$`));
@@ -28,7 +29,7 @@ test("framed: only a notice with a top-level link, no file input; the link opens
 });
 
 test("not framed: the app runs normally", async ({ page }) => {
-  await page.goto("./");
+  await gotoReady(page, "./");
   await expect(page.locator("input[type=file]")).toHaveCount(1);
   await expect(page.getByText(S.framedMessage)).toHaveCount(0);
 });
