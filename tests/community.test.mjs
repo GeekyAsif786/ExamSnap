@@ -83,3 +83,27 @@ test("README and templates link to anchors that exist", async () => {
   assert.ok(headings(readme).includes("Supported exams"));
   assert.match(readme, /CONTRIBUTING\.md#add-an-exam-in-10-minutes/);
 });
+
+test("launch README: header, links, demo placeholder, sections in order, local links resolve", async () => {
+  const readme = await read("README.md");
+  const h = headings(readme);
+  assert.ok(readme.startsWith('<div align="center">'));
+  assert.match(readme, /<img src="icons\/icon-192\.png"/, "icon from the repo, not hotlinked");
+  assert.ok(readme.includes("Exam photo & signature resizer for Indian forms: exact pixels, exact KB, 100% in your browser."));
+  for (const b of ["Live site", "CI", "CodeQL", "License: AGPL-3.0", "PRs welcome", "हिंदी available"]) {
+    assert.ok(readme.includes(`[![${b}](https://img.shields.io/`), b);
+  }
+  assert.ok(readme.includes("[Open ExamSnap →](https://examsnap.asifurrahaman.com/)"));
+  assert.ok(readme.includes("[हिंदी में खोलें →](https://examsnap.asifurrahaman.com/hi/)"));
+  assert.equal(readme.split("<!-- DEMO_GIF -->").length, 2);
+  const order = ["ExamSnap", "Why ExamSnap", "Supported exams", "How it works", "Security & privacy", "Contributors", "Licensing", "Development"];
+  const at = order.map((x) => h.indexOf(x));
+  assert.ok(at.every((i) => i >= 0), `headings: ${h.join(", ")}`);
+  assert.deepEqual(at, [...at].sort((a, b) => a - b), "sections in order");
+  // Every relative link or image points at a file in the repo.
+  const local = [...readme.matchAll(/(?:\]\(|src=")([^)"#?]+)/g)].map((m) => m[1]).filter((u) => !/^[a-z]+:/.test(u));
+  assert.ok(local.includes("src/core/fit.js") && local.includes("src/core/size.js"));
+  for (const p of local) await access(new URL(`../${p}`, import.meta.url));
+  // Launch claims only: no counts, ratings or competitor comparisons.
+  assert.doesNotMatch(readme, /\b\d[\d,.]*\+? (users|downloads)\b|★|rating/i);
+});
