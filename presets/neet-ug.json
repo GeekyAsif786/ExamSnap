@@ -1,0 +1,74 @@
+{
+  "id": "neet-ug",
+  "name": "NEET (UG) — NTA",
+  "category": "Entrance exams",
+  "notes": "From the NEET (UG) 2026 Information Bulletin. The bulletin gives only file-size ranges, not pixel sizes; the pixel sizes here are ExamSnap defaults (photo and signature are cm at 200 DPI). The bulletin lists the fingers-and-thumb impressions as 10–200 KB on one page and 50–300 KB on the next; ExamSnap targets the overlap (50–200 KB) so the file is valid under both. The 4×6 inch postcard photo is NOT uploaded; it is only needed as prints for the exam day. The form also captures a live photo with your camera, which must match your uploaded photo.",
+  "last_verified": "2026-11-12",
+  "sources": [
+    {
+      "title": "NEET (UG) 2026 Information Bulletin — NTA (Upload Scanned Images, p. 16–17)",
+      "url": "https://cdnbbsr.s3waas.gov.in/s37bc1ec1d9c3426357e69acd5bf320061/uploads/2026/02/202602231394640855.pdf",
+      "type": "notice"
+    },
+    {
+      "title": "NEET (UG) official site",
+      "url": "https://neet.nta.nic.in",
+      "type": "portal"
+    }
+  ],
+  "documents": [
+    {
+      "id": "photo",
+      "label": "Passport size photograph (3.5 × 4.5 cm)",
+      "kind": "photo",
+      "width": 276,
+      "height": 354,
+      "min_kb": 10,
+      "max_kb": 200,
+      "filename": "photograph.jpg",
+      "notes": "Colour or black & white, white background; about 80% of the photo should be your face, ears visible, no mask. Use the same photo you will paste on the attendance sheet."
+    },
+    {
+      "id": "signature",
+      "label": "Signature (3.5 × 1.5 cm)",
+      "kind": "signature",
+      "width": 276,
+      "height": 118,
+      "min_kb": 10,
+      "max_kb": 100,
+      "filename": "signature.jpg",
+      "notes": "Sign in running hand on white paper."
+    },
+    {
+      "id": "fingers",
+      "label": "Fingers & thumb impressions (left and right hands)",
+      "kind": "thumb",
+      "width": 800,
+      "height": 500,
+      "min_kb": 50,
+      "max_kb": 200,
+      "filename": "finger_thumb.jpg",
+      "notes": "Impressions of the fingers and thumb of both hands on white paper. Unclear impressions are rejected. ExamSnap makes one landscape image; if the form asks for each hand separately, make one file per hand."
+    }
+  ],
+  "translations": {
+    "hi": {
+      "name": "NEET (UG) — NTA",
+      "notes": "NEET (UG) 2026 सूचना बुलेटिन से। बुलेटिन में सिर्फ़ फ़ाइल साइज़ की रेंज दी गई है, पिक्सेल साइज़ नहीं; यहाँ के पिक्सेल साइज़ ExamSnap के डिफ़ॉल्ट हैं (फ़ोटो और हस्ताक्षर के cm से 200 DPI पर निकाले गए)। बुलेटिन में उँगलियों और अंगूठे के निशान एक पेज पर 10–200 KB और अगले पेज पर 50–300 KB लिखे हैं; ExamSnap वह रेंज लेता है जो दोनों में मान्य है (50–200 KB), ताकि फ़ाइल हर हाल में सही रहे। 4×6 इंच की पोस्टकार्ड फ़ोटो अपलोड नहीं होती; उसके प्रिंट सिर्फ़ परीक्षा के दिन चाहिए। फ़ॉर्म आपके कैमरे से एक लाइव फ़ोटो भी लेता है, जो आपकी अपलोड की गई फ़ोटो से मिलनी चाहिए।",
+      "documents": {
+        "photo": {
+          "label": "पासपोर्ट साइज़ फ़ोटो (3.5 × 4.5 cm)",
+          "notes": "रंगीन या ब्लैक एंड व्हाइट, सफ़ेद बैकग्राउंड; फ़ोटो का लगभग 80% हिस्सा आपका चेहरा हो, कान दिखने चाहिए, मास्क नहीं। वही फ़ोटो इस्तेमाल करें जो आप अटेंडेंस शीट पर चिपकाएँगे।"
+        },
+        "signature": {
+          "label": "हस्ताक्षर (3.5 × 1.5 cm)",
+          "notes": "सफ़ेद काग़ज़ पर रनिंग हैंड (जुड़े अक्षरों) में हस्ताक्षर करें।"
+        },
+        "fingers": {
+          "label": "उँगलियों और अंगूठे के निशान (बायाँ और दायाँ हाथ)",
+          "notes": "दोनों हाथों की उँगलियों और अंगूठे के निशान, सफ़ेद काग़ज़ पर। साफ़ न दिखने वाले निशान रिजेक्ट हो जाते हैं। ExamSnap एक आड़ी (लैंडस्केप) फ़ोटो बनाता है; अगर फ़ॉर्म हर हाथ के लिए अलग फ़ाइल माँगे, तो हर हाथ की अलग फ़ाइल बनाएँ।"
+        }
+      }
+    }
+  }
+}

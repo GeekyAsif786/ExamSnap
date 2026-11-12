@@ -103,7 +103,7 @@ test("defaultClean: on for signature and thumb only", () => {
 
 test("hasNotice", () => {
   const byId = Object.fromEntries(PRESETS.map((p) => [p.id, hasNotice(p)]));
-  assert.deepEqual(byId, { "banking-ibps": true, "jee-main": false, ssc: false, "upsc-cse": false });
+  assert.deepEqual(byId, { "banking-ibps": true, "cuet-ug": true, "jee-main": false, "neet-ug": true, ssc: false, "upsc-cse": false });
 });
 
 test("groupByCategory keeps order", () => {
@@ -112,7 +112,7 @@ test("groupByCategory keeps order", () => {
     groups.map((g) => [g.category, g.presets.map((p) => p.id)]),
     [
       ["Banking", ["banking-ibps"]],
-      ["Entrance exams", ["jee-main"]],
+      ["Entrance exams", ["cuet-ug", "jee-main", "neet-ug"]],
       ["Government jobs", ["ssc", "upsc-cse"]],
     ],
   );

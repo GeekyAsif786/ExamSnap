@@ -17,7 +17,9 @@ Works offline after your first visit, and you can install it from your browser m
 | Exam | Documents | Source |
 | --- | --- | --- |
 | [Banking — IBPS PO / Clerk / RRB / SO, RBI, PSU banks](https://examsnap.asifurrahaman.com/banking-ibps/) | Photograph: 200×230 px, 20–50 KB<br>Signature: 140×60 px, 10–20 KB<br>Left thumb impression: 240×240 px, 20–50 KB<br>Handwritten declaration: 800×400 px, 50–100 KB | Official notice |
+| [CUET (UG) — NTA](https://examsnap.asifurrahaman.com/cuet-ug/) | Passport size photograph (3.5 × 4.5 cm): 276×354 px, 10–200 KB<br>Signature (3.5 × 1.5 cm): 276×118 px, 10–50 KB | Official notice |
 | [JEE Main (NTA)](https://examsnap.asifurrahaman.com/jee-main/) | Photograph (3.5 × 4.5 cm): 276×354 px, 10–200 KB<br>Signature (3.5 × 1.5 cm): 276×118 px, 10–30 KB | [⚠ Needs verification](https://github.com/GeekyAsif786/ExamSnap/labels/verify-preset) |
+| [NEET (UG) — NTA](https://examsnap.asifurrahaman.com/neet-ug/) | Passport size photograph (3.5 × 4.5 cm): 276×354 px, 10–200 KB<br>Signature (3.5 × 1.5 cm): 276×118 px, 10–100 KB<br>Fingers &amp; thumb impressions (left and right hands): 800×500 px, 50–200 KB | Official notice |
 | [SSC — CGL / CHSL / MTS / GD / CPO](https://examsnap.asifurrahaman.com/ssc/) | Photograph (3.5 × 4.5 cm): 276×354 px, 20–50 KB<br>Signature (6.0 × 2.0 cm): 472×157 px, 10–20 KB | [⚠ Needs verification](https://github.com/GeekyAsif786/ExamSnap/labels/verify-preset) |
 | [UPSC — Civil Services (and other UPSC exams)](https://examsnap.asifurrahaman.com/upsc-cse/) | Photograph: 400×500 px, 20–200 KB<br>Signature ×3 (one image): 500×350 px, 20–100 KB<br>Photo ID card: 800×500 px, 20–200 KB | [⚠ Needs verification](https://github.com/GeekyAsif786/ExamSnap/labels/verify-preset) |
 <!-- exams:end -->

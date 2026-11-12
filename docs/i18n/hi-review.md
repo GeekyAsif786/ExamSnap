@@ -113,6 +113,33 @@ Placeholders like `{w}` are filled in by the app (numbers, file names, exam name
 | `languageNav` | Language | भाषा |
 | `noscript` | ExamSnap needs JavaScript to process your photo on your device. Please enable JavaScript for this page. | ExamSnap आपकी फ़ोटो को आपके डिवाइस पर ही प्रोसेस करता है, इसके लिए JavaScript ज़रूरी है। कृपया इस पेज के लिए JavaScript चालू करें। |
 
+## New in M3c
+
+Draft translations not yet reviewed by a native speaker. Once reviewed, they move to "Exam presets" below.
+
+### `cuet-ug`
+
+| Field | English | Hindi |
+| --- | --- | --- |
+| `name` | CUET (UG) — NTA | CUET (UG) — NTA |
+| `notes` | From the CUET (UG) 2026 Information Bulletin. The bulletin gives only file-size ranges, not pixel sizes; the pixel sizes here are ExamSnap defaults (cm at 200 DPI). The form also captures a live photo with your camera in addition to the uploaded photograph. | CUET (UG) 2026 सूचना बुलेटिन से। बुलेटिन में सिर्फ़ फ़ाइल साइज़ की रेंज दी गई है, पिक्सेल साइज़ नहीं; यहाँ के पिक्सेल साइज़ ExamSnap के डिफ़ॉल्ट हैं (cm से 200 DPI पर निकाले गए)। अपलोड की गई फ़ोटो के अलावा, फ़ॉर्म आपके कैमरे से एक लाइव फ़ोटो भी लेता है। |
+| `documents.photo.label` | Passport size photograph (3.5 × 4.5 cm) | पासपोर्ट साइज़ फ़ोटो (3.5 × 4.5 cm) |
+| `documents.photo.notes` | Colour photo, white background; about 80% of the photo should be your face, ears visible, no mask. | रंगीन फ़ोटो, सफ़ेद बैकग्राउंड; फ़ोटो का लगभग 80% हिस्सा आपका चेहरा हो, कान दिखने चाहिए, मास्क नहीं। |
+| `documents.signature.label` | Signature (3.5 × 1.5 cm) | हस्ताक्षर (3.5 × 1.5 cm) |
+
+### `neet-ug`
+
+| Field | English | Hindi |
+| --- | --- | --- |
+| `name` | NEET (UG) — NTA | NEET (UG) — NTA |
+| `notes` | From the NEET (UG) 2026 Information Bulletin. The bulletin gives only file-size ranges, not pixel sizes; the pixel sizes here are ExamSnap defaults (photo and signature are cm at 200 DPI). The bulletin lists the fingers-and-thumb impressions as 10–200 KB on one page and 50–300 KB on the next; ExamSnap targets the overlap (50–200 KB) so the file is valid under both. The 4×6 inch postcard photo is NOT uploaded; it is only needed as prints for the exam day. The form also captures a live photo with your camera, which must match your uploaded photo. | NEET (UG) 2026 सूचना बुलेटिन से। बुलेटिन में सिर्फ़ फ़ाइल साइज़ की रेंज दी गई है, पिक्सेल साइज़ नहीं; यहाँ के पिक्सेल साइज़ ExamSnap के डिफ़ॉल्ट हैं (फ़ोटो और हस्ताक्षर के cm से 200 DPI पर निकाले गए)। बुलेटिन में उँगलियों और अंगूठे के निशान एक पेज पर 10–200 KB और अगले पेज पर 50–300 KB लिखे हैं; ExamSnap वह रेंज लेता है जो दोनों में मान्य है (50–200 KB), ताकि फ़ाइल हर हाल में सही रहे। 4×6 इंच की पोस्टकार्ड फ़ोटो अपलोड नहीं होती; उसके प्रिंट सिर्फ़ परीक्षा के दिन चाहिए। फ़ॉर्म आपके कैमरे से एक लाइव फ़ोटो भी लेता है, जो आपकी अपलोड की गई फ़ोटो से मिलनी चाहिए। |
+| `documents.photo.label` | Passport size photograph (3.5 × 4.5 cm) | पासपोर्ट साइज़ फ़ोटो (3.5 × 4.5 cm) |
+| `documents.photo.notes` | Colour or black &amp; white, white background; about 80% of the photo should be your face, ears visible, no mask. Use the same photo you will paste on the attendance sheet. | रंगीन या ब्लैक एंड व्हाइट, सफ़ेद बैकग्राउंड; फ़ोटो का लगभग 80% हिस्सा आपका चेहरा हो, कान दिखने चाहिए, मास्क नहीं। वही फ़ोटो इस्तेमाल करें जो आप अटेंडेंस शीट पर चिपकाएँगे। |
+| `documents.signature.label` | Signature (3.5 × 1.5 cm) | हस्ताक्षर (3.5 × 1.5 cm) |
+| `documents.signature.notes` | Sign in running hand on white paper. | सफ़ेद काग़ज़ पर रनिंग हैंड (जुड़े अक्षरों) में हस्ताक्षर करें। |
+| `documents.fingers.label` | Fingers &amp; thumb impressions (left and right hands) | उँगलियों और अंगूठे के निशान (बायाँ और दायाँ हाथ) |
+| `documents.fingers.notes` | Impressions of the fingers and thumb of both hands on white paper. Unclear impressions are rejected. ExamSnap makes one landscape image; if the form asks for each hand separately, make one file per hand. | दोनों हाथों की उँगलियों और अंगूठे के निशान, सफ़ेद काग़ज़ पर। साफ़ न दिखने वाले निशान रिजेक्ट हो जाते हैं। ExamSnap एक आड़ी (लैंडस्केप) फ़ोटो बनाता है; अगर फ़ॉर्म हर हाथ के लिए अलग फ़ाइल माँगे, तो हर हाथ की अलग फ़ाइल बनाएँ। |
+
 ## Exam presets
 
 Optional per preset (`translations.hi` in `presets/<id>.json`); anything not translated is shown in English.

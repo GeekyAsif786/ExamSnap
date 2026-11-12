@@ -87,7 +87,7 @@ test("exams are grouped by category, with Custom size last", async ({ page }) =>
   );
   expect(groups).toEqual([
     ["Banking", ["banking-ibps"]],
-    ["Entrance exams", ["jee-main"]],
+    ["Entrance exams", ["cuet-ug", "jee-main", "neet-ug"]],
     ["Government jobs", ["ssc", "upsc-cse"]],
   ]);
   await expect(page.locator("#exam > option")).toHaveText(["Custom size…"]);
