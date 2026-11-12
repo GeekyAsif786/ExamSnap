@@ -20,7 +20,7 @@ export const REVIEW_DIR = join(ROOT, "docs", "i18n");
  * Presets whose translations are new and not yet reviewed: listed first, under
  * their own heading, so the reviewer finds them. Empty `ids` once reviewed.
  */
-export const NEW_FOR_REVIEW = { heading: "New in M3c", ids: [] };
+export const NEW_FOR_REVIEW = { heading: "Changed: needs review", ids: ["jee-main"] };
 
 /**
  * The review document for one locale.

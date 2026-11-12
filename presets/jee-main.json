@@ -2,18 +2,13 @@
   "id": "jee-main",
   "name": "JEE Main (NTA)",
   "category": "Entrance exams",
-  "notes": "Sources disagree: photo 10–200 KB vs 10–300 KB, signature 4–30 KB vs 10–50 KB. ExamSnap targets the overlap (photo 10–200, signature 10–30) so the file is valid under every version. Pixel sizes are cm at 200 DPI.",
-  "last_verified": "2026-11-11",
+  "notes": "From the JEE (Main) 2027 Information Bulletin. The bulletin gives only file-size ranges, not pixel sizes; the pixel sizes here are ExamSnap defaults (cm at 200 DPI). The form also captures a live photo with your camera, in addition to the uploaded photograph.",
+  "last_verified": "2026-11-12",
   "sources": [
     {
-      "title": "CollegeDekho — JEE Main 2026 documents (signature 4–30 KB)",
-      "url": "https://www.collegedekho.com/news/jee-main-2026-registration-list-of-important-documents-required-72297",
-      "type": "secondary"
-    },
-    {
-      "title": "Physics Wallah — JEE Main documents (photo 10–300 KB)",
-      "url": "https://www.pw.live/iit-jee/exams/list-of-documents-required-to-apply-for-jee-main",
-      "type": "secondary"
+      "title": "JEE (Main) 2027 Information Bulletin — NTA (Application Form, p. 8)",
+      "url": "https://cdnbbsr.s3waas.gov.in/s3f8e59f4b2fe7c5705bf878bbd494ccdf/uploads/2026/10/202610241890224107.pdf",
+      "type": "notice"
     },
     {
       "title": "JEE Main official site",
@@ -31,7 +26,7 @@
       "min_kb": 10,
       "max_kb": 200,
       "filename": "Photograph.jpg",
-      "notes": "Colour photo, white background, ears visible."
+      "notes": "Colour photo (not black & white), white background; about 80% of the photo should be your face, ears visible, no mask."
     },
     {
       "id": "signature",
@@ -40,17 +35,17 @@
       "width": 276,
       "height": 118,
       "min_kb": 10,
-      "max_kb": 30,
+      "max_kb": 100,
       "filename": "Signature.jpg"
     }
   ],
   "translations": {
     "hi": {
-      "notes": "स्रोतों में अंतर है: फ़ोटो 10–200 KB या 10–300 KB, हस्ताक्षर 4–30 KB या 10–50 KB। ExamSnap वह रेंज लेता है जो सभी में मान्य है (फ़ोटो 10–200, हस्ताक्षर 10–30), ताकि फ़ाइल हर हाल में सही रहे। पिक्सेल साइज़ cm से 200 DPI पर निकाले गए हैं।",
+      "notes": "JEE (Main) 2027 सूचना बुलेटिन से। बुलेटिन में सिर्फ़ फ़ाइल साइज़ की रेंज दी गई है, पिक्सेल साइज़ नहीं; यहाँ के पिक्सेल साइज़ ExamSnap के डिफ़ॉल्ट हैं (cm से 200 DPI पर निकाले गए)। अपलोड की गई फ़ोटो के अलावा, फ़ॉर्म आपके कैमरे से एक लाइव फ़ोटो भी लेता है।",
       "documents": {
         "photo": {
           "label": "फ़ोटो (3.5 × 4.5 cm)",
-          "notes": "रंगीन फ़ोटो, सफ़ेद बैकग्राउंड, कान दिखने चाहिए।"
+          "notes": "रंगीन फ़ोटो (ब्लैक एंड व्हाइट नहीं), सफ़ेद बैकग्राउंड; फ़ोटो का लगभग 80% हिस्सा आपका चेहरा हो, कान दिखने चाहिए, मास्क नहीं।"
         },
         "signature": {
           "label": "हस्ताक्षर (3.5 × 1.5 cm)"
