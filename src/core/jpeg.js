@@ -83,3 +83,86 @@ export function padJpeg(bytes, targetLen) {
   out.set(bytes.subarray(at), pos);
   return out;
 }
+
+// APP1 (EXIF/XMP), APP13 (IPTC/Photoshop), COM (free text: software, device).
+const METADATA_MARKERS = new Set([0xe1, 0xed, 0xfe]);
+
+/**
+ * Remove metadata segments that can carry location, camera or device data —
+ * APP1 (EXIF, XMP), APP13 (IPTC / Photoshop) and COM (comments, where some
+ * encoders write software or device text) — from the header of a JPEG.
+ * Everything else, including APP0 JFIF, APP2 ICC profiles, APP14 Adobe and
+ * the scan data, is kept byte-for-byte. Some encoders (WebKit/ImageIO) write
+ * these segments even for canvas output. Run it before padJpeg: the COM
+ * padding padJpeg adds would otherwise be removed too.
+ *
+ * If the header can't be walked safely up to SOS, the input is returned
+ * unchanged rather than risk corrupting it.
+ *
+ * @param {Uint8Array} bytes
+ * @returns {Uint8Array} the input itself if nothing was removed.
+ */
+export function stripMetadata(bytes) {
+  if (!isJpeg(bytes)) throw new TypeError("stripMetadata: input is not a JPEG");
+  const keep = []; // [start, end) ranges to keep
+  let start = 0;
+  let pos = 2;
+  for (;;) {
+    if (pos + 4 > bytes.length || bytes[pos] !== 0xff) return bytes;
+    const marker = bytes[pos + 1];
+    if (marker === 0xff) {
+      pos++; // fill byte before a marker
+      continue;
+    }
+    if (marker === 0xda) break; // SOS: scan data follows, stop
+    // Standalone markers (TEM, RSTn, SOI, EOI) have no business in the header.
+    if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd9)) return bytes;
+    const len = (bytes[pos + 2] << 8) | bytes[pos + 3];
+    if (len < 2 || pos + 2 + len > bytes.length) return bytes;
+    if (METADATA_MARKERS.has(marker)) {
+      keep.push([start, pos]);
+      start = pos + 2 + len;
+    }
+    pos += 2 + len;
+  }
+  if (!keep.length) return bytes;
+  keep.push([start, bytes.length]);
+  const out = new Uint8Array(keep.reduce((n, [a, b]) => n + (b - a), 0));
+  let at = 0;
+  for (const [a, b] of keep) {
+    out.set(bytes.subarray(a, b), at);
+    at += b - a;
+  }
+  return out;
+}
+
+// APP0 JFIF 1.01, aspect ratio 1:1 (units 0), no thumbnail.
+const JFIF_APP0 = [0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00];
+
+/**
+ * Make sure a JPEG starts with an APP0 JFIF segment (FF D8 FF E0 … "JFIF\0"),
+ * which some portals check for. If the first segment after SOI isn't APP0
+ * JFIF, a standard JFIF 1.01 APP0 (1:1 aspect, no thumbnail) is inserted
+ * right after SOI. Decoded pixels are unchanged.
+ *
+ * @param {Uint8Array} bytes
+ * @returns {Uint8Array} the input itself if it already starts with JFIF.
+ */
+export function ensureJfif(bytes) {
+  if (!isJpeg(bytes)) throw new TypeError("ensureJfif: input is not a JPEG");
+  const hasJfif =
+    bytes.length >= 11 &&
+    bytes[2] === 0xff &&
+    bytes[3] === 0xe0 &&
+    bytes[6] === 0x4a &&
+    bytes[7] === 0x46 &&
+    bytes[8] === 0x49 &&
+    bytes[9] === 0x46 &&
+    bytes[10] === 0x00;
+  if (hasJfif) return bytes;
+  const out = new Uint8Array(bytes.length + JFIF_APP0.length);
+  out.set(bytes.subarray(0, 2), 0);
+  out.set(JFIF_APP0, 2);
+  out.set(bytes.subarray(2), 2 + JFIF_APP0.length);
+  return out;
+}

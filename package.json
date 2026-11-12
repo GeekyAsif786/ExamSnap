@@ -10,11 +10,16 @@
   },
   "scripts": {
     "test": "node --test \"tests/**/*.test.mjs\"",
-    "check": "node scripts/check-presets.mjs",
-    "lint": "eslint ."
+    "check": "node scripts/check-presets.mjs && node scripts/bundle-presets.mjs --check && node scripts/check-size.mjs",
+    "lint": "eslint .",
+    "build:presets": "node scripts/bundle-presets.mjs",
+    "dev": "node scripts/serve.mjs",
+    "test:e2e": "playwright test",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "eslint": "^10.14.0",
