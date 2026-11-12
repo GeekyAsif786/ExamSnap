@@ -91,12 +91,31 @@ test("sources list: safe new-tab links with type badges and last verified", asyn
   await expect(page.locator("#source-list .badge").first()).toHaveText("Official notice");
 });
 
-test("document and preset notes are shown as text", async ({ page }) => {
+test("document notes stay visible; preset notes sit inside the sources section", async ({ page }) => {
   await page.goto("/?exam=banking-ibps&doc=signature");
   await expect(page.locator("#notes p")).toHaveText([
     "Black ink on white paper. Signatures in CAPITAL LETTERS are not accepted.",
-    /^Standard IBPS-style annex/,
   ]);
+  await expect(page.locator("#notes p")).toBeVisible();
+  // Preset notes come before the source list, inside the closed <details>.
+  const presetNote = page.locator("#sources #preset-notes p");
+  await expect(presetNote).toHaveText([/^Standard IBPS-style annex/]);
+  await expect(presetNote).toBeHidden();
+  expect(
+    await page.locator("#preset-notes").evaluate((n) => n.nextElementSibling?.id),
+  ).toBe("source-list");
+  await page.getByText("Where these numbers come from").click();
+  await expect(presetNote).toBeVisible();
+
+  // A document without notes leaves the visible notes empty.
+  await page.locator("#doc").selectOption("photo");
+  await expect(page.locator("#notes p")).toHaveCount(0);
+  await expect(presetNote).toHaveText([/^Standard IBPS-style annex/]);
+  // Chips and warning stay outside the collapsible section.
+  await page.locator("#exam").selectOption("jee-main");
+  await expect(page.locator("#chips")).toBeVisible();
+  await expect(page.locator("#warning")).toBeVisible();
+  expect(await page.locator("#sources #chips, #sources #warning").count()).toBe(0);
 });
 
 test("custom size with an invalid KB range shows the inline RangeError", async ({ page }) => {

@@ -37,6 +37,7 @@ const el = {
   chips: $("chips"),
   warning: $("warning"),
   notes: $("notes"),
+  presetNotes: $("preset-notes"),
   sources: $("sources"),
   sourceList: $("source-list"),
   verified: $("verified"),
@@ -127,9 +128,11 @@ function renderSpec() {
   );
 
   el.warning.hidden = isCustom || hasNotice(preset);
-  el.notes.replaceChildren(
-    ...[doc?.notes, preset?.notes].filter(Boolean).map((t) => make$("p", { textContent: t })),
-  );
+  // The document's own notes stay visible; preset-wide notes live in the
+  // collapsible sources section to keep step 1 short on phones.
+  const paragraphs = (...texts) => texts.filter(Boolean).map((t) => make$("p", { textContent: t }));
+  el.notes.replaceChildren(...paragraphs(doc?.notes));
+  el.presetNotes.replaceChildren(...paragraphs(preset?.notes));
 
   el.sources.hidden = isCustom;
   el.sourceList.replaceChildren(

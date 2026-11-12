@@ -363,6 +363,10 @@ input[type="range"] {
   display: none;
 }
 
+.sources .notes p {
+  margin: 4px 0 8px;
+}
+
 .sources ul {
   margin: 4px 0;
   padding-left: 20px;
