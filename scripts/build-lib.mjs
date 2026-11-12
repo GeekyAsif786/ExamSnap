@@ -167,9 +167,9 @@ export function landingAboveHtml(preset, S) {
       (d) => `
             <tr>
               <th scope="row">${esc(d.label)}</th>
-              <td>${esc(S.chipPixels(d.width, d.height))}</td>
-              <td>${esc(S.chipKb(d.min_kb, d.max_kb))}</td>
-              <td>${esc(d.notes ?? S.emptyCell)}</td>
+              <td data-label="${esc(S.thPixels)}">${esc(S.chipPixels(d.width, d.height))}</td>
+              <td data-label="${esc(S.thKb)}">${esc(S.chipKb(d.min_kb, d.max_kb))}</td>
+              <td data-label="${esc(S.thNotes)}"${d.notes ? "" : ' class="empty"'}>${esc(d.notes ?? S.emptyCell)}</td>
             </tr>`,
     )
     .join("");

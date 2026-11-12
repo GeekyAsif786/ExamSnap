@@ -130,7 +130,8 @@ test("landingAboveHtml: escaped h1, warning only without a notice, one row per d
   assert.match(html, /class="warning"/);
   assert.equal(html.match(/<tr>/g).length, 1 + byId.ssc.documents.length);
   assert.doesNotMatch(landingAboveHtml(byId["banking-ibps"], S), /class="warning"/);
-  assert.match(landingAboveHtml(byId["banking-ibps"], S), /<td>—<\/td>/, "missing notes render as an em dash");
+  assert.match(landingAboveHtml(byId["banking-ibps"], S), /<td data-label="Notes" class="empty">—<\/td>/, "missing notes render as an em dash");
+  assert.match(html, /<td data-label="Size">276 × 354 px<\/td>/, "cells carry labels for the narrow-screen layout");
 });
 
 test("examLinksHtml links relatively to every preset", () => {

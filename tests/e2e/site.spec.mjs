@@ -68,6 +68,20 @@ test.describe("landing pages", () => {
     });
   }
 
+  test("landing pages fit 360 px without horizontal scrolling", async ({ browser, baseURL }) => {
+    const context = await browser.newContext({ viewport: { width: 360, height: 740 }, baseURL });
+    const page = await context.newPage();
+    for (const preset of PRESETS) {
+      await page.goto(`./${preset.id}/`);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow, preset.id).toBeLessThanOrEqual(0);
+      // Each document is a labelled card; notes are readable without scrolling the table.
+      const wrap = await page.locator(".table-wrap").evaluate((w) => w.scrollWidth - w.clientWidth);
+      expect(wrap, preset.id).toBeLessThanOrEqual(0);
+    }
+    await context.close();
+  });
+
   test("?exam= and ?doc= override a landing page's exam", async ({ page }) => {
     await page.goto("./ssc/?exam=jee-main&doc=signature");
     await expect(page.locator("#exam")).toHaveValue("jee-main");
