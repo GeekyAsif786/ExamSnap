@@ -96,14 +96,14 @@ test("stale last_verified and missing notice are warnings, not errors", async ()
   ]);
 });
 
-test("the real presets pass, with notice warnings for ssc, upsc-cse and jee-main", async () => {
+test("the real presets pass, with notice warnings for ssc and upsc-cse only", async () => {
   const dir = fileURLToPath(new URL("../presets/", import.meta.url));
   const { errors, warnings, count } = await validatePresets(dir);
   assert.deepEqual(errors, []);
   assert.equal(count, 6);
   assert.deepEqual(
     warnings.filter((w) => w.includes("no official notice")),
-    ["jee-main", "ssc", "upsc-cse"].map((id) => `${id}: no official notice linked — specs unverified`),
+    ["ssc", "upsc-cse"].map((id) => `${id}: no official notice linked — specs unverified`),
   );
 });
 
@@ -171,4 +171,32 @@ test("NEET (UG) and CUET (UG): bulletin values exactly, official notices linked 
     }
   }
   assert.equal(cuet.documents[1].notes, undefined, "CUET signature has no notes");
+});
+
+test("JEE Main: 2027 bulletin values exactly, official notice and portal only", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const jee = JSON.parse(await readFile(new URL("../presets/jee-main.json", import.meta.url), "utf8"));
+  assert.equal(jee.name, "JEE Main (NTA)");
+  assert.equal(jee.category, "Entrance exams");
+  assert.equal(jee.last_verified, "2026-11-12");
+  assert.deepEqual(
+    jee.documents.map((d) => [d.id, d.kind, d.width, d.height, d.min_kb, d.max_kb, d.filename]),
+    [
+      ["photo", "photo", 276, 354, 10, 200, "Photograph.jpg"],
+      ["signature", "signature", 276, 118, 10, 100, "Signature.jpg"],
+    ],
+  );
+  assert.equal(jee.documents[1].notes, undefined, "signature has no notes");
+  assert.deepEqual(jee.sources, [
+    {
+      title: "JEE (Main) 2027 Information Bulletin — NTA (Application Form, p. 8)",
+      url: "https://cdnbbsr.s3waas.gov.in/s3f8e59f4b2fe7c5705bf878bbd494ccdf/uploads/2026/10/202610241890224107.pdf",
+      type: "notice",
+    },
+    { title: "JEE Main official site", url: "https://jeemain.nta.nic.in", type: "portal" },
+  ]);
+  const hi = jee.translations.hi;
+  assert.match(hi.notes, /^JEE \(Main\) 2027 /);
+  assert.ok(hi.documents.photo.notes && hi.documents.photo.label && hi.documents.signature.label);
+  assert.equal(hi.documents.signature.notes, undefined);
 });

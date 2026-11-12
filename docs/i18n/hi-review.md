@@ -113,6 +113,20 @@ Placeholders like `{w}` are filled in by the app (numbers, file names, exam name
 | `languageNav` | Language | भाषा |
 | `noscript` | ExamSnap needs JavaScript to process your photo on your device. Please enable JavaScript for this page. | ExamSnap आपकी फ़ोटो को आपके डिवाइस पर ही प्रोसेस करता है, इसके लिए JavaScript ज़रूरी है। कृपया इस पेज के लिए JavaScript चालू करें। |
 
+## Changed: needs review
+
+Draft translations not yet reviewed by a native speaker. Once reviewed, they move to "Exam presets" below.
+
+### `jee-main`
+
+| Field | English | Hindi |
+| --- | --- | --- |
+| `name` | JEE Main (NTA) | _(English)_ |
+| `notes` | From the JEE (Main) 2027 Information Bulletin. The bulletin gives only file-size ranges, not pixel sizes; the pixel sizes here are ExamSnap defaults (cm at 200 DPI). The form also captures a live photo with your camera, in addition to the uploaded photograph. | JEE (Main) 2027 सूचना बुलेटिन से। बुलेटिन में सिर्फ़ फ़ाइल साइज़ की रेंज दी गई है, पिक्सेल साइज़ नहीं; यहाँ के पिक्सेल साइज़ ExamSnap के डिफ़ॉल्ट हैं (cm से 200 DPI पर निकाले गए)। अपलोड की गई फ़ोटो के अलावा, फ़ॉर्म आपके कैमरे से एक लाइव फ़ोटो भी लेता है। |
+| `documents.photo.label` | Photograph (3.5 × 4.5 cm) | फ़ोटो (3.5 × 4.5 cm) |
+| `documents.photo.notes` | Colour photo (not black &amp; white), white background; about 80% of the photo should be your face, ears visible, no mask. | रंगीन फ़ोटो (ब्लैक एंड व्हाइट नहीं), सफ़ेद बैकग्राउंड; फ़ोटो का लगभग 80% हिस्सा आपका चेहरा हो, कान दिखने चाहिए, मास्क नहीं। |
+| `documents.signature.label` | Signature (3.5 × 1.5 cm) | हस्ताक्षर (3.5 × 1.5 cm) |
+
 ## Exam presets
 
 Optional per preset (`translations.hi` in `presets/<id>.json`); anything not translated is shown in English.
@@ -137,16 +151,6 @@ Optional per preset (`translations.hi` in `presets/<id>.json`); anything not tra
 | `notes` | From the CUET (UG) 2026 Information Bulletin. The bulletin gives only file-size ranges, not pixel sizes; the pixel sizes here are ExamSnap defaults (cm at 200 DPI). The form also captures a live photo with your camera in addition to the uploaded photograph. | CUET (UG) 2026 सूचना बुलेटिन से। बुलेटिन में सिर्फ़ फ़ाइल साइज़ की रेंज दी गई है, पिक्सेल साइज़ नहीं; यहाँ के पिक्सेल साइज़ ExamSnap के डिफ़ॉल्ट हैं (cm से 200 DPI पर निकाले गए)। अपलोड की गई फ़ोटो के अलावा, फ़ॉर्म आपके कैमरे से एक लाइव फ़ोटो भी लेता है। |
 | `documents.photo.label` | Passport size photograph (3.5 × 4.5 cm) | पासपोर्ट साइज़ फ़ोटो (3.5 × 4.5 cm) |
 | `documents.photo.notes` | Colour photo, white background; about 80% of the photo should be your face, ears visible, no mask. | रंगीन फ़ोटो, सफ़ेद बैकग्राउंड; फ़ोटो का लगभग 80% हिस्सा आपका चेहरा हो, कान दिखने चाहिए, मास्क नहीं। |
-| `documents.signature.label` | Signature (3.5 × 1.5 cm) | हस्ताक्षर (3.5 × 1.5 cm) |
-
-### `jee-main`
-
-| Field | English | Hindi |
-| --- | --- | --- |
-| `name` | JEE Main (NTA) | _(English)_ |
-| `notes` | Sources disagree: photo 10–200 KB vs 10–300 KB, signature 4–30 KB vs 10–50 KB. ExamSnap targets the overlap (photo 10–200, signature 10–30) so the file is valid under every version. Pixel sizes are cm at 200 DPI. | स्रोतों में अंतर है: फ़ोटो 10–200 KB या 10–300 KB, हस्ताक्षर 4–30 KB या 10–50 KB। ExamSnap वह रेंज लेता है जो सभी में मान्य है (फ़ोटो 10–200, हस्ताक्षर 10–30), ताकि फ़ाइल हर हाल में सही रहे। पिक्सेल साइज़ cm से 200 DPI पर निकाले गए हैं। |
-| `documents.photo.label` | Photograph (3.5 × 4.5 cm) | फ़ोटो (3.5 × 4.5 cm) |
-| `documents.photo.notes` | Colour photo, white background, ears visible. | रंगीन फ़ोटो, सफ़ेद बैकग्राउंड, कान दिखने चाहिए। |
 | `documents.signature.label` | Signature (3.5 × 1.5 cm) | हस्ताक्षर (3.5 × 1.5 cm) |
 
 ### `neet-ug`

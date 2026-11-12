@@ -96,7 +96,7 @@ test("exams are grouped by category, with Custom size last", async ({ page }) =>
 test("secondary-source warning shows only for presets without an official notice", async ({ page }) => {
   await gotoReady(page, "./?exam=banking-ibps&doc=photo");
   await expect(page.locator("#warning")).toBeHidden();
-  await page.locator("#exam").selectOption("jee-main");
+  await page.locator("#exam").selectOption("ssc");
   await expect(page.locator("#warning")).toBeVisible();
   await expect(page.locator("#warning")).toHaveText(
     "These specs come from secondary sources. Check the official notification before submitting.",
@@ -140,7 +140,7 @@ test("document notes stay visible; preset notes sit inside the sources section",
   await expect(page.locator("#notes p")).toHaveCount(0);
   await expect(presetNote).toHaveText([/^Standard IBPS-style annex/]);
   // Chips and warning stay outside the collapsible section.
-  await page.locator("#exam").selectOption("jee-main");
+  await page.locator("#exam").selectOption("ssc");
   await expect(page.locator("#chips")).toBeVisible();
   await expect(page.locator("#warning")).toBeVisible();
   expect(await page.locator("#sources #chips, #sources #warning").count()).toBe(0);
