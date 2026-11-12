@@ -28,7 +28,9 @@ You need [Node.js 22+](https://nodejs.org/) and git. First time only: fork the r
    npm run preview
    ```
    Open `http://localhost:4173/<id>/`, upload a real photo (yours is fine, it never leaves your computer), and make a file for each document. Check the size and KB in the result.
-5. **Open a pull request.** Commit the files the scaffolder lists, push to your fork, and open a PR. The PR template has a short checklist.
+5. **Open a pull request.** Commit the files the scaffolder lists, push to your fork, and open a PR. The PR template has a short checklist. Keep **"Allow edits by maintainers"** ticked.
+
+The README "Supported exams" table is generated from `presets/`. If it is out of date in your PR, CI shows a warning, not a failure: the maintainer regenerates the table before merging (that's why "Allow edits by maintainers" matters).
 
 Opening an issue with the ["I'm adding an exam"](https://github.com/GeekyAsif786/ExamSnap/issues/new?template=add-preset.yml&title=%5BExam%5D%20) form first lets others know you're on it.
 
@@ -125,7 +127,7 @@ Presets marked "⚠ Needs verification" in the [README](README.md#supported-exam
 3. Add the notice to `sources` with type `notice`. Fix any number that doesn't match it. Set `last_verified` to today's date.
 4. Commit to a new branch and open a pull request, and say you edited on GitHub.
 
-CI will report that the README exams table is out of date. That's expected for edits made on GitHub: the maintainer regenerates it before merging, so leave "Allow edits by maintainers" ticked. If you have the repo cloned, `npm run update-readme` fixes it yourself.
+CI may show a warning that the README exams table is out of date. That's expected for edits made on GitHub, and it doesn't fail your PR: the maintainer regenerates the table before merging, so leave "Allow edits by maintainers" ticked. If you have the repo cloned, `npm run update-readme` fixes it yourself.
 
 ## Translations
 

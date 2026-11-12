@@ -68,3 +68,21 @@ test("preset-only PR: edit a preset JSON, nothing else; check and unit tests pas
   assert.match(tests.out, /ℹ fail 0/);
   assert.match(await readFile(join(dir, "src/generated/presets.js"), "utf8"), /Re-checked against the portal\./);
 });
+
+test("preset-only PR that changes a number: check passes on the PR, with the README warning", { skip: NESTED, timeout: 180_000 }, async (t) => {
+  const dir = await freshCheckout();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await editPreset(dir, "ssc", (p) => {
+    p.documents[0].max_kb = 60;
+  });
+  const pr = { GITHUB_ACTIONS: "true", GITHUB_EVENT_NAME: "pull_request", GITHUB_REF: "refs/pull/1/merge" };
+  const check = await run(dir, ["run", "check"], pr);
+  assert.equal(check.code, 0, check.out);
+  assert.match(check.out, /::warning title=README exams table::/);
+  const tests = await run(dir, ["test"], pr);
+  assert.equal(tests.code, 0, tests.out);
+  assert.match(tests.out, /ℹ fail 0/);
+  // After merge (push to main) the stale table is an error until regenerated.
+  const main = await run(dir, ["run", "check"], { GITHUB_ACTIONS: "true", GITHUB_EVENT_NAME: "push", GITHUB_REF: "refs/heads/main" });
+  assert.notEqual(main.code, 0);
+});

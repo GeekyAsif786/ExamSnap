@@ -53,7 +53,7 @@ The ExamSnap name and logo are not covered by these licenses.
 - `npm run build` — build the site into `dist/`.
 - `npm run preview` — build, then serve `dist/` at http://localhost:4173/.
 - `npm run test:e2e` — run the Playwright tests on Chromium, Firefox and WebKit against the built site.
-- `npm run check` — validate presets, regenerate the presets module, check the README exams table is fresh, and enforce the JS size budget.
+- `npm run check` — validate presets, regenerate the presets module, check the README exams table is fresh (a warning on pull requests, an error locally and on main), and enforce the JS size budget.
 
 `src/generated/presets.js` is not committed: npm regenerates it from `presets/` before `dev`, `preview`, `build`, `test`, `test:e2e`, `screenshots` and `check`.
 - `npm run new-preset` — add an exam preset interactively (see [CONTRIBUTING.md](CONTRIBUTING.md)).

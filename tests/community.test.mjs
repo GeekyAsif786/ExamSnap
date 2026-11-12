@@ -45,6 +45,9 @@ test("CONTRIBUTING: sections, anchors, review promise and licensing", async () =
   assert.match(md, /no CLA/);
   assert.match(md, /labels\/i18n/);
   assert.match(md, /README\.md#development/);
+  // Stale README table: a PR warning; the maintainer regenerates it.
+  assert.match(md, /maintainer regenerates the table before merging/);
+  assert.match(md, /Keep \*\*"Allow edits by maintainers"\*\* ticked/);
 });
 
 test("the example preset in CONTRIBUTING is valid and matches the cm conversion", async () => {

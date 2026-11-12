@@ -1,0 +1,47 @@
+{
+  "id": "jee-main",
+  "name": "JEE Main (NTA)",
+  "category": "Entrance exams",
+  "notes": "Sources disagree: photo 10–200 KB vs 10–300 KB, signature 4–30 KB vs 10–50 KB. ExamSnap targets the overlap (photo 10–200, signature 10–30) so the file is valid under every version. Pixel sizes are cm at 200 DPI.",
+  "last_verified": "2026-11-11",
+  "sources": [
+    {
+      "title": "CollegeDekho — JEE Main 2026 documents (signature 4–30 KB)",
+      "url": "https://www.collegedekho.com/news/jee-main-2026-registration-list-of-important-documents-required-72297",
+      "type": "secondary"
+    },
+    {
+      "title": "Physics Wallah — JEE Main documents (photo 10–300 KB)",
+      "url": "https://www.pw.live/iit-jee/exams/list-of-documents-required-to-apply-for-jee-main",
+      "type": "secondary"
+    },
+    {
+      "title": "JEE Main official site",
+      "url": "https://jeemain.nta.nic.in",
+      "type": "portal"
+    }
+  ],
+  "documents": [
+    {
+      "id": "photo",
+      "label": "Photograph (3.5 × 4.5 cm)",
+      "kind": "photo",
+      "width": 276,
+      "height": 354,
+      "min_kb": 10,
+      "max_kb": 200,
+      "filename": "Photograph.jpg",
+      "notes": "Colour photo, white background, ears visible."
+    },
+    {
+      "id": "signature",
+      "label": "Signature (3.5 × 1.5 cm)",
+      "kind": "signature",
+      "width": 276,
+      "height": 118,
+      "min_kb": 10,
+      "max_kb": 30,
+      "filename": "Signature.jpg"
+    }
+  ]
+}

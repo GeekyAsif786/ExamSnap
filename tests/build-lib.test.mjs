@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { fileURLToPath } from "node:url";
 import { PRESETS } from "../src/generated/presets.js";
+import { readPresets } from "../scripts/bundle-presets.mjs";
 import { STRINGS as S } from "../src/ui/strings.js";
 import {
   CSP,
@@ -40,7 +42,11 @@ import {
   truncateWords,
 } from "../scripts/build-lib.mjs";
 
-const byId = Object.fromEntries(PRESETS.map((p) => [p.id, p]));
+// Exact-output examples use a frozen copy of the presets (tests/fixtures/
+// presets/snapshot/), so editing a real preset never breaks these tests;
+// properties every real preset must have still loop over PRESETS.
+const SNAPSHOT = await readPresets(fileURLToPath(new URL("./fixtures/presets/snapshot/", import.meta.url)));
+const byId = Object.fromEntries(SNAPSHOT.map((p) => [p.id, p]));
 
 test("siteUrl: origin + base + path; custom domain only needs base '/' and a new origin", () => {
   assert.equal(siteUrl("https://geekyasif786.github.io", "/ExamSnap/", "ssc/"), "https://geekyasif786.github.io/ExamSnap/ssc/");

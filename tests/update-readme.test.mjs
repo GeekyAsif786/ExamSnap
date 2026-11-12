@@ -5,7 +5,8 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { END, README_PATH, START, VERIFY_URL, cell, examsTable, replaceBlock, run } from "../scripts/update-readme.mjs";
+import { END, README_PATH, START, STALE_SUMMARY, VERIFY_URL, cell, examsTable, replaceBlock, run, staleSeverity } from "../scripts/update-readme.mjs";
+import { execFile } from "node:child_process";
 import { readPresets } from "../scripts/bundle-presets.mjs";
 
 const fixture = (name) => fileURLToPath(new URL(`./fixtures/presets/${name}/`, import.meta.url));
@@ -81,10 +82,55 @@ test("run: --check reports stale without writing; write mode fixes it", async ()
   }
 });
 
-test("the committed README table is up to date and lists every preset", async () => {
-  assert.deepEqual(await run({ check: true }), { stale: false, written: false });
+test("the committed README table is up to date and lists every preset", async (t) => {
+  // On a pull request a stale table is the maintainer's job (a warning in npm run check).
+  const { stale } = await run({ check: true });
+  if (stale && staleSeverity(process.env) === "warning") return t.skip("README table stale on a PR: maintainer regenerates it");
+  assert.equal(stale, false);
   const text = await readFile(README_PATH, "utf8");
   for (const p of await readPresets()) assert.ok(text.includes(`(https://examsnap.asifurrahaman.com/${p.id}/)`), p.id);
   assert.match(text, /Your exam missing\? \[Request it\]\(https:\/\/github\.com\/GeekyAsif786\/ExamSnap\/issues\/new\?template=request-exam\.yml&title=%5BExam%5D%20\) · \[Add it yourself in 10 minutes\]\(CONTRIBUTING\.md#add-an-exam-in-10-minutes\)/);
   assert.match(text, /contrib\.rocks\/image\?repo=GeekyAsif786\/ExamSnap/);
+});
+
+test("staleSeverity: error locally and on push to main, warning on pull requests", () => {
+  assert.equal(staleSeverity({}), "error");
+  assert.equal(staleSeverity({ GITHUB_EVENT_NAME: "pull_request" }), "error", "not in Actions");
+  const gh = { GITHUB_ACTIONS: "true" };
+  assert.equal(staleSeverity({ ...gh, GITHUB_EVENT_NAME: "push", GITHUB_REF: "refs/heads/main" }), "error");
+  assert.equal(staleSeverity({ ...gh, GITHUB_EVENT_NAME: "pull_request", GITHUB_REF: "refs/pull/9/merge" }), "warning");
+  assert.equal(staleSeverity({ ...gh, GITHUB_EVENT_NAME: "push", GITHUB_REF: "refs/heads/add-neet" }), "warning");
+});
+
+const SCRIPT = fileURLToPath(new URL("../scripts/update-readme.mjs", import.meta.url));
+function checkStale(readme, env) {
+  const clean = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith("GITHUB_")));
+  return new Promise((resolve) =>
+    execFile(process.execPath, [SCRIPT, "--check", "--readme", readme], { env: { ...clean, ...env } }, (error, stdout, stderr) =>
+      resolve({ code: error ? error.code : 0, stdout, stderr }),
+    ),
+  );
+}
+
+test("--check on a stale README: ::warning + job summary line on a PR, error on push to main", async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), "examsnap-readme-"));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const readme = join(dir, "README.md");
+  const summary = join(dir, "summary.md");
+  await writeFile(readme, `# T\n\n${START}\nold\n${END}\n`);
+  await writeFile(summary, "");
+
+  const pr = await checkStale(readme, { GITHUB_ACTIONS: "true", GITHUB_EVENT_NAME: "pull_request", GITHUB_REF: "refs/pull/1/merge", GITHUB_STEP_SUMMARY: summary });
+  assert.equal(pr.code, 0, pr.stderr);
+  assert.match(pr.stdout, /^::warning title=README exams table::README\.md exams table is out of date\./m);
+  assert.equal(await readFile(summary, "utf8"), STALE_SUMMARY);
+  assert.match(STALE_SUMMARY, /npm run update-readme/);
+  assert.match(await readFile(readme, "utf8"), /\nold\n/, "--check never writes");
+
+  const main = await checkStale(readme, { GITHUB_ACTIONS: "true", GITHUB_EVENT_NAME: "push", GITHUB_REF: "refs/heads/main" });
+  assert.equal(main.code, 1);
+  assert.match(main.stderr, /ERROR README\.md exams table is out of date\. Run: npm run update-readme/);
+
+  const local = await checkStale(readme, {});
+  assert.equal(local.code, 1);
 });
