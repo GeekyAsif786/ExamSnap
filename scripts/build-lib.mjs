@@ -6,8 +6,8 @@ import { normalizeBase } from "./serve.mjs";
 import { hasNotice } from "../src/ui/state.js";
 
 export { normalizeBase };
-export const DEFAULT_BASE = "/ExamSnap/";
-export const DEFAULT_ORIGIN = "https://geekyasif786.github.io";
+export const DEFAULT_BASE = "/";
+export const DEFAULT_ORIGIN = "https://examsnap.asifurrahaman.com";
 export const TITLE_MAX = 65;
 export const OG_IMAGE_SIZE = { width: 1200, height: 630 };
 
@@ -51,8 +51,9 @@ export function hashAll(parts) {
   return h.digest("hex");
 }
 
-// Static `import … from "./x.js"` / `export … from "./x.js"` and `import "./x.js"`.
-const IMPORT_RE = /(\bfrom\s*|\bimport\s*)(["'])(\.{1,2}\/[^"']+)\2/g;
+// `import … from "./x.js"`, `export … from "./x.js"`, `import "./x.js"` and
+// dynamic `import("./x.js")` with a literal specifier.
+const IMPORT_RE = /(\bfrom\s*|\bimport\s*\(?\s*)(["'])(\.{1,2}\/[^"']+)\2/g;
 
 /** Relative module specifiers imported by `code`, in order, without duplicates. */
 export function findImports(code) {
@@ -325,7 +326,7 @@ export function jsBytes(files, exclude = /^src\/generated\//) {
 }
 
 /** Standalone 404 page. Asset URLs are root-absolute (the page is served at any path). */
-export function notFoundHtml({ base, csp, css, favicon, S }) {
+export function notFoundHtml({ base, css, favicon, S }) {
   const b = normalizeBase(base);
   return `<!doctype html>
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
@@ -333,7 +334,7 @@ export function notFoundHtml({ base, csp, css, favicon, S }) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  ${csp}
+  ${cspMeta()}
   <meta name="referrer" content="no-referrer">
   <meta name="color-scheme" content="light dark">
   <meta name="robots" content="noindex">
@@ -402,4 +403,53 @@ const CACHE = ${JSON.stringify(cache)};
 const PRECACHE = ${JSON.stringify(precache, null, 2)};
 
 ${body.replace(/^\/\/ SPDX-License-Identifier:.*\n/, "")}`;
+}
+
+/**
+ * Content-Security-Policy for every built page (meta tag; GitHub Pages
+ * can't send headers). `upgrade-insecure-requests` is deliberately absent:
+ * WebKit applies it even to http://localhost and http://127.0.0.1, which
+ * breaks local preview and e2e, and it adds nothing here because every URL
+ * is relative or https and Pages enforces HTTPS. The compensating control
+ * is findInsecureUrls(), which fails the build on any http:// URL.
+ */
+export const CSP = [
+  "default-src 'none'",
+  "script-src 'self'",
+  "style-src 'self'",
+  "img-src 'self' blob: data:",
+  "connect-src 'self'",
+  "worker-src 'self'",
+  "manifest-src 'self'",
+  "font-src 'none'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join("; ");
+
+export function cspMeta() {
+  return `<meta http-equiv="Content-Security-Policy" content="${CSP}">`;
+}
+
+// Text outputs that can carry URLs. (SVG images are not scanned: their
+// xmlns="http://www.w3.org/2000/svg" is a namespace name, not a fetch.)
+const URL_SCANNED = /\.(html|css|js|webmanifest|xml|txt|json)$/;
+// Namespace identifiers that are never fetched.
+const ALLOWED_HTTP = { "sitemap.xml": ["http://www.sitemaps.org/schemas/sitemap/0.9"] };
+
+/**
+ * Every http:// URL in the built text files, except allowed namespaces.
+ * @param {{ path: string, text: string }[]} files
+ * @returns {string[]} "path: url"
+ */
+export function findInsecureUrls(files) {
+  const found = [];
+  for (const { path, text } of files) {
+    if (!URL_SCANNED.test(path)) continue;
+    const allowed = ALLOWED_HTTP[path] ?? [];
+    for (const m of text.matchAll(/http:\/\/[^\s"'<>)\\`]*/gi)) {
+      if (!allowed.includes(m[0])) found.push(`${path}: ${m[0]}`);
+    }
+  }
+  return found;
 }

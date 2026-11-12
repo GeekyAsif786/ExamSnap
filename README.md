@@ -2,9 +2,21 @@
 
 Turn a photo or signature into a JPEG with the exact pixel size and KB range Indian exam portals require. Everything runs in your browser and nothing is uploaded.
 
-**Live:** https://geekyasif786.github.io/ExamSnap/
+**Live:** https://examsnap.asifurrahaman.com/
 
 Works offline after your first visit, and you can install it from your browser menu ("Install app" / "Add to Home Screen").
+
+<p>
+  <img src="docs/screenshots/root-empty-desktop-light.webp" alt="ExamSnap on desktop: choose an exam and document, upload, adjust, make and download" width="640">
+  <img src="docs/screenshots/ssc-result-mobile-light.webp" alt="ExamSnap SSC page on a phone with a finished 276×354 px, 20.5 KB photo" width="195">
+</p>
+
+## Security & privacy
+
+- Your photo never leaves your device: all processing happens in the browser, and nothing is uploaded.
+- No analytics, no tracking, no third-party requests. A strict Content-Security-Policy (`default-src 'none'`, scripts and styles from the site only) is on every page, and the app refuses to run inside another site's frame.
+- Output JPEGs carry no EXIF, XMP, IPTC or comment metadata.
+- Found a security problem? Please report it privately; see [SECURITY.md](SECURITY.md).
 
 ## Licensing
 
@@ -20,10 +32,10 @@ The ExamSnap name and logo are not covered by these licenses.
 - `npm run dev` — serve the app at http://localhost:5173/.
 - `npm test` — run the unit tests.
 - `npm run build` — build the site into `dist/`.
-- `npm run preview` — build, then serve `dist/` at http://localhost:4173/ExamSnap/.
+- `npm run preview` — build, then serve `dist/` at http://localhost:4173/.
 - `npm run test:e2e` — run the Playwright tests on Chromium, Firefox and WebKit against the built site.
 - `npm run check` — validate presets, check the generated bundle is fresh, and enforce the JS size budget.
-- `npm run screenshots` — regenerate the review screenshots in `docs/screenshots/`.
+- `npm run screenshots` — capture review screenshots of the built site into `screenshots/` (gitignored; CI attaches them to every PR). Add `-- --readme` to refresh the two README images in `docs/screenshots/`.
 - `npm run icons` — regenerate the app icons and social image in `icons/`.
 
 ## Deployment
@@ -32,7 +44,7 @@ Every push to `main` runs lint, check and unit tests, builds, and deploys `dist/
 
 The build reads two environment variables:
 
-- `BASE_PATH` — URL prefix the site lives under. Default `/ExamSnap/`.
-- `SITE_ORIGIN` — origin used for canonical, sitemap and social URLs. Default `https://geekyasif786.github.io`.
+- `BASE_PATH` — URL prefix the site lives under. Default `/`.
+- `SITE_ORIGIN` — origin used for canonical, sitemap and social URLs. Default `https://examsnap.asifurrahaman.com`.
 
-To move to a custom domain: add it under the repository's Settings → Pages, then set the repository variables `BASE_PATH` to `/` and `SITE_ORIGIN` to `https://your.domain` (Settings → Secrets and variables → Actions → Variables), and re-run the deploy.
+The site is served from the custom domain set in Settings → Pages (Actions-based deploys need no `CNAME` file). To serve it somewhere else, set the repository variables `BASE_PATH` and `SITE_ORIGIN` (Settings → Secrets and variables → Actions → Variables) and re-run the deploy; for example `BASE_PATH=/ExamSnap/` and `SITE_ORIGIN=https://geekyasif786.github.io` for the project-site URL.

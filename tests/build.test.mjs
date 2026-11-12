@@ -5,6 +5,9 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { build, JS_BUDGET } from "../scripts/build.mjs";
+import { CSP } from "../scripts/build-lib.mjs";
+import { cp, writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { PRESETS } from "../src/generated/presets.js";
 
 const tmp = () => mkdtemp(join(tmpdir(), "examsnap-build-"));
@@ -36,13 +39,38 @@ test("output layout: pages, crawl files, hashed assets, budget", async (t) => {
   assert.deepEqual(r.pages, ["", ...PRESETS.map((p) => `${p.id}/`)]);
 });
 
-test("BASE_PATH and SITE_ORIGIN: a custom domain only needs base '/' and a new origin", async (t) => {
+test("defaults: the custom domain at the root", async (t) => {
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await build({ outDir: dir });
+  const ssc = await readFile(join(dir, "ssc/index.html"), "utf8");
+  assert.match(ssc, /<link rel="canonical" href="https:\/\/examsnap\.asifurrahaman\.com\/ssc\/">/);
+  assert.equal(await readFile(join(dir, "robots.txt"), "utf8"), "User-agent: *\nAllow: /\n\nSitemap: https://examsnap.asifurrahaman.com/sitemap.xml\n");
+  const manifest = JSON.parse(await readFile(join(dir, "manifest.webmanifest"), "utf8"));
+  assert.deepEqual([manifest.id, manifest.start_url, manifest.scope], ["/", "/", "/"]);
+  assert.match(await readFile(join(dir, "sitemap.xml"), "utf8"), /<loc>https:\/\/examsnap\.asifurrahaman\.com\/<\/loc>/);
+  assert.match(await readFile(join(dir, "404.html"), "utf8"), /href="\/src\/ui\/styles\.[0-9a-f]{8}\.css"/);
+});
+
+test("BASE_PATH still works: a GitHub Pages project site under /ExamSnap/", async (t) => {
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await build({ outDir: dir, base: "/ExamSnap/", origin: "https://geekyasif786.github.io" });
+  const ssc = await readFile(join(dir, "ssc/index.html"), "utf8");
+  assert.match(ssc, /<link rel="canonical" href="https:\/\/geekyasif786\.github\.io\/ExamSnap\/ssc\/">/);
+  assert.match(ssc, /src="\.\.\/src\/ui\/main\.[0-9a-f]{8}\.js"/, "assets stay relative");
+  assert.match(await readFile(join(dir, "404.html"), "utf8"), /href="\/ExamSnap\/src\/ui\/styles\.[0-9a-f]{8}\.css"/);
+  const manifest = JSON.parse(await readFile(join(dir, "manifest.webmanifest"), "utf8"));
+  assert.deepEqual([manifest.id, manifest.start_url, manifest.scope], ["/ExamSnap/", "/ExamSnap/", "/ExamSnap/"]);
+});
+
+test("BASE_PATH and SITE_ORIGIN: another custom domain only needs base '/' and a new origin", async (t) => {
   const dir = await tmp();
   t.after(() => rm(dir, { recursive: true, force: true }));
   await build({ outDir: dir, base: "/", origin: "https://examsnap.example" });
   const ssc = await readFile(join(dir, "ssc/index.html"), "utf8");
   assert.match(ssc, /<link rel="canonical" href="https:\/\/examsnap\.example\/ssc\/">/);
-  assert.match(ssc, /src="\.\.\/src\/ui\/app\.[0-9a-f]{8}\.js"/, "assets stay relative");
+  assert.match(ssc, /src="\.\.\/src\/ui\/main\.[0-9a-f]{8}\.js"/, "assets stay relative");
   const notFound = await readFile(join(dir, "404.html"), "utf8");
   assert.match(notFound, /href="\/src\/ui\/styles\.[0-9a-f]{8}\.css"/, "404 uses root-absolute paths under the base");
   assert.match(await readFile(join(dir, "robots.txt"), "utf8"), /Sitemap: https:\/\/examsnap\.example\/sitemap\.xml/);
@@ -59,7 +87,7 @@ test("hashed imports point at files that exist in the build", async (t) => {
   const paths = new Set(r.files.map((f) => f.path));
   for (const f of r.files.filter((f) => f.path.endsWith(".js") && f.path.startsWith("src/"))) {
     const code = await readFile(join(dir, f.path), "utf8");
-    for (const m of code.matchAll(/\bfrom\s*"(\.{1,2}\/[^"]+)"/g)) {
+    for (const m of code.matchAll(/\b(?:from\s*|import\s*\(\s*)"(\.{1,2}\/[^"]+)"/g)) {
       const target = new URL(m[1], `file:///${f.path}`).pathname.slice(1);
       assert.ok(paths.has(target), `${f.path} imports missing ${target}`);
     }
@@ -101,4 +129,69 @@ test("the in-tool warning is left out exactly where the page-level warning is sh
     assert.equal(html.match(/class="warning"/g).length, 1, p.id);
   }
   assert.ok((await readFile(join(dir, "index.html"), "utf8")).includes('id="warning"'), "root keeps the in-tool warning");
+});
+
+const cspOf = (html) => [...html.matchAll(/<meta http-equiv="Content-Security-Policy" content="([^"]*)">/g)].map((m) => m[1]);
+
+test("production, preview and e2e (sub-path) builds emit the identical CSP on every page", async (t) => {
+  const configs = [
+    {}, // production defaults (also what npm run preview builds)
+    { base: "/ExamSnap/" }, // e2e chromium-subpath
+    { base: "/", origin: "https://examsnap.example" },
+  ];
+  for (const config of configs) {
+    const dir = await tmp();
+    t.after(() => rm(dir, { recursive: true, force: true }));
+    const r = await build({ outDir: dir, ...config });
+    for (const f of r.files.filter((f) => f.path.endsWith(".html"))) {
+      const html = await readFile(join(dir, f.path), "utf8");
+      assert.deepEqual(cspOf(html), [CSP], `${JSON.stringify(config)} ${f.path}`);
+      assert.ok(html.includes('<meta name="referrer" content="no-referrer">'), f.path);
+    }
+  }
+  // The dev template carries the same policy, so npm run dev behaves alike.
+  const template = await readFile(fileURLToPath(new URL("../index.html", import.meta.url)), "utf8");
+  assert.deepEqual(cspOf(template), [CSP]);
+});
+
+test("the build fails on any http:// URL in its output", async (t) => {
+  const src = await tmp();
+  const out = await tmp();
+  t.after(() => Promise.all([rm(src, { recursive: true, force: true }), rm(out, { recursive: true, force: true })]));
+  const root = fileURLToPath(new URL("..", import.meta.url));
+  for (const p of ["index.html", "favicon.svg", "icons", "src"]) await cp(join(root, p), join(src, p), { recursive: true });
+  const css = join(src, "src/ui/styles.css");
+  await writeFile(css, `${await readFile(css, "utf8")}\n.x { background: url(http://cdn.example/x.png); }\n`);
+  await assert.rejects(build({ root: src, outDir: out }), /http:\/\/ URLs in the build:\nsrc\/ui\/styles\.[0-9a-f]{8}\.css: http:\/\/cdn\.example\/x\.png/);
+});
+
+test("XSS fixture: every preset value is escaped in pages, attributes and JSON-LD", async (t) => {
+  const { buildXssSite, PAYLOADS } = await import("./support/xss-site.mjs");
+  const { outDir, cleanup } = await buildXssSite();
+  t.after(cleanup);
+  for (const page of ["xss-test/index.html", "index.html"]) {
+    const html = await readFile(join(outDir, page), "utf8");
+    // Only the two scripts we put there; no injected tags or handlers.
+    assert.deepEqual(
+      [...html.matchAll(/<script\b[^>]*>/gi)].map((m) => m[0]),
+      [/<script type="module" src="[^"]+">/i.exec(html)[0], '<script type="application/ld+json">'],
+      page,
+    );
+    // The only <img> tag is the app's result image; no tag has an event handler.
+    assert.deepEqual([...html.matchAll(/<img\b[^>]*>/gi)].map((m) => m[0]), ['<img id="result-img" class="result-img" alt="">'], page);
+    // Attribute *names* only: quoted values may legitimately contain the escaped payload text.
+    const attrNames = [...html.matchAll(/<[a-z][^>]*>/gi)].flatMap((m) =>
+      [...m[0].replace(/"[^"]*"/g, '""').matchAll(/\s([a-z-:]+)=/gi)].map((a) => a[1].toLowerCase()),
+    );
+    assert.deepEqual(attrNames.filter((n) => n.startsWith("on")), [], page);
+    // JSON-LD can't be closed early and still round-trips the raw text.
+    const ld = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script\s*>/i)[1];
+    assert.doesNotMatch(ld, /</, page);
+    const data = JSON.parse(ld);
+    if (page !== "index.html") for (const p of PAYLOADS) assert.ok(data.description.includes(p), `${page} JSON-LD keeps ${p}`);
+  }
+  const landing = await readFile(join(outDir, "xss-test/index.html"), "utf8");
+  assert.ok(landing.includes("&lt;script&gt;alert(1)&lt;/script&gt; &quot;&gt;&lt;img src=x onerror=alert(1)&gt; &lt;/script&gt;"));
+  assert.ok(landing.includes('href="https://example.org/notice?a=1&amp;b=2"'), "attribute values are escaped");
+  assert.match(landing, /<title>XSS test &lt;script&gt;/);
 });

@@ -96,3 +96,17 @@ test("presets/ holds only preset JSON files and the CC0 LICENSE", async () => {
   assert.deepEqual(unexpected, []);
   assert.ok(!names.includes("schema.json"), "schema lives in schema/, not presets/");
 });
+
+test("javascript: source URLs are rejected", async () => {
+  await expectOneError("javascript-url", /sample\.json: \/sources\/0\/url: must match pattern "\^https:\/\/"/);
+});
+
+test("data: source URLs are rejected", async () => {
+  await expectOneError("data-url", /sample\.json: \/sources\/0\/url: must match pattern "\^https:\/\/"/);
+});
+
+test("the XSS fixture preset is schema-valid (so the XSS e2e test exercises a real-looking preset)", async () => {
+  const { errors, warnings } = await validatePresets(fixture("xss"), { now: NOW });
+  assert.deepEqual(errors, []);
+  assert.deepEqual(warnings, ["xss-test: no official notice linked — specs unverified"]);
+});

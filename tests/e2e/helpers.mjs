@@ -2,10 +2,52 @@
 import { test as base, expect } from "@playwright/test";
 
 /**
- * `page` that fails the test on any uncaught page error or any request that
- * leaves the dev server (blob:/data: are local).
+ * Report every securitypolicyviolation event (in any frame, across
+ * navigations) from `context` into `sink`.
+ */
+async function watchCsp(context, sink) {
+  await context.exposeBinding("__examsnapCspViolation", ({ frame }, detail) => sink.push(`${frame.url()} — ${detail}`));
+  await context.addInitScript(() => {
+    document.addEventListener("securitypolicyviolation", (e) => {
+      window.__examsnapCspViolation(`${e.violatedDirective} blocked ${e.blockedURI || "(inline)"} at ${e.sourceFile}:${e.lineNumber}`);
+    });
+  });
+}
+
+/**
+ * Fixtures:
+ * - every context (the default one and any made with `newContext`) fails the
+ *   test on a Content-Security-Policy violation;
+ * - `page` also fails on any uncaught page error or any request that leaves
+ *   the dev server (blob:/data: are local);
+ * - `newContext(options)` makes an extra, watched context with the project's
+ *   baseURL; it is closed after the test.
  */
 export const test = base.extend({
+  cspViolations: [
+    // Playwright requires a destructuring pattern here, even an empty one.
+    // eslint-disable-next-line no-empty-pattern
+    async ({}, use) => {
+      const violations = [];
+      await use(violations);
+      expect(violations, "Content-Security-Policy violations").toEqual([]);
+    },
+    { auto: true },
+  ],
+  context: async ({ context, cspViolations }, use) => {
+    await watchCsp(context, cspViolations);
+    await use(context);
+  },
+  newContext: async ({ browser, baseURL, cspViolations }, use) => {
+    const made = [];
+    await use(async (options = {}) => {
+      const context = await browser.newContext({ baseURL, ...options });
+      await watchCsp(context, cspViolations);
+      made.push(context);
+      return context;
+    });
+    for (const c of made) await c.close().catch(() => {});
+  },
   page: async ({ page, baseURL }, use) => {
     const problems = [];
     const origin = new URL(baseURL).origin;

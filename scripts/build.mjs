@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Build the deployable site into dist/: content-hashed assets, one landing
 // page per preset, sitemap, robots, 404. No bundler, no minifier.
-//   BASE_PATH   URL prefix the site is served under (default /ExamSnap/)
-//   SITE_ORIGIN origin for absolute URLs (default https://geekyasif786.github.io)
+//   BASE_PATH   URL prefix the site is served under (default /)
+//   SITE_ORIGIN origin for absolute URLs (default https://examsnap.asifurrahaman.com)
 // Deterministic: same inputs, byte-identical output.
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative, sep } from "node:path";
@@ -21,6 +21,8 @@ import {
   landingAboveHtml,
   landingBelowHtml,
   cacheName,
+  cspMeta,
+  findInsecureUrls,
   latestDate,
   manifestJson,
   normalizeBase,
@@ -94,14 +96,18 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
 
   // Pages.
   const template = await readFile(join(root, "index.html"), "utf8");
-  const csp = template.match(/<meta http-equiv="Content-Security-Policy"[^>]*>/)?.[0];
-  if (!csp) throw new Error("build template: no CSP meta tag in index.html");
+  const cspInTemplate = template.match(/<meta http-equiv="Content-Security-Policy"[^>]*>/)?.[0];
+  if (!cspInTemplate) throw new Error("build template: no CSP meta tag in index.html");
+  if (!template.includes('<meta name="referrer" content="no-referrer">')) {
+    throw new Error('build template: no <meta name="referrer" content="no-referrer"> in index.html');
+  }
   const ogImage = siteUrl(origin, base, assets["icons/og-image.png"]);
 
   const renderPage = ({ prefix, title, description, canonical, above = "", below = "", exam = null, pageWarning = false }) => {
-    let html = template;
+    // The build owns the CSP: whatever the dev template says is replaced.
+    let html = replaceOnce(template, cspInTemplate, cspMeta());
     html = replaceOnce(html, 'href="src/ui/styles.css"', `href="${prefix}${assets["src/ui/styles.css"]}"`);
-    html = replaceOnce(html, 'src="src/ui/app.js"', `src="${prefix}${assets["src/ui/app.js"]}"`);
+    html = replaceOnce(html, 'src="src/ui/main.js"', `src="${prefix}${assets["src/ui/main.js"]}"`);
     html = replaceOnce(html, 'href="favicon.svg"', `href="${prefix}${assets["favicon.svg"]}"`);
     html = replaceOnce(html, "<title>ExamSnap</title>", `<title>${esc(title)}</title>`);
     html = replaceOnce(
@@ -166,7 +172,7 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
       }),
     );
   }
-  out.set("404.html", notFoundHtml({ base, csp, css: assets["src/ui/styles.css"], favicon: assets["favicon.svg"], S }));
+  out.set("404.html", notFoundHtml({ base, css: assets["src/ui/styles.css"], favicon: assets["favicon.svg"], S }));
 
   // PWA: manifest, then a service worker precaching every page and asset
   // (not the Open Graph image, which only crawlers fetch).
@@ -201,6 +207,13 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
   lastmod[""] = latestDate(PRESETS.map((p) => p.last_verified));
   out.set("sitemap.xml", sitemapXml(pages.map((pg) => ({ loc: siteUrl(origin, base, pg), lastmod: lastmod[pg] }))));
   out.set("robots.txt", robotsTxt(siteUrl(origin, base, "sitemap.xml")));
+
+  // No http:// URLs anywhere (compensates for omitting upgrade-insecure-requests).
+  // Static assets (CSS, images) are buffers; findInsecureUrls picks the text types.
+  const insecure = findInsecureUrls(
+    [...out].map(([path, d]) => ({ path, text: typeof d === "string" ? d : Buffer.from(d).toString("utf8") })),
+  );
+  if (insecure.length) throw new Error(`http:// URLs in the build:\n${insecure.join("\n")}`);
 
   // Write.
   await rm(outDir, { recursive: true, force: true });

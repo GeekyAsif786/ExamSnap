@@ -2,11 +2,12 @@
 // The built site: landing pages, crawlable links/assets, sitemap, robots, 404.
 import { PRESETS } from "../../src/generated/presets.js";
 import { STRINGS as S } from "../../src/ui/strings.js";
-import { DEFAULT_ORIGIN, docSummary, pageDescription, pageTitle, siteUrl } from "../../scripts/build-lib.mjs";
+import { CSP, DEFAULT_ORIGIN, docSummary, pageDescription, pageTitle, siteUrl } from "../../scripts/build-lib.mjs";
 import { test, expect } from "./helpers.mjs";
 
-const BASE = "/ExamSnap/";
-const live = (path = "") => siteUrl(DEFAULT_ORIGIN, BASE, path);
+// The site's base path in this project ("/" or "/ExamSnap/").
+const base = () => new URL(test.info().project.use.baseURL).pathname;
+const live = (path = "") => siteUrl(DEFAULT_ORIGIN, base(), path);
 const hasNotice = (p) => p.sources.some((s) => s.type === "notice");
 
 test.describe("landing pages", () => {
@@ -78,8 +79,8 @@ test.describe("landing pages", () => {
     });
   }
 
-  test("on a 390×844 phone the tool starts on the first screen; the warning appears once", async ({ browser, baseURL }) => {
-    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, baseURL });
+  test("on a 390×844 phone the tool starts on the first screen; the warning appears once", async ({ newContext }) => {
+    const context = await newContext({ viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
     for (const preset of PRESETS) {
       await page.goto(`./${preset.id}/`);
@@ -96,8 +97,8 @@ test.describe("landing pages", () => {
     await context.close();
   });
 
-  test("landing pages fit 360 px without horizontal scrolling", async ({ browser, baseURL }) => {
-    const context = await browser.newContext({ viewport: { width: 360, height: 740 }, baseURL });
+  test("landing pages fit 360 px without horizontal scrolling", async ({ newContext }) => {
+    const context = await newContext({ viewport: { width: 360, height: 740 } });
     const page = await context.newPage();
     for (const preset of PRESETS) {
       await page.goto(`./${preset.id}/`);
@@ -148,7 +149,7 @@ function htmlRefs(html) {
 test("every internal link and asset returns 200 under BASE_PATH (crawl from the root)", async ({ request, baseURL }) => {
   const origin = new URL(baseURL).origin;
   const liveBase = live();
-  const toLocal = (abs) => (abs.startsWith(liveBase) ? `${origin}${BASE}${abs.slice(liveBase.length)}` : abs);
+  const toLocal = (abs) => (abs.startsWith(liveBase) ? `${origin}${base()}${abs.slice(liveBase.length)}` : abs);
   const seen = new Map(); // url -> status
   const queue = [new URL("./", baseURL).href];
   while (queue.length) {
@@ -161,7 +162,7 @@ test("every internal link and asset returns 200 under BASE_PATH (crawl from the 
     const body = await res.text();
     let refs = [];
     if (type.startsWith("text/html")) refs = htmlRefs(body);
-    else if (type.startsWith("text/javascript")) refs = [...body.matchAll(/\bfrom\s*["'](\.{1,2}\/[^"']+)["']/g)].map((m) => m[1]);
+    else if (type.startsWith("text/javascript")) refs = [...body.matchAll(/\b(?:from\s*|import\s*\(\s*)["'](\.{1,2}\/[^"']+)["']/g)].map((m) => m[1]);
     else if (type.startsWith("application/manifest+json")) refs = [JSON.parse(body).start_url, ...JSON.parse(body).icons.map((i) => i.src)];
     for (const ref of refs) {
       const abs = toLocal(new URL(toLocal(ref), url).href.split("#")[0]);
@@ -172,14 +173,14 @@ test("every internal link and asset returns 200 under BASE_PATH (crawl from the 
   expect(bad).toEqual([]);
   // Sanity: the crawl reached every exam page, the app module and the stylesheet.
   const urls = [...seen.keys()];
-  for (const p of PRESETS) expect(urls).toContain(`${origin}${BASE}${p.id}/`);
+  for (const p of PRESETS) expect(urls).toContain(`${origin}${base()}${p.id}/`);
   expect(urls.some((u) => /\/src\/ui\/app\.[0-9a-f]{8}\.js$/.test(u))).toBe(true);
   expect(urls.some((u) => /\/src\/core\/jpeg\.[0-9a-f]{8}\.js$/.test(u))).toBe(true);
   expect(urls.some((u) => /\/src\/ui\/styles\.[0-9a-f]{8}\.css$/.test(u))).toBe(true);
-  expect(urls).toContain(`${origin}${BASE}sw.js`);
-  expect(urls).toContain(`${origin}${BASE}manifest.webmanifest`);
+  expect(urls).toContain(`${origin}${base()}sw.js`);
+  expect(urls).toContain(`${origin}${base()}manifest.webmanifest`);
   expect(urls.some((u) => /\/icons\/icon-512-maskable\.[0-9a-f]{8}\.png$/.test(u))).toBe(true);
-  expect(urls.every((u) => u.startsWith(`${origin}${BASE}`))).toBe(true);
+  expect(urls.every((u) => u.startsWith(`${origin}${base()}`))).toBe(true);
 });
 
 test("sitemap lists the root and one URL per preset; robots points to it", async ({ request }) => {
@@ -204,6 +205,35 @@ test("unknown paths get 404.html with status 404, and its assets load", async ({
   await page.goto("./no/such/page/");
   await expect(page.locator("h1")).toHaveText(S.notFoundHeading);
   await page.getByRole("link", { name: S.notFoundHome }).click();
-  await expect(page).toHaveURL(new RegExp(`${BASE}(\\?.*)?$`));
+  await expect(page).toHaveURL(new RegExp(`${base()}(\\?.*)?$`));
   await expect(page.locator("#exam")).toBeVisible();
+});
+
+test("every page carries the exact CSP and no-referrer meta tags", async ({ request }) => {
+  const paths = ["./", ...PRESETS.map((p) => `./${p.id}/`), "./404.html"];
+  for (const path of paths) {
+    const html = await (await request.get(path)).text();
+    const csp = [...html.matchAll(/<meta http-equiv="Content-Security-Policy" content="([^"]*)">/g)].map((m) => m[1]);
+    expect(csp, path).toEqual([CSP]);
+    expect(html, path).toContain('<meta name="referrer" content="no-referrer">');
+  }
+  expect(CSP).toBe(
+    "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'",
+  );
+});
+
+test("a CSP violation is reported (the e2e watcher itself works)", async ({ newContext, cspViolations }) => {
+  // A separate watched context: Chromium reports the blocked image as a
+  // request, which the default page fixture would flag as external.
+  const page = await (await newContext()).newPage();
+  await page.goto("./");
+  // Blocked by img-src 'self' in every engine.
+  await page.evaluate(() => {
+    const img = new Image();
+    img.src = "https://example.invalid/x.png";
+    document.body.append(img);
+  });
+  await expect.poll(() => cspViolations.length).toBeGreaterThan(0);
+  expect(cspViolations.join("\n")).toMatch(/img-src/);
+  cspViolations.length = 0; // drain so this test itself passes
 });

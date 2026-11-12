@@ -139,6 +139,12 @@ footer.site p {
   min-height: 44px;
 }
 
+/* ---- Shown instead of the app when framed ---- */
+
+.framed {
+  padding: 24px 16px;
+}
+
 /* ---- Update banner ---- */
 
 .update p {
