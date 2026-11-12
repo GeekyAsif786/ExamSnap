@@ -1,0 +1,48 @@
+{
+  "id": "ssc",
+  "name": "SSC — CGL / CHSL / MTS / GD / CPO",
+  "category": "Government jobs",
+  "notes": "Recent SSC forms capture the photograph live inside the application; the photo preset is for forms that still ask for an upload. Signature dimensions differ between notices (4×2 cm, 6×2 cm); the 10–20 KB range is consistent and is what the portal checks. Pixel sizes are cm at 200 DPI.",
+  "last_verified": "2026-11-11",
+  "sources": [
+    {
+      "title": "Physics Wallah — SSC CHSL 2026 photo & signature size",
+      "url": "https://www.pw.live/ssc/exams/ssc-chsl-photo-and-signature-size",
+      "type": "secondary"
+    },
+    {
+      "title": "Testbook — SSC GD signature & photo size",
+      "url": "https://testbook.com/news/ssc-gd-signature-photo-size/",
+      "type": "secondary"
+    },
+    {
+      "title": "Adda247 — SSC GD photo and signature size 2026",
+      "url": "https://www.adda247.com/exams/ssc/ssc-gd-photo-and-signature-size",
+      "type": "secondary"
+    }
+  ],
+  "documents": [
+    {
+      "id": "photo",
+      "label": "Photograph (3.5 × 4.5 cm)",
+      "kind": "photo",
+      "width": 276,
+      "height": 354,
+      "min_kb": 20,
+      "max_kb": 50,
+      "filename": "photo.jpg",
+      "notes": "White background, recent photo. Some notices require the date the photo was taken printed on it."
+    },
+    {
+      "id": "signature",
+      "label": "Signature (6.0 × 2.0 cm)",
+      "kind": "signature",
+      "width": 472,
+      "height": 157,
+      "min_kb": 10,
+      "max_kb": 20,
+      "filename": "signature.jpg",
+      "notes": "Running hand, not capitals. Blurred or miniature signatures are rejected."
+    }
+  ]
+}
