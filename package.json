@@ -15,7 +15,8 @@
     "build:presets": "node scripts/bundle-presets.mjs",
     "dev": "node scripts/serve.mjs",
     "test:e2e": "playwright test",
-    "screenshots": "node scripts/screenshots.mjs"
+    "screenshots": "node scripts/screenshots.mjs",
+    "icons": "node scripts/make-icons.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
