@@ -22,6 +22,8 @@ export const STRINGS = {
   customMaxKb: "Max KB",
   customSizeError: (min, max) => `Width and height must be whole numbers between ${min} and ${max} px.`,
   customLabel: "Custom size",
+  requestExam: "Don't see your exam? Request it",
+  requestSpecs: (w, h, min, max) => `Custom size I used in ExamSnap: ${w} × ${h} px, ${min}–${max} KB`,
 
   chipPixels: (w, h) => `${w} × ${h} px`,
   chipKb: (min, max) => `${min}–${max} KB`,
@@ -112,5 +114,6 @@ export const STRINGS = {
 
   footerRepo: "Source code on GitHub",
   footerReport: "Report a wrong spec",
+  footerRequest: "Request an exam",
   footerPrivacy: "Free and open source. No uploads, no tracking.",
 };

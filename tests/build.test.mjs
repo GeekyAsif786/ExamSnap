@@ -195,3 +195,22 @@ test("XSS fixture: every preset value is escaped in pages, attributes and JSON-L
   assert.ok(landing.includes('href="https://example.org/notice?a=1&amp;b=2"'), "attribute values are escaped");
   assert.match(landing, /<title>XSS test &lt;script&gt;/);
 });
+
+test("request-exam link: in step 1 and the footer of every page, including 404", async (t) => {
+  const { REQUEST_EXAM_URL } = await import("../scripts/build-lib.mjs");
+  const { requestExamUrl } = await import("../src/ui/state.js");
+  assert.equal(REQUEST_EXAM_URL, requestExamUrl(null, () => ""));
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const r = await build({ outDir: dir });
+  const href = `href="${REQUEST_EXAM_URL.replace(/&/g, "&amp;")}" target="_blank" rel="noopener noreferrer"`;
+  for (const page of [...r.pages.map((p) => `${p}index.html`), "404.html"]) {
+    const html = await readFile(join(dir, page), "utf8");
+    const count = html.split(href).length - 1;
+    assert.equal(count, page === "404.html" ? 1 : 2, page);
+    const footer = html.slice(html.indexOf("<footer"));
+    assert.ok(footer.includes(href), `${page}: footer link`);
+  }
+  const root = await readFile(join(dir, "index.html"), "utf8");
+  assert.match(root, /issues\/new\?template=wrong-spec\.yml"/);
+});

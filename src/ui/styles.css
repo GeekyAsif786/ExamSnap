@@ -210,6 +210,17 @@ label {
   font-weight: 600;
 }
 
+.field .request {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.field .request a {
+  display: inline-block;
+  padding: 10px 0;
+  min-height: 44px;
+}
+
 select,
 input[type="text"] {
   width: 100%;

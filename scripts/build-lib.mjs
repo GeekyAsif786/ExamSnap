@@ -8,6 +8,8 @@ import { hasNotice } from "../src/ui/state.js";
 export { normalizeBase };
 export const DEFAULT_BASE = "/";
 export const DEFAULT_ORIGIN = "https://examsnap.asifurrahaman.com";
+/** The request-exam issue form; the app adds custom specs to it at runtime. */
+export const REQUEST_EXAM_URL = "https://github.com/GeekyAsif786/ExamSnap/issues/new?template=request-exam.yml&title=%5BExam%5D%20";
 export const TITLE_MAX = 65;
 export const OG_IMAGE_SIZE = { width: 1200, height: 630 };
 
@@ -356,6 +358,13 @@ export function notFoundHtml({ base, css, favicon, S }) {
       <p><a class="button primary" href="${esc(b)}">${esc(S.notFoundHome)}</a></p>
     </section>
   </main>
+  <footer class="site">
+    <div class="wrap">
+      <ul class="links">
+        <li><a href="${esc(REQUEST_EXAM_URL)}" target="_blank" rel="noopener noreferrer">${esc(S.footerRequest)} <span class="visually-hidden">${esc(S.opensInNewTab)}</span></a></li>
+      </ul>
+    </div>
+  </footer>
 </body>
 </html>
 `;

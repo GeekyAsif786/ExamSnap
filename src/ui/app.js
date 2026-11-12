@@ -20,6 +20,7 @@ import {
   panBy,
   parseCustom,
   previewSize,
+  requestExamUrl,
   resetAdjust,
   selectionSearch,
 } from "./state.js";
@@ -63,6 +64,7 @@ const el = {
   checklist: $("checklist"),
   padded: $("padded"),
   download: $("download"),
+  requestLinks: document.querySelectorAll("a[data-request]"),
 };
 
 // Landing pages (dist/<exam>/) name their exam on <body data-exam>.
@@ -152,6 +154,8 @@ function renderSpec() {
     ),
   );
   el.verified.textContent = preset ? S.lastVerified(preset.last_verified) : "";
+  const requestUrl = requestExamUrl(isCustom ? doc : null, S.requestSpecs);
+  for (const a of el.requestLinks) a.href = requestUrl;
   updateMakeButton();
 }
 

@@ -20,6 +20,7 @@ import {
   parseCustom,
   parseSelection,
   previewSize,
+  requestExamUrl,
   resetAdjust,
   selectionSearch,
 } from "../src/ui/state.js";
@@ -298,4 +299,25 @@ test("isFramed", () => {
     },
   });
   assert.equal(isFramed(throwing), true);
+});
+
+test("requestExamUrl: request-exam form, [Exam] title, no other data", () => {
+  const url = new URL(requestExamUrl(null, STRINGS.requestSpecs));
+  assert.equal(`${url.origin}${url.pathname}`, "https://github.com/GeekyAsif786/ExamSnap/issues/new");
+  assert.deepEqual([...url.searchParams], [["template", "request-exam.yml"], ["title", "[Exam] "]]);
+  assert.equal(requestExamUrl(null, STRINGS.requestSpecs), "https://github.com/GeekyAsif786/ExamSnap/issues/new?template=request-exam.yml&title=%5BExam%5D%20");
+});
+
+test("requestExamUrl: a custom doc adds only width, height and KB range to specs", () => {
+  const r = parseCustom({ width: "300", height: "400", minKb: "12.5", maxKb: "40" });
+  assert.equal(r.ok, true);
+  const raw = requestExamUrl(r.doc, STRINGS.requestSpecs);
+  const url = new URL(raw);
+  assert.deepEqual([...url.searchParams.keys()], ["template", "title", "specs"]);
+  assert.equal(url.searchParams.get("specs"), "Custom size I used in ExamSnap: 300 × 400 px, 12.5–40 KB");
+  assert.equal(url.searchParams.get("specs"), STRINGS.requestSpecs(300, 400, 12.5, 40));
+  // Spaces are %20 (not +) so GitHub shows them as typed; × and – are UTF-8 encoded.
+  assert.match(raw, /&specs=Custom%20size%20I%20used%20in%20ExamSnap%3A%20300%20%C3%97%20400%20px%2C%2012\.5%E2%80%9340%20KB$/);
+  // The filename and other doc fields never leak into the URL.
+  assert.doesNotMatch(raw, /examsnap-300x400|photo|jpg/);
 });
