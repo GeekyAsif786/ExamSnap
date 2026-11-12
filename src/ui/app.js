@@ -53,6 +53,9 @@ const el = {
   adjustEmpty: $("adjust-empty"),
   previewWrap: $("preview-wrap"),
   preview: $("preview"),
+  faceGuide: $("face-guide"),
+  faceGuideField: $("face-guide-field"),
+  faceGuideToggle: $("face-guide-toggle"),
   zoom: $("zoom"),
   clean: $("clean"),
   thresholdField: $("threshold-field"),
@@ -131,6 +134,7 @@ function renderSpec() {
     doc = r.ok ? r.doc : null;
   }
   if (doc) lastDoc = doc;
+  updateFaceGuide(doc);
 
   el.chips.replaceChildren(
     ...(doc
@@ -310,6 +314,13 @@ document.addEventListener("paste", (e) => {
 
 // ---- Step 3: adjust ----------------------------------------------------
 
+function updateFaceGuide(doc) {
+  const isPhoto = doc?.kind === "photo";
+  el.faceGuideField.hidden = !isPhoto;
+  if (!isPhoto) el.faceGuideToggle.checked = false;
+  el.faceGuide.hidden = !el.faceGuideToggle.checked;
+}
+
 function syncAdjustControls() {
   el.zoom.value = String(state.zoom);
   el.clean.checked = state.clean;
@@ -378,6 +389,8 @@ el.zoom.addEventListener("input", () => {
   state.zoom = clampZoom(Number(el.zoom.value));
   adjusted();
 });
+
+el.faceGuideToggle.addEventListener("change", () => updateFaceGuide(currentDoc(state, PRESETS)));
 
 el.clean.addEventListener("change", () => {
   state.clean = el.clean.checked;

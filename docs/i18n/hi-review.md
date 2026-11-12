@@ -55,6 +55,7 @@ Placeholders like `{w}` are filled in by the app (numbers, file names, exam name
 | `adjustEmpty` | Add a photo in step 2 to adjust the crop. | क्रॉप सेट करने के लिए स्टेप 2 में फ़ोटो जोड़ें। |
 | `previewLabel` | Crop preview. Drag to move. Arrow keys move, plus and minus zoom. | क्रॉप का प्रीव्यू। खिसकाने के लिए ड्रैग करें। ऐरो की से खिसकाएँ, प्लस और माइनस से ज़ूम करें। |
 | `adjustHint` | Drag to move · pinch, scroll or use the slider to zoom. | खिसकाने के लिए ड्रैग करें · ज़ूम के लिए पिंच, स्क्रॉल या स्लाइडर इस्तेमाल करें। |
+| `faceGuideLabel` | Show face guide | चेहरे की रूपरेखा दिखाएँ |
 | `zoomLabel` | Zoom | ज़ूम |
 | `cleanLabel` | Clean background | बैकग्राउंड साफ़ करें |
 | `cleanHint` | Turns paper pure white and makes ink darker. | काग़ज़ को एकदम सफ़ेद और स्याही को गहरा कर देता है। |
