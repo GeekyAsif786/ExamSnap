@@ -2,7 +2,7 @@
 // The built site: landing pages, crawlable links/assets, sitemap, robots, 404.
 import { PRESETS } from "../../src/generated/presets.js";
 import { STRINGS as S } from "../../src/ui/strings.js";
-import { DEFAULT_ORIGIN, pageDescription, pageTitle, siteUrl } from "../../scripts/build-lib.mjs";
+import { DEFAULT_ORIGIN, docSummary, pageDescription, pageTitle, siteUrl } from "../../scripts/build-lib.mjs";
 import { test, expect } from "./helpers.mjs";
 
 const BASE = "/ExamSnap/";
@@ -45,6 +45,16 @@ test.describe("landing pages", () => {
       );
       await expect(page.locator(".intro .warning")).toHaveCount(hasNotice(preset) ? 0 : 1);
 
+      // Above the tool: h1, one summary line, the warning. Table below the tool, above sources.
+      await expect(page.locator(".intro .summary")).toHaveText(docSummary(preset, S));
+      await expect(page.locator(".intro table")).toHaveCount(0);
+      const order = await page.evaluate(() => {
+        const at = (sel) => document.querySelector(sel).getBoundingClientRect().top;
+        return [at("#h-make"), at(".page-specs"), at(".page-sources")];
+      });
+      expect(order[0]).toBeLessThan(order[1]);
+      expect(order[1]).toBeLessThan(order[2]);
+
       // Sources below the tool, with badges and last verified.
       await expect(page.locator(".page-sources li a")).toHaveCount(preset.sources.length);
       await expect(page.locator(".page-sources .badge")).toHaveText(preset.sources.map((s) => S.sourceType[s.type]));
@@ -67,6 +77,24 @@ test.describe("landing pages", () => {
       expect(JSON.stringify(ld)).not.toMatch(/FAQPage|HowTo|Review/);
     });
   }
+
+  test("on a 390×844 phone the tool starts on the first screen; the warning appears once", async ({ browser, baseURL }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, baseURL });
+    const page = await context.newPage();
+    for (const preset of PRESETS) {
+      await page.goto(`./${preset.id}/`);
+      const top = await page.getByText("Choose a photo").evaluate((n) => n.getBoundingClientRect().top);
+      expect(top, preset.id).toBeLessThan(844);
+      // Exactly one warning element per page; visible only without an official notice.
+      const warnings = page.locator(".warning", { hasText: S.secondaryWarning });
+      await expect(warnings, preset.id).toHaveCount(1);
+      await expect(warnings.first(), preset.id).toBeVisible({ visible: !hasNotice(preset) });
+      // Switching to another exam on the page never adds a second copy.
+      await page.locator("#exam").selectOption(PRESETS.find((p) => p.id !== preset.id && !hasNotice(p)).id);
+      await expect(warnings, preset.id).toHaveCount(1);
+    }
+    await context.close();
+  });
 
   test("landing pages fit 360 px without horizontal scrolling", async ({ browser, baseURL }) => {
     const context = await browser.newContext({ viewport: { width: 360, height: 740 }, baseURL });

@@ -89,6 +89,8 @@ export const STRINGS = {
     thumb: "thumb impression",
   },
   landingHeading: (name) => `${name} photo & signature resizer`,
+  summaryPart: (noun, w, h, min, max) => `${noun} ${w}×${h} px, ${min}–${max} KB`,
+  summarySep: " · ",
   specTableCaption: "Required files",
   thDocument: "Document",
   thPixels: "Size",

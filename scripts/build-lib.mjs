@@ -160,8 +160,33 @@ export function pageDescription(preset, S) {
   return S.pageDescription(shortName(preset.name), joinList(parts, S));
 }
 
-/** Static intro for an exam page: h1, warning, spec table. */
+/** "Photo 276×354 px, 20–50 KB · Signature 472×157 px, 10–20 KB" */
+export function docSummary(preset, S) {
+  return preset.documents
+    .map((d) => {
+      const noun = docNoun(d, S);
+      return S.summaryPart(noun.charAt(0).toUpperCase() + noun.slice(1), d.width, d.height, d.min_kb, d.max_kb);
+    })
+    .join(S.summarySep);
+}
+
+/** True if an exam page shows the secondary-sources warning above the tool. */
+export const hasPageWarning = (preset) => !hasNotice(preset);
+
+/**
+ * Above the tool on an exam page: kept short so the tool starts on the first
+ * screen of a phone. h1, a one-line document summary, and the warning.
+ */
 export function landingAboveHtml(preset, S) {
+  const warning = hasPageWarning(preset) ? `\n      <p id="page-warning" class="warning">${esc(S.secondaryWarning)}</p>` : "";
+  return `<section class="intro" aria-labelledby="page-title">
+      <h1 id="page-title">${esc(S.landingHeading(preset.name))}</h1>
+      <p class="summary">${esc(docSummary(preset, S))}</p>${warning}
+    </section>`;
+}
+
+/** Full spec table, server-rendered for crawlers. */
+export function specTableHtml(preset, S) {
   const rows = preset.documents
     .map(
       (d) => `
@@ -173,12 +198,10 @@ export function landingAboveHtml(preset, S) {
             </tr>`,
     )
     .join("");
-  const warning = hasNotice(preset) ? "" : `\n      <p class="warning">${esc(S.secondaryWarning)}</p>`;
-  return `<section class="intro" aria-labelledby="page-title">
-      <h1 id="page-title">${esc(S.landingHeading(preset.name))}</h1>${warning}
+  return `<section class="page-specs" aria-labelledby="page-specs-title">
+      <h2 id="page-specs-title">${esc(S.specTableCaption)}</h2>
       <div class="table-wrap">
-        <table class="spec-table">
-          <caption>${esc(S.specTableCaption)}</caption>
+        <table class="spec-table" aria-labelledby="page-specs-title">
           <thead>
             <tr><th scope="col">${esc(S.thDocument)}</th><th scope="col">${esc(S.thPixels)}</th><th scope="col">${esc(S.thKb)}</th><th scope="col">${esc(S.thNotes)}</th></tr>
           </thead>
@@ -189,7 +212,7 @@ export function landingAboveHtml(preset, S) {
     </section>`;
 }
 
-/** Static notes + sources for below the tool on an exam page. */
+/** Below the tool on an exam page: the spec table, then notes + sources. */
 export function landingBelowHtml(preset, S) {
   const notes = preset.notes ? `\n      <p>${esc(preset.notes)}</p>` : "";
   const items = preset.sources
@@ -198,7 +221,8 @@ export function landingBelowHtml(preset, S) {
         <li><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title)}<span class="visually-hidden"> ${esc(S.opensInNewTab)}</span></a> <span class="badge badge-${esc(s.type)}">${esc(S.sourceType[s.type])}</span></li>`,
     )
     .join("");
-  return `<section class="page-sources" aria-labelledby="page-sources-title">
+  return `${specTableHtml(preset, S)}
+    <section class="page-sources" aria-labelledby="page-sources-title">
       <h2 id="page-sources-title">${esc(S.sourcesSummary)}</h2>${notes}
       <ul>${items}
       </ul>

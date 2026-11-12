@@ -88,3 +88,17 @@ test("sw.js precaches every page and shipped asset (not the OG image), and parse
   const cacheOf = async (d) => (await readFile(join(d, "sw.js"), "utf8")).match(/const CACHE = "([^"]+)"/)[1];
   assert.notEqual(await cacheOf(dir), await cacheOf(other));
 });
+
+test("the in-tool warning is left out exactly where the page-level warning is shown", async (t) => {
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  await build({ outDir: dir });
+  for (const p of PRESETS) {
+    const html = await readFile(join(dir, `${p.id}/index.html`), "utf8");
+    const pageLevel = !p.sources.some((s) => s.type === "notice");
+    assert.equal(html.includes('id="page-warning"'), pageLevel, p.id);
+    assert.equal(html.includes('id="warning"'), !pageLevel, p.id);
+    assert.equal(html.match(/class="warning"/g).length, 1, p.id);
+  }
+  assert.ok((await readFile(join(dir, "index.html"), "utf8")).includes('id="warning"'), "root keeps the in-tool warning");
+});

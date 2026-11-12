@@ -130,7 +130,8 @@ function renderSpec() {
       : []),
   );
 
-  el.warning.hidden = isCustom || hasNotice(preset);
+  // Exam pages that already show the warning above the tool omit this copy.
+  if (el.warning) el.warning.hidden = isCustom || hasNotice(preset);
   // The document's own notes stay visible; preset-wide notes live in the
   // collapsible sources section to keep step 1 short on phones.
   const paragraphs = (...texts) => texts.filter(Boolean).map((t) => make$("p", { textContent: t }));

@@ -13,6 +13,7 @@ import {
   esc,
   examLinksHtml,
   fillDataStrings,
+  hasPageWarning,
   findImports,
   hashName,
   headTags,
@@ -97,7 +98,7 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
   if (!csp) throw new Error("build template: no CSP meta tag in index.html");
   const ogImage = siteUrl(origin, base, assets["icons/og-image.png"]);
 
-  const renderPage = ({ prefix, title, description, canonical, above = "", below = "", exam = null }) => {
+  const renderPage = ({ prefix, title, description, canonical, above = "", below = "", exam = null, pageWarning = false }) => {
     let html = template;
     html = replaceOnce(html, 'href="src/ui/styles.css"', `href="${prefix}${assets["src/ui/styles.css"]}"`);
     html = replaceOnce(html, 'src="src/ui/app.js"', `src="${prefix}${assets["src/ui/app.js"]}"`);
@@ -123,6 +124,10 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
     html = replaceOnce(html, "<!-- build:below -->", below);
     const examAttr = exam ? ` data-exam="${esc(exam)}"` : "";
     html = replaceOnce(html, "<body>", `<body${examAttr} data-sw="${prefix}sw.js">`);
+    if (pageWarning) {
+      // The warning is already above the tool; show it only once per page.
+      html = replaceOnce(html, '<p id="warning" class="warning" data-s="secondaryWarning" hidden></p>', "");
+    }
     if (exam) {
       // The exam heading is the page's h1; the brand becomes a link home.
       html = replaceOnce(
@@ -157,6 +162,7 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
         above: landingAboveHtml(p, S),
         below: landingBelowHtml(p, S),
         exam: p.id,
+        pageWarning: hasPageWarning(p),
       }),
     );
   }

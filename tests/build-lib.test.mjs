@@ -6,6 +6,7 @@ import { STRINGS as S } from "../src/ui/strings.js";
 import {
   cacheName,
   docNoun,
+  docSummary,
   esc,
   examLinksHtml,
   fillDataStrings,
@@ -16,6 +17,7 @@ import {
   joinList,
   jsonLd,
   landingAboveHtml,
+  landingBelowHtml,
   latestDate,
   manifestJson,
   normalizeOrigin,
@@ -29,6 +31,7 @@ import {
   shortName,
   siteUrl,
   sitemapXml,
+  specTableHtml,
   swSource,
   topoSort,
   truncateWords,
@@ -124,14 +127,30 @@ test("docNoun and joinList", () => {
   assert.equal(joinList(["a", "b", "c"], S), "a, b and c");
 });
 
-test("landingAboveHtml: escaped h1, warning only without a notice, one row per document", () => {
+test("docSummary: one line, every document", () => {
+  assert.equal(docSummary(byId.ssc, S), "Photo 276×354 px, 20–50 KB · Signature 472×157 px, 10–20 KB");
+  assert.equal(
+    docSummary(byId["banking-ibps"], S),
+    "Photo 200×230 px, 20–50 KB · Signature 140×60 px, 10–20 KB · Thumb impression 240×240 px, 20–50 KB · Handwritten declaration 800×400 px, 50–100 KB",
+  );
+  assert.doesNotMatch(docSummary(byId["upsc-cse"], S), /\n/);
+});
+
+test("landingAboveHtml: only h1, summary and (without a notice) the warning", () => {
   const html = landingAboveHtml(byId.ssc, S);
   assert.match(html, /<h1 id="page-title">SSC — CGL \/ CHSL \/ MTS \/ GD \/ CPO photo &amp; signature resizer<\/h1>/);
-  assert.match(html, /class="warning"/);
-  assert.equal(html.match(/<tr>/g).length, 1 + byId.ssc.documents.length);
+  assert.match(html, /<p class="summary">Photo 276×354 px, 20–50 KB · Signature 472×157 px, 10–20 KB<\/p>/);
+  assert.match(html, /<p id="page-warning" class="warning">/);
+  assert.doesNotMatch(html, /<table/);
   assert.doesNotMatch(landingAboveHtml(byId["banking-ibps"], S), /class="warning"/);
-  assert.match(landingAboveHtml(byId["banking-ibps"], S), /<td data-label="Notes" class="empty">—<\/td>/, "missing notes render as an em dash");
+});
+
+test("landingBelowHtml: spec table first (one row per document), then sources", () => {
+  const html = landingBelowHtml(byId.ssc, S);
+  assert.ok(html.indexOf('class="page-specs"') < html.indexOf('class="page-sources"'));
+  assert.equal(html.match(/<tr>/g).length, 1 + byId.ssc.documents.length);
   assert.match(html, /<td data-label="Size">276 × 354 px<\/td>/, "cells carry labels for the narrow-screen layout");
+  assert.match(specTableHtml(byId["banking-ibps"], S), /<td data-label="Notes" class="empty">—<\/td>/, "missing notes render as an em dash");
 });
 
 test("examLinksHtml links relatively to every preset", () => {
