@@ -184,3 +184,58 @@ test("Hindi titles, descriptions and summaries: real specs only, titles within t
   assert.equal(pageTitle({ name: "JEE Main (NTA)", documents: [] }, HI), "JEE Main (NTA) फोटो और हस्ताक्षर: सही साइज़ और KB | ExamSnap");
   assert.equal(pageTitle({ name: "SSC — CGL / CHSL / MTS / GD / CPO" }, HI), "SSC फोटो और हस्ताक्षर: सही साइज़ और KB | ExamSnap");
 });
+
+// ---- docs/i18n/<code>-review.md ------------------------------------------------
+
+test("review markdown: every key with English and the translation; preset fields; missing marked", async () => {
+  const { reviewMarkdown } = await import("../scripts/i18n-review.mjs");
+  const md = reviewMarkdown(
+    { code: "hi", name: "हिन्दी", status: "draft" },
+    { a: "A | b", f: (w, h) => `${w} × ${h} px`, g: { x: "X" } },
+    { a: "अ", f: (w, h) => `${w} × ${h} px` },
+    [
+      {
+        id: "x",
+        name: "X exam",
+        notes: "Notes",
+        documents: [{ id: "photo", label: "Photo", notes: "N" }, { id: "sig", label: "Signature" }],
+        translations: { hi: { name: "X परीक्षा", documents: { photo: { label: "फोटो" } } } },
+      },
+    ],
+    "Hindi",
+  );
+  assert.match(md, /^# Hindi \(हिन्दी\) translation review\n/);
+  assert.ok(md.includes("| Key | English | Hindi |"));
+  assert.ok(md.includes("| `a` | A \\| b | अ |"), "pipes escaped");
+  assert.ok(md.includes("| `f` | {w} × {h} px | {w} × {h} px |"), "templates shown with placeholders");
+  assert.ok(md.includes("| `g.x` | X | _(missing: English is shown)_ |"));
+  assert.ok(md.includes("### `x`"));
+  assert.ok(md.includes("| `name` | X exam | X परीक्षा |"));
+  assert.ok(md.includes("| `notes` | Notes | _(English)_ |"));
+  assert.ok(md.includes("| `documents.photo.label` | Photo | फोटो |"));
+  assert.ok(md.includes("| `documents.photo.notes` | N | _(English)_ |"));
+  assert.ok(md.includes("| `documents.sig.label` | Signature | _(English)_ |"));
+  assert.ok(!md.includes("documents.sig.notes"), "no row for notes English doesn't have");
+});
+
+test("docs/i18n/hi-review.md is up to date and covers every key", async (t) => {
+  const { run } = await import("../scripts/i18n-review.mjs");
+  const { staleSeverity } = await import("../scripts/update-readme.mjs");
+  const stale = await run({ check: true });
+  if (stale.length && staleSeverity(process.env) === "warning") return t.skip("review file stale on a PR: maintainer regenerates it");
+  assert.deepEqual(stale, []);
+  const { readFile } = await import("node:fs/promises");
+  const md = await readFile(new URL("../docs/i18n/hi-review.md", import.meta.url), "utf8");
+  for (const [key] of flatten(EN)) assert.ok(md.includes(`| \`${key}\` |`), key);
+  for (const p of PRESETS) assert.ok(md.includes(`### \`${p.id}\``), p.id);
+});
+
+test("i18n-review run(): writes missing or stale files, --check only reports", async (t) => {
+  const { run } = await import("../scripts/i18n-review.mjs");
+  const outDir = await mkdtemp(join(tmpdir(), "examsnap-review-"));
+  t.after(() => rm(outDir, { recursive: true, force: true }));
+  const file = join(outDir, "hi-review.md");
+  assert.deepEqual(await run({ check: true, outDir }), [file]);
+  assert.deepEqual(await run({ outDir }), [file]);
+  assert.deepEqual(await run({ check: true, outDir }), []);
+});

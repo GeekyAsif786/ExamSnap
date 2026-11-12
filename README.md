@@ -58,6 +58,7 @@ The ExamSnap name and logo are not covered by these licenses.
 `src/generated/presets.js` is not committed: npm regenerates it from `presets/` before `dev`, `preview`, `build`, `test`, `test:e2e`, `screenshots` and `check`.
 - `npm run new-preset` — add an exam preset interactively (see [CONTRIBUTING.md](CONTRIBUTING.md)).
 - `npm run update-readme` — regenerate the README "Supported exams" table from `presets/`.
+- `npm run i18n-review` — regenerate `docs/i18n/<code>-review.md` (English next to each translation, for review). Like the README table, a stale file is a warning on pull requests and an error on `main`.
 - `npm run labels` — show how GitHub labels differ from `.github/labels.yml`; `npm run labels -- --apply` syncs them (maintainer only, needs `gh`).
 - `npm run screenshots` — capture review screenshots of the built site into `screenshots/` (gitignored; CI attaches them to every PR). Add `-- --readme` to refresh the two README images in `docs/screenshots/`.
 - `npm run icons` — regenerate the app icons and social image in `icons/`.
