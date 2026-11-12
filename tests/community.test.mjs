@@ -107,3 +107,11 @@ test("launch README: header, links, demo placeholder, sections in order, local l
   // Launch claims only: no counts, ratings or competitor comparisons.
   assert.doesNotMatch(readme, /\b\d[\d,.]*\+? (users|downloads)\b|★|rating/i);
 });
+
+test("version 1.0.0, package-lock.json in sync", async () => {
+  const pkg = JSON.parse(await read("package.json"));
+  const lock = JSON.parse(await read("package-lock.json"));
+  assert.equal(pkg.version, "1.0.0");
+  assert.equal(lock.version, pkg.version);
+  assert.equal(lock.packages[""].version, pkg.version);
+});
