@@ -98,7 +98,7 @@ test.describe("landing pages", () => {
 
 /** href/src URLs (and canonical/og:image mapped to the local server) in an HTML page. */
 function htmlRefs(html) {
-  const refs = [...html.matchAll(/\b(?:href|src)="([^"]+)"/g)].map((m) => m[1]);
+  const refs = [...html.matchAll(/\b(?:href|src|data-sw)="([^"]+)"/g)].map((m) => m[1]);
   const metas = [...html.matchAll(/<meta property="og:(?:image|url)" content="([^"]+)"/g)].map((m) => m[1]);
   return [...refs, ...metas].map((r) => r.replaceAll("&amp;", "&"));
 }
@@ -134,6 +134,9 @@ test("every internal link and asset returns 200 under BASE_PATH (crawl from the 
   expect(urls.some((u) => /\/src\/ui\/app\.[0-9a-f]{8}\.js$/.test(u))).toBe(true);
   expect(urls.some((u) => /\/src\/core\/jpeg\.[0-9a-f]{8}\.js$/.test(u))).toBe(true);
   expect(urls.some((u) => /\/src\/ui\/styles\.[0-9a-f]{8}\.css$/.test(u))).toBe(true);
+  expect(urls).toContain(`${origin}${BASE}sw.js`);
+  expect(urls).toContain(`${origin}${BASE}manifest.webmanifest`);
+  expect(urls.some((u) => /\/icons\/icon-512-maskable\.[0-9a-f]{8}\.png$/.test(u))).toBe(true);
   expect(urls.every((u) => u.startsWith(`${origin}${BASE}`))).toBe(true);
 });
 

@@ -24,6 +24,15 @@ export default [
     },
   },
   {
+    // Service worker source; scripts/build.mjs prepends CACHE and PRECACHE.
+    files: ["src/sw/**/*.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "script",
+      globals: { ...globals.serviceworker, CACHE: "readonly", PRECACHE: "readonly" },
+    },
+  },
+  {
     files: ["scripts/**/*.mjs", "tests/**/*.mjs", "eslint.config.js", "playwright.config.js"],
     languageOptions: {
       ecmaVersion: "latest",

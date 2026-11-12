@@ -5,6 +5,7 @@ import { PRESETS } from "../src/generated/presets.js";
 import { cropRect } from "../src/core/index.js";
 import {
   CUSTOM_ID,
+  canUseServiceWorker,
   clampZoom,
   createState,
   currentDoc,
@@ -250,4 +251,13 @@ test("hasMetadataSegment: unparseable input is treated as not clean", () => {
   assert.equal(hasMetadataSegment(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00])), true);
   assert.equal(hasMetadataSegment(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x01, 0x00, 0x00])), true);
   assert.equal(hasMetadataSegment(null), true);
+});
+
+test("canUseServiceWorker: https or localhost only", () => {
+  assert.equal(canUseServiceWorker({ protocol: "https:", hostname: "geekyasif786.github.io" }), true);
+  assert.equal(canUseServiceWorker({ protocol: "http:", hostname: "localhost" }), true);
+  assert.equal(canUseServiceWorker({ protocol: "http:", hostname: "127.0.0.1" }), true);
+  assert.equal(canUseServiceWorker({ protocol: "http:", hostname: "[::1]" }), true);
+  assert.equal(canUseServiceWorker({ protocol: "http:", hostname: "192.168.1.5" }), false);
+  assert.equal(canUseServiceWorker({ protocol: "file:", hostname: "" }), false);
 });

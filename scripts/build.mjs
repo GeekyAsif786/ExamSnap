@@ -19,8 +19,12 @@ import {
   jsBytes,
   landingAboveHtml,
   landingBelowHtml,
+  cacheName,
   latestDate,
+  manifestJson,
   normalizeBase,
+  swSource,
+  THEME_COLOR,
   notFoundHtml,
   pageDescription,
   pageTitle,
@@ -73,7 +77,8 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
   }
 
   // JS modules: rewrite relative imports to hashed names, leaves first.
-  const jsPaths = (await walk(join(root, "src"), root)).filter((p) => p.endsWith(".js"));
+  // src/sw/ is the service worker source, emitted separately as dist/sw.js.
+  const jsPaths = (await walk(join(root, "src"), root)).filter((p) => p.endsWith(".js") && !p.startsWith("src/sw/"));
   const code = {};
   const deps = {};
   for (const p of jsPaths) {
@@ -107,13 +112,18 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
         canonical,
         ogImage,
         S,
-        extra: [`<link rel="apple-touch-icon" href="${prefix}${assets["icons/apple-touch-icon.png"]}">`],
+        extra: [
+          `<link rel="manifest" href="${prefix}manifest.webmanifest">`,
+          `<meta name="theme-color" content="${THEME_COLOR}">`,
+          `<link rel="apple-touch-icon" href="${prefix}${assets["icons/apple-touch-icon.png"]}">`,
+        ],
       }),
     );
     html = replaceOnce(html, "<!-- build:above -->", above);
     html = replaceOnce(html, "<!-- build:below -->", below);
+    const examAttr = exam ? ` data-exam="${esc(exam)}"` : "";
+    html = replaceOnce(html, "<body>", `<body${examAttr} data-sw="${prefix}sw.js">`);
     if (exam) {
-      html = replaceOnce(html, "<body>", `<body data-exam="${esc(exam)}">`);
       // The exam heading is the page's h1; the brand becomes a link home.
       html = replaceOnce(
         html,
@@ -151,6 +161,34 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
     );
   }
   out.set("404.html", notFoundHtml({ base, csp, css: assets["src/ui/styles.css"], favicon: assets["favicon.svg"], S }));
+
+  // PWA: manifest, then a service worker precaching every page and asset
+  // (not the Open Graph image, which only crawlers fetch).
+  out.set(
+    "manifest.webmanifest",
+    manifestJson({
+      S,
+      base,
+      icons: {
+        any192: assets["icons/icon-192.png"],
+        any512: assets["icons/icon-512.png"],
+        maskable512: assets["icons/icon-512-maskable.png"],
+      },
+    }),
+  );
+  const precacheFiles = [...out.keys()]
+    .filter((p) => p !== assets["icons/og-image.png"])
+    .sort();
+  const toUrl = (p) => (p === "index.html" ? "./" : p.endsWith("/index.html") ? p.slice(0, -"index.html".length) : p);
+  const precache = precacheFiles.map(toUrl);
+  out.set(
+    "sw.js",
+    swSource({
+      cache: cacheName(precacheFiles.map((p) => [toUrl(p), out.get(p)])),
+      precache,
+      body: await readFile(join(root, "src/sw/sw.js"), "utf8"),
+    }),
+  );
 
   // Crawling.
   const lastmod = Object.fromEntries(PRESETS.map((p) => [`${p.id}/`, p.last_verified]));

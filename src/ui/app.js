@@ -7,6 +7,7 @@ import {
   CUSTOM_ID,
   CUSTOM_MAX_PX,
   CUSTOM_MIN_PX,
+  canUseServiceWorker,
   clampZoom,
   createState,
   currentDoc,
@@ -25,6 +26,7 @@ import {
 import { drawCrop, resizeBitmap } from "./render.js";
 import { canvasEncoder } from "./encode.js";
 import { attachGestures } from "./gestures.js";
+import { registerServiceWorker } from "./pwa.js";
 
 const $ = (id) => document.getElementById(id);
 const el = {
@@ -490,6 +492,15 @@ buildDocSelect();
 renderSpec();
 syncAdjustControls();
 history.replaceState(null, "", `${location.pathname}${selectionSearch(location.search, state, pageExam)}${location.hash}`);
+
+// Built pages carry the service worker URL on <body data-sw>; dev pages don't.
+const swUrl = document.body.dataset.sw;
+if (swUrl && "serviceWorker" in navigator && canUseServiceWorker(location)) {
+  registerServiceWorker(swUrl, (apply) => {
+    $("update").hidden = false;
+    $("update-reload").addEventListener("click", apply, { once: true });
+  });
+}
 
 if (new URLSearchParams(location.search).get("test") === "1") {
   window.__examsnap = { state, loadFile, make };

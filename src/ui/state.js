@@ -255,3 +255,11 @@ export function hasMetadataSegment(bytes) {
   }
   return true;
 }
+
+/**
+ * Service workers need a secure context: https, or localhost for development.
+ * @param {{ protocol: string, hostname: string }} loc
+ */
+export function canUseServiceWorker(loc) {
+  return loc.protocol === "https:" || ["localhost", "127.0.0.1", "[::1]"].includes(loc.hostname);
+}

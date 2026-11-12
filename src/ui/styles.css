@@ -138,6 +138,22 @@ footer.site p {
   min-height: 44px;
 }
 
+/* ---- Update banner ---- */
+
+.update p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 8px 0 0;
+  padding: 8px 8px 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
 /* ---- Steps ---- */
 
 .step {

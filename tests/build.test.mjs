@@ -25,7 +25,7 @@ test("output layout: pages, crawl files, hashed assets, budget", async (t) => {
   t.after(() => rm(dir, { recursive: true, force: true }));
   const r = await build({ outDir: dir });
   const paths = r.files.map((f) => f.path);
-  for (const p of ["index.html", "404.html", "sitemap.xml", "robots.txt", ...PRESETS.map((p) => `${p.id}/index.html`)]) {
+  for (const p of ["index.html", "404.html", "sitemap.xml", "robots.txt", "manifest.webmanifest", "sw.js", ...PRESETS.map((p) => `${p.id}/index.html`)]) {
     assert.ok(paths.includes(p), p);
   }
   // Every JS/CSS/image asset is content-hashed; no unhashed source paths ship.
@@ -64,4 +64,27 @@ test("hashed imports point at files that exist in the build", async (t) => {
       assert.ok(paths.has(target), `${f.path} imports missing ${target}`);
     }
   }
+});
+
+test("sw.js precaches every page and shipped asset (not the OG image), and parses", async (t) => {
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const r = await build({ outDir: dir });
+  const sw = await readFile(join(dir, "sw.js"), "utf8");
+  const precache = JSON.parse(sw.match(/const PRECACHE = (\[[\s\S]*?\]);/)[1]);
+  assert.ok(precache.includes("./"));
+  for (const p of PRESETS) assert.ok(precache.includes(`${p.id}/`), p.id);
+  for (const f of r.files) {
+    if (/^(sw\.js|sitemap\.xml|robots\.txt)$/.test(f.path) || f.path.includes("og-image")) continue;
+    const url = f.path === "index.html" ? "./" : f.path.replace(/index\.html$/, "");
+    assert.ok(precache.includes(url), `${f.path} not precached`);
+  }
+  assert.ok(!precache.some((u) => u.includes("og-image")));
+  new Function(sw); // syntax check
+  // A content change gives a new cache name.
+  const other = await tmp();
+  t.after(() => rm(other, { recursive: true, force: true }));
+  await build({ outDir: other, origin: "https://examsnap.example" });
+  const cacheOf = async (d) => (await readFile(join(d, "sw.js"), "utf8")).match(/const CACHE = "([^"]+)"/)[1];
+  assert.notEqual(await cacheOf(dir), await cacheOf(other));
 });

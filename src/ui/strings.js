@@ -103,6 +103,9 @@ export const STRINGS = {
   notFoundBody: "There is nothing at this address.",
   notFoundHome: "Go to ExamSnap",
 
+  updateAvailable: "A new version is available.",
+  updateReload: "Reload",
+
   footerRepo: "Source code on GitHub",
   footerReport: "Report a wrong spec",
   footerPrivacy: "Free and open source. No uploads, no tracking.",
