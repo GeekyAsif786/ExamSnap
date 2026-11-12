@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { crc32, deflateSync } from "node:zlib";
+import { PRESETS } from "../../src/generated/presets.js";
 import { test, expect, openApp, loadImage, readResult } from "./helpers.mjs";
+
+// Expectations about real presets come from the preset data, so a
+// preset-only PR (new numbers, new sources, new date) keeps e2e green.
+const preset = (id) => PRESETS.find((p) => p.id === id);
+const doc = (id, docId) => preset(id).documents.find((d) => d.id === docId);
+const SOURCE_BADGE = { notice: "Official notice", portal: "Official site", secondary: "Secondary" };
 
 /** Minimal RGB PNG built in Node (no binary fixtures). */
 function makePng(w, h, [r, g, b]) {
@@ -30,8 +37,9 @@ test("deep link preselects exam and document and is kept in the URL", async ({ p
   await page.goto("./?exam=jee-main&doc=signature");
   await expect(page.locator("#exam")).toHaveValue("jee-main");
   await expect(page.locator("#doc")).toHaveValue("signature");
-  await expect(page.locator("#chips")).toContainText("276 × 118 px");
-  await expect(page.locator("#chips")).toContainText("10–30 KB");
+  const sig = doc("jee-main", "signature");
+  await expect(page.locator("#chips")).toContainText(`${sig.width} × ${sig.height} px`);
+  await expect(page.locator("#chips")).toContainText(`${sig.min_kb}–${sig.max_kb} KB`);
   await expect(page.locator("#clean")).toBeHidden(); // adjust step waits for an image
   expect(new URL(page.url()).search).toBe("?exam=jee-main&doc=signature");
 });
@@ -80,13 +88,14 @@ test("sources list: safe new-tab links with type badges and last verified", asyn
   await page.goto("./?exam=jee-main&doc=photo");
   await page.getByText("Where these numbers come from").click();
   const links = page.locator("#source-list a");
-  await expect(links).toHaveCount(3);
+  const jee = preset("jee-main");
+  await expect(links).toHaveCount(jee.sources.length);
   for (const a of await links.all()) {
     await expect(a).toHaveAttribute("target", "_blank");
     await expect(a).toHaveAttribute("rel", "noopener noreferrer");
   }
-  await expect(page.locator("#source-list .badge")).toHaveText(["Secondary", "Secondary", "Official site"]);
-  await expect(page.locator("#verified")).toHaveText("Last verified: 2026-11-11");
+  await expect(page.locator("#source-list .badge")).toHaveText(jee.sources.map((s) => SOURCE_BADGE[s.type]));
+  await expect(page.locator("#verified")).toHaveText(`Last verified: ${jee.last_verified}`);
   await page.locator("#exam").selectOption("banking-ibps");
   await expect(page.locator("#source-list .badge").first()).toHaveText("Official notice");
 });
@@ -390,7 +399,8 @@ test("result is announced and the download link saves the file", async ({ page }
   await expect(page.locator("#result-status")).toHaveText(/^Your file is ready: signature\.jpg, \d+\.\d KB\.$/);
   await expect(page.locator("#result-status")).toHaveAttribute("aria-live", "polite");
   await expect(page.locator("#checklist")).toContainText("Location & camera data removed");
-  await expect(page.locator("#checklist")).toContainText(/\d+\.\d KB \(allowed 10–20 KB\)/);
+  const sig = doc("ssc", "signature");
+  await expect(page.locator("#checklist")).toContainText(new RegExp(`\\d+\\.\\d KB \\(allowed ${sig.min_kb}–${sig.max_kb} KB\\)`));
   const [download] = await Promise.all([page.waitForEvent("download"), page.locator("#download").click()]);
   expect(download.suggestedFilename()).toBe("signature.jpg");
 });

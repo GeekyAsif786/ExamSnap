@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "../../scripts/build.mjs";
 import { createDevServer } from "../../scripts/serve.mjs";
+import { PRESETS } from "../../src/generated/presets.js";
 import { STRINGS as S } from "../../src/ui/strings.js";
 import { test, expect, openApp, loadImage, readResult } from "./helpers.mjs";
 
@@ -33,12 +34,14 @@ test("offline: reload, make a photo, and open an exam page", async ({ page, cont
     await page.getByRole("button", { name: "Make my file" }).click();
     await expect(page.locator("#result")).toBeVisible();
     const out = await readResult(page);
-    expect(out.decoded).toEqual({ width: 276, height: 354 });
+    const photo = PRESETS.find((p) => p.id === "jee-main").documents.find((d) => d.id === "photo");
+    expect(out.decoded).toEqual({ width: photo.width, height: photo.height });
 
+    const ssc = PRESETS.find((p) => p.id === "ssc");
     await page.goto("./ssc/");
-    await expect(page.locator("h1")).toHaveText(S.landingHeading("SSC — CGL / CHSL / MTS / GD / CPO"));
+    await expect(page.locator("h1")).toHaveText(S.landingHeading(ssc.name));
     await expect(page.locator("#exam")).toHaveValue("ssc");
-    await expect(page.locator(".spec-table tbody tr")).toHaveCount(2);
+    await expect(page.locator(".spec-table tbody tr")).toHaveCount(ssc.documents.length);
   } finally {
     await context.setOffline(false);
   }
