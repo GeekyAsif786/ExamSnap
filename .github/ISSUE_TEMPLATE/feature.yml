@@ -1,0 +1,29 @@
+name: Feature request
+description: An idea that would make ExamSnap better.
+labels: [enhancement, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a new exam, use "Request an exam" instead. Open-ended ideas are welcome in [Discussions → Ideas](https://github.com/GeekyAsif786/ExamSnap/discussions/categories/ideas).
+
+        ExamSnap stays fully in the browser: no uploads, no accounts, no tracking. Ideas that need a server are out of scope.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      placeholder: When I …, I can't …
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Anything you've tried instead?
+    validations:
+      required: false

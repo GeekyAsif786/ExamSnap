@@ -1,0 +1,39 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Please don't post your photo or signature.** Discussions are public. Describe the problem in words, or use a test image.
+  - type: input
+    id: exam
+    attributes:
+      label: Exam
+      placeholder: e.g. IBPS PO
+    validations:
+      required: true
+  - type: input
+    id: document
+    attributes:
+      label: Document
+      placeholder: e.g. Left thumb impression
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Device and browser
+      placeholder: e.g. Android, Chrome 131
+    validations:
+      required: true
+  - type: textarea
+    id: portal
+    attributes:
+      label: What the portal said
+      description: The exact message, if the portal showed one.
+    validations:
+      required: false
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true

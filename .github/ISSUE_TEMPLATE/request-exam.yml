@@ -1,0 +1,44 @@
+name: Request an exam
+description: Your exam isn't in ExamSnap yet. Tell us which one.
+title: "[Exam] "
+labels: [preset, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! The fastest way to get an exam added is a link to its **official notification** (the PDF that lists the photo and signature sizes).
+
+        Please **don't attach your own photo or signature**. Issues are public.
+  - type: input
+    id: exam
+    attributes:
+      label: Exam name
+      description: Full name, and the conducting body if you know it.
+      placeholder: e.g. NEET UG (NTA)
+    validations:
+      required: true
+  - type: input
+    id: notice
+    attributes:
+      label: Official notice link
+      description: Optional, but it makes this much faster. A link to the notification PDF or the official portal page.
+      placeholder: https://
+    validations:
+      required: false
+  - type: textarea
+    id: specs
+    attributes:
+      label: Document specs, if you know them
+      description: For each document, the pixel size (or cm), the KB range, and anything else the portal checks.
+      placeholder: |
+        Photo: 200 × 230 px, 20–50 KB
+        Signature: 140 × 60 px, 10–20 KB
+    validations:
+      required: false
+  - type: checkboxes
+    id: self
+    attributes:
+      label: Can you help?
+      options:
+        - label: I can add it myself (see "Add an exam in 10 minutes" in CONTRIBUTING.md).
+          required: false
