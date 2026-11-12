@@ -12,6 +12,7 @@ import {
   fitWithin,
   formatKb,
   groupByCategory,
+  hasMetadataSegment,
   hasNotice,
   panBy,
   parseCustom,
@@ -192,4 +193,27 @@ test("strings: every value is a string, a function, or a map of strings", () => 
     assert.ok(ok, key);
   }
   assert.equal(STRINGS.tagline, "Exact pixels. Exact KB. Your photo never leaves your device.");
+});
+
+/** Build a JPEG-shaped byte array from [marker, payloadLength] segments, then SOS. */
+function jpegWith(segments) {
+  const out = [0xff, 0xd8];
+  for (const [marker, n] of segments) out.push(0xff, marker, (n + 2) >> 8, (n + 2) & 0xff, ...new Array(n).fill(0));
+  out.push(0xff, 0xda, 0x00, 0x02, 0x12, 0x34, 0xff, 0xd9);
+  return new Uint8Array(out);
+}
+
+test("hasMetadataSegment: APP0/DQT/COM only is clean; APP1 or APP13 is not", () => {
+  assert.equal(hasMetadataSegment(jpegWith([[0xe0, 14], [0xfe, 10], [0xdb, 67]])), false);
+  assert.equal(hasMetadataSegment(jpegWith([[0xe0, 14], [0xe1, 30]])), true);
+  assert.equal(hasMetadataSegment(jpegWith([[0xed, 30]])), true);
+  // APP2 (ICC profile) is colour data, not location/camera data.
+  assert.equal(hasMetadataSegment(jpegWith([[0xe0, 14], [0xe2, 30]])), false);
+});
+
+test("hasMetadataSegment: unparseable input is treated as not clean", () => {
+  assert.equal(hasMetadataSegment(new Uint8Array([0x89, 0x50, 0x4e, 0x47])), true);
+  assert.equal(hasMetadataSegment(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00])), true);
+  assert.equal(hasMetadataSegment(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x01, 0x00, 0x00])), true);
+  assert.equal(hasMetadataSegment(null), true);
 });

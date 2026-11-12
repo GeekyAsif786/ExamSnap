@@ -3,7 +3,7 @@ import js from "@eslint/js";
 import globals from "globals";
 
 export default [
-  { ignores: ["node_modules/"] },
+  { ignores: ["node_modules/", "playwright-report/", "test-results/"] },
   js.configs.recommended,
   {
     // Pure logic: ES built-ins only. No browser or Node globals, so any DOM or
@@ -24,11 +24,18 @@ export default [
     },
   },
   {
-    files: ["scripts/**/*.mjs", "tests/**/*.mjs", "eslint.config.js"],
+    files: ["scripts/**/*.mjs", "tests/**/*.mjs", "eslint.config.js", "playwright.config.js"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
       globals: { ...globals.node },
+    },
+  },
+  {
+    // Playwright specs run in Node, but page.evaluate callbacks run in the page.
+    files: ["tests/e2e/**/*.mjs"],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
     },
   },
 ];

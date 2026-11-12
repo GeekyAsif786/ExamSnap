@@ -221,3 +221,27 @@ export function formatKb(bytes, fallback = false) {
   const kb = bytes / (fallback ? 1000 : 1024);
   return (Math.floor(kb * 10) / 10).toFixed(1);
 }
+
+/**
+ * True if a JPEG carries a metadata segment that can hold location or
+ * camera data (APP1 = EXIF/XMP, APP13 = IPTC/Photoshop) before the image
+ * data starts. Returns true for anything it can't parse, so a malformed
+ * file never shows as "clean".
+ *
+ * @param {Uint8Array} bytes
+ * @returns {boolean}
+ */
+export function hasMetadataSegment(bytes) {
+  if (!(bytes?.length >= 4) || bytes[0] !== 0xff || bytes[1] !== 0xd8) return true;
+  let pos = 2;
+  while (pos + 4 <= bytes.length) {
+    if (bytes[pos] !== 0xff) return true;
+    const marker = bytes[pos + 1];
+    if (marker === 0xda) return false; // SOS: image data follows
+    if (marker === 0xe1 || marker === 0xed) return true;
+    const len = (bytes[pos + 2] << 8) | bytes[pos + 3];
+    if (len < 2) return true;
+    pos += 2 + len;
+  }
+  return true;
+}

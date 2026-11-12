@@ -1,0 +1,119 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light dark">
+  <title>ExamSnap</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="src/ui/styles.css">
+  <script type="module" src="src/ui/app.js"></script>
+</head>
+<body>
+  <header class="site">
+    <div class="wrap">
+      <h1 class="brand" data-s="appName"></h1>
+      <p class="tagline" data-s="tagline"></p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="step" aria-labelledby="h-spec">
+      <h2 id="h-spec"><span class="num" aria-hidden="true">1</span><span data-s="stepSpec"></span></h2>
+
+      <div class="field">
+        <label for="exam" data-s="examLabel"></label>
+        <select id="exam"></select>
+      </div>
+      <div class="field" id="doc-field">
+        <label for="doc" data-s="docLabel"></label>
+        <select id="doc"></select>
+      </div>
+
+      <fieldset id="custom" class="custom" hidden>
+        <legend data-s="customLegend"></legend>
+        <div class="grid">
+          <div class="field"><label for="custom-width" data-s="customWidth"></label><input id="custom-width" type="text" inputmode="numeric" autocomplete="off" aria-describedby="custom-error"></div>
+          <div class="field"><label for="custom-height" data-s="customHeight"></label><input id="custom-height" type="text" inputmode="numeric" autocomplete="off" aria-describedby="custom-error"></div>
+          <div class="field"><label for="custom-min" data-s="customMinKb"></label><input id="custom-min" type="text" inputmode="decimal" autocomplete="off" aria-describedby="custom-error"></div>
+          <div class="field"><label for="custom-max" data-s="customMaxKb"></label><input id="custom-max" type="text" inputmode="decimal" autocomplete="off" aria-describedby="custom-error"></div>
+        </div>
+        <p id="custom-error" class="msg error" aria-live="polite"></p>
+      </fieldset>
+
+      <ul id="chips" class="chips"></ul>
+      <p id="warning" class="warning" data-s="secondaryWarning" hidden></p>
+      <div id="notes" class="notes"></div>
+
+      <details id="sources" class="sources">
+        <summary data-s="sourcesSummary"></summary>
+        <ul id="source-list"></ul>
+        <p id="verified" class="muted"></p>
+      </details>
+    </section>
+
+    <section class="step" aria-labelledby="h-upload">
+      <h2 id="h-upload"><span class="num" aria-hidden="true">2</span><span data-s="stepUpload"></span></h2>
+      <div id="drop" class="drop">
+        <input id="file" class="file-input" type="file" accept="image/*">
+        <label for="file" class="button primary" data-s="chooseFile"></label>
+        <p class="muted" data-s="dropHint"></p>
+      </div>
+      <p id="upload-msg" class="msg" aria-live="polite"></p>
+    </section>
+
+    <section class="step" aria-labelledby="h-adjust">
+      <h2 id="h-adjust"><span class="num" aria-hidden="true">3</span><span data-s="stepAdjust"></span></h2>
+      <p id="adjust-empty" class="muted" data-s="adjustEmpty"></p>
+      <div id="adjust" hidden>
+        <div id="preview-wrap" class="preview-wrap">
+          <canvas id="preview" class="preview" tabindex="0" role="img"></canvas>
+        </div>
+        <p class="muted hint" data-s="adjustHint"></p>
+        <div class="field">
+          <label for="zoom" data-s="zoomLabel"></label>
+          <input id="zoom" type="range" min="1" max="4" step="0.01" value="1">
+        </div>
+        <div class="check">
+          <input id="clean" type="checkbox" aria-describedby="clean-hint">
+          <label for="clean" data-s="cleanLabel"></label>
+        </div>
+        <p id="clean-hint" class="muted" data-s="cleanHint"></p>
+        <div class="field" id="threshold-field" hidden>
+          <label for="threshold"><span data-s="thresholdLabel"></span> <output id="threshold-out" for="threshold"></output></label>
+          <input id="threshold" type="range" min="120" max="220" step="1" value="170">
+        </div>
+      </div>
+    </section>
+
+    <section class="step" aria-labelledby="h-make">
+      <h2 id="h-make"><span class="num" aria-hidden="true">4</span><span data-s="stepMake"></span></h2>
+      <button id="make" type="button" class="button primary wide" data-s="makeButton" disabled></button>
+      <p id="make-msg" class="msg error" aria-live="polite"></p>
+      <p id="result-status" class="visually-hidden" aria-live="polite"></p>
+      <div id="result" class="result" hidden>
+        <h3 data-s="resultHeading"></h3>
+        <div class="result-body">
+          <img id="result-img" class="result-img" alt="">
+          <ul id="checklist" class="checklist"></ul>
+        </div>
+        <p id="padded" class="muted" data-s="padded" hidden></p>
+        <a id="download" class="button primary wide" href="#"></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site">
+    <div class="wrap">
+      <p class="muted" data-s="footerPrivacy"></p>
+      <ul class="links">
+        <li><a href="https://github.com/GeekyAsif786/ExamSnap" rel="noopener noreferrer" data-s="footerRepo"></a></li>
+        <li><a href="https://github.com/GeekyAsif786/ExamSnap/issues/new" rel="noopener noreferrer" data-s="footerReport"></a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>
