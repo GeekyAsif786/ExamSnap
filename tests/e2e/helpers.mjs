@@ -171,12 +171,13 @@ export async function readResult(page) {
 }
 
 /**
- * Walk JPEG segments up to SOS. Returns marker bytes in order and the SOF
- * frame size.
+ * Walk JPEG segments up to SOS. Returns marker bytes in order, each
+ * segment's payload, and the SOF frame size.
  * @param {Uint8Array} bytes
  */
 export function jpegSegments(bytes) {
   const markers = [];
+  const segments = []; // { marker, payload } for every segment before SOS
   let frame = null;
   let pos = 2;
   while (pos + 4 <= bytes.length) {
@@ -189,10 +190,11 @@ export function jpegSegments(bytes) {
     markers.push(m);
     if (m === 0xda) break;
     const len = (bytes[pos + 2] << 8) | bytes[pos + 3];
+    segments.push({ marker: m, payload: bytes.subarray(pos + 4, pos + 2 + len) });
     if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) {
       frame = { height: (bytes[pos + 5] << 8) | bytes[pos + 6], width: (bytes[pos + 7] << 8) | bytes[pos + 8] };
     }
     pos += 2 + len;
   }
-  return { markers, frame };
+  return { markers, segments, frame };
 }

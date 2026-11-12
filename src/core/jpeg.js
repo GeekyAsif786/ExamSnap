@@ -84,14 +84,17 @@ export function padJpeg(bytes, targetLen) {
   return out;
 }
 
-const METADATA_MARKERS = new Set([0xe1, 0xed]); // APP1 (EXIF/XMP), APP13 (IPTC/Photoshop)
+// APP1 (EXIF/XMP), APP13 (IPTC/Photoshop), COM (free text: software, device).
+const METADATA_MARKERS = new Set([0xe1, 0xed, 0xfe]);
 
 /**
- * Remove metadata segments that can carry location or camera data — APP1
- * (EXIF, XMP) and APP13 (IPTC / Photoshop) — from the header of a JPEG.
- * Everything else, including APP0 JFIF, APP2 ICC profiles and the scan data,
- * is kept byte-for-byte. Some encoders (WebKit/ImageIO) write these segments
- * even for canvas output.
+ * Remove metadata segments that can carry location, camera or device data —
+ * APP1 (EXIF, XMP), APP13 (IPTC / Photoshop) and COM (comments, where some
+ * encoders write software or device text) — from the header of a JPEG.
+ * Everything else, including APP0 JFIF, APP2 ICC profiles, APP14 Adobe and
+ * the scan data, is kept byte-for-byte. Some encoders (WebKit/ImageIO) write
+ * these segments even for canvas output. Run it before padJpeg: the COM
+ * padding padJpeg adds would otherwise be removed too.
  *
  * If the header can't be walked safely up to SOS, the input is returned
  * unchanged rather than risk corrupting it.

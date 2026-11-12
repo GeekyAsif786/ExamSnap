@@ -60,12 +60,24 @@ test("rejects non-JPEG input", () => {
   assert.throws(() => stripMetadata(new Uint8Array([0x89, 0x50])), TypeError);
 });
 
-test("strip then pad keeps JFIF first and stays metadata-free", () => {
-  const stripped = stripMetadata(u8(SOI, APP0, APP1, APP13, DQT, SOF0, SOS, EOI));
+test("COM before SOS is removed; APP0, APP2 and APP14 are kept", () => {
+  const COM = segment(0xfe, ascii("Created by PhoneCam 3.1, device X-200"));
+  const APP14 = segment(0xee, [...ascii("Adobe"), 0, 100, 0, 0, 0, 0, 1]);
+  const input = u8(SOI, APP0, COM, APP2, APP14, DQT, COM, SOF0, SOS, EOI);
+  assert.deepEqual(stripMetadata(input), u8(SOI, APP0, APP2, APP14, DQT, SOF0, SOS, EOI));
+});
+
+test("strip then pad keeps JFIF first; the only COM left is space padding", () => {
+  const COM = segment(0xfe, ascii("encoder v1"));
+  const stripped = stripMetadata(u8(SOI, APP0, APP1, APP13, COM, DQT, SOF0, SOS, EOI));
+  assert.deepEqual(stripped, u8(SOI, APP0, DQT, SOF0, SOS, EOI));
   const padded = padJpeg(stripped, stripped.length + 100);
   assert.deepEqual([...padded.subarray(0, 4)], [0xff, 0xd8, 0xff, 0xe0]);
-  assert.deepEqual(stripMetadata(padded), padded);
-  assert.equal(stripMetadata(padded), padded);
+  // Padding is a COM of spaces right after APP0; stripping again removes just that.
+  assert.equal(padded[20], 0xff);
+  assert.equal(padded[21], 0xfe);
+  assert.ok(padded.subarray(24, 120).every((b) => b === 0x20));
+  assert.deepEqual(stripMetadata(padded), stripped);
 });
 
 test("ensureJfif: already JFIF returns the same array", () => {

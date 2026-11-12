@@ -83,7 +83,7 @@ for (const mode of ["after-app0", "no-app0"]) {
       const doc = PRESETS.find((p) => p.id === examId).documents.find((d) => d.id === docId);
       const { minBytes, maxBytes } = byteRange(doc.min_kb, doc.max_kb);
       const out = await readResult(page);
-      const { markers, frame } = jpegSegments(out.bytes);
+      const { markers, segments, frame } = jpegSegments(out.bytes);
       expect(markers).not.toContain(0xe1);
       expect(markers).not.toContain(0xed);
       expect([...out.bytes.subarray(0, 4)]).toEqual([0xff, 0xd8, 0xff, 0xe0]);
@@ -92,7 +92,11 @@ for (const mode of ["after-app0", "no-app0"]) {
       expect(frame).toEqual({ width: doc.width, height: doc.height });
       expect(out.bytes.length).toBeGreaterThanOrEqual(minBytes);
       expect(out.bytes.length).toBeLessThanOrEqual(maxBytes);
-      if (mode === "after-app0") expect(markers).toContain(0xfe); // the injected COM survives
+      // The injected comment text is gone; any COM left is size padding (spaces only).
+      expect(out.bytes.includes(Buffer.from("injected by test", "latin1"))).toBe(false);
+      for (const { payload } of segments.filter((x) => x.marker === 0xfe)) {
+        expect(payload.every((b) => b === 0x20)).toBe(true);
+      }
       await expect(page.locator("#checklist li.pass", { hasText: "Location & camera data removed" })).toBeVisible();
       await expect(page.locator("#checklist li.fail")).toHaveCount(0);
     });

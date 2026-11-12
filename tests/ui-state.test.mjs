@@ -203,8 +203,14 @@ function jpegWith(segments) {
   return new Uint8Array(out);
 }
 
-test("hasMetadataSegment: APP0/DQT/COM only is clean; APP1 or APP13 is not", () => {
-  assert.equal(hasMetadataSegment(jpegWith([[0xe0, 14], [0xfe, 10], [0xdb, 67]])), false);
+test("hasMetadataSegment: APP0/DQT/space-padding COM is clean; APP1, APP13 or text COM is not", () => {
+  // jpegWith fills payloads with zero bytes, so build COM segments by hand.
+  const com = (text) => [...[0xff, 0xfe, (text.length + 2) >> 8, (text.length + 2) & 0xff], ...[...text].map((c) => c.charCodeAt(0))];
+  const withCom = (text) =>
+    new Uint8Array([0xff, 0xd8, ...jpegWith([[0xe0, 14]]).subarray(2, 20), ...com(text), 0xff, 0xda, 0x00, 0x02, 0xff, 0xd9]);
+  assert.equal(hasMetadataSegment(withCom(" ".repeat(40))), false);
+  assert.equal(hasMetadataSegment(withCom("Made on PhoneCam X-200")), true);
+  assert.equal(hasMetadataSegment(jpegWith([[0xe0, 14], [0xdb, 67]])), false);
   assert.equal(hasMetadataSegment(jpegWith([[0xe0, 14], [0xe1, 30]])), true);
   assert.equal(hasMetadataSegment(jpegWith([[0xed, 30]])), true);
   // APP2 (ICC profile) is colour data, not location/camera data.
