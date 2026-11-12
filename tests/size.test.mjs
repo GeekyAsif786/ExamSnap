@@ -36,3 +36,10 @@ test("byteRange throws RangeError on invalid input", () => {
   assert.throws(() => byteRange(NaN, 10), RangeError);
   assert.throws(() => byteRange(10, NaN), RangeError);
 });
+
+test("byteRange throws RangeError when the range is under 4 bytes wide", () => {
+  // Fallback range 10000–10003: 3 bytes wide.
+  assert.throws(() => byteRange(10, 10.003), RangeError);
+  // Fallback range 10000–10004: exactly 4 bytes is allowed.
+  assert.deepEqual(byteRange(10, 10.004), { minBytes: 10000, maxBytes: 10004, fallback: true });
+});

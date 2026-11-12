@@ -54,7 +54,8 @@ export async function fitToRange(encode, { minBytes, maxBytes }, { margin = 0.97
   let { bytes } = best;
   let padded = false;
   if (bytes.length < minBytes) {
-    bytes = padJpeg(bytes, Math.min(minBytes + PAD_HEADROOM, maxBytes));
+    // padJpeg may overshoot its target by up to 3 bytes; keep that under max.
+    bytes = padJpeg(bytes, Math.min(minBytes + PAD_HEADROOM, maxBytes - 3));
     padded = true;
   }
 

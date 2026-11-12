@@ -103,3 +103,24 @@ test("custom margin changes the ceiling", async () => {
   assert.equal(r.ok, true);
   assert.ok(r.size <= 25000);
 });
+
+test("padding never overshoots maxBytes in a 10-byte-wide range", async () => {
+  const range = { minBytes: 10240, maxBytes: 10250 };
+  const { encode } = fakeEncoder((q) => 200 + q * 5000);
+  const r = await fitToRange(encode, range);
+  assert.equal(r.ok, true);
+  assert.equal(r.padded, true);
+  assert.ok(r.size >= range.minBytes && r.size <= range.maxBytes, `size ${r.size}`);
+});
+
+test("padding a 1–3 byte shortfall in the narrowest allowed range stays in range", async () => {
+  // 4 bytes wide; pad target = maxBytes - 3 = minBytes + 1. A 2-byte shortfall
+  // forces a 4-byte COM segment, i.e. the full 3-byte overshoot.
+  const range = { minBytes: 10000, maxBytes: 10004 };
+  for (const size of [9998, 9999]) {
+    const { encode } = fakeEncoder(() => size);
+    const r = await fitToRange(encode, range);
+    assert.equal(r.ok, true, `start ${size} -> ${r.size}`);
+    assert.ok(r.size <= range.maxBytes);
+  }
+});
