@@ -1,0 +1,57 @@
+{
+  "id": "cuet-ug",
+  "name": "CUET (UG) — NTA",
+  "category": "Entrance exams",
+  "notes": "From the CUET (UG) 2026 Information Bulletin. The bulletin gives only file-size ranges, not pixel sizes; the pixel sizes here are ExamSnap defaults (cm at 200 DPI). The form also captures a live photo with your camera in addition to the uploaded photograph.",
+  "last_verified": "2026-11-12",
+  "sources": [
+    {
+      "title": "CUET (UG) 2026 Information Bulletin — NTA (upload specifications, p. 8)",
+      "url": "https://cdnbbsr.s3waas.gov.in/s3d1a21da7bca4abff8b0b61b87597de73/uploads/2026/01/202601031633478370.pdf",
+      "type": "notice"
+    },
+    {
+      "title": "CUET (UG) official site",
+      "url": "https://cuet.nta.nic.in",
+      "type": "portal"
+    }
+  ],
+  "documents": [
+    {
+      "id": "photo",
+      "label": "Passport size photograph (3.5 × 4.5 cm)",
+      "kind": "photo",
+      "width": 276,
+      "height": 354,
+      "min_kb": 10,
+      "max_kb": 200,
+      "filename": "photograph.jpg",
+      "notes": "Colour photo, white background; about 80% of the photo should be your face, ears visible, no mask."
+    },
+    {
+      "id": "signature",
+      "label": "Signature (3.5 × 1.5 cm)",
+      "kind": "signature",
+      "width": 276,
+      "height": 118,
+      "min_kb": 10,
+      "max_kb": 50,
+      "filename": "signature.jpg"
+    }
+  ],
+  "translations": {
+    "hi": {
+      "name": "CUET (UG) — NTA",
+      "notes": "CUET (UG) 2026 सूचना बुलेटिन से। बुलेटिन में सिर्फ़ फ़ाइल साइज़ की रेंज दी गई है, पिक्सेल साइज़ नहीं; यहाँ के पिक्सेल साइज़ ExamSnap के डिफ़ॉल्ट हैं (cm से 200 DPI पर निकाले गए)। अपलोड की गई फ़ोटो के अलावा, फ़ॉर्म आपके कैमरे से एक लाइव फ़ोटो भी लेता है।",
+      "documents": {
+        "photo": {
+          "label": "पासपोर्ट साइज़ फ़ोटो (3.5 × 4.5 cm)",
+          "notes": "रंगीन फ़ोटो, सफ़ेद बैकग्राउंड; फ़ोटो का लगभग 80% हिस्सा आपका चेहरा हो, कान दिखने चाहिए, मास्क नहीं।"
+        },
+        "signature": {
+          "label": "हस्ताक्षर (3.5 × 1.5 cm)"
+        }
+      }
+    }
+  }
+}

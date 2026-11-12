@@ -20,13 +20,13 @@ test("bundled module has a generated-file header and CC0 SPDX line", async () =>
 
 test("PRESETS is sorted by category, then name", async () => {
   const { PRESETS } = await importSource(await bundlePresets(PRESETS_DIR));
-  assert.equal(PRESETS.length, 4);
+  assert.equal(PRESETS.length, 6);
   const keys = PRESETS.map((p) => [p.category, p.name]);
   const sorted = [...keys].sort((a, b) => (a[0] === b[0] ? (a[1] < b[1] ? -1 : 1) : a[0] < b[0] ? -1 : 1));
   assert.deepEqual(keys, sorted);
   assert.deepEqual(
     PRESETS.map((p) => p.id),
-    ["banking-ibps", "jee-main", "ssc", "upsc-cse"],
+    ["banking-ibps", "cuet-ug", "jee-main", "neet-ug", "ssc", "upsc-cse"],
   );
 });
 

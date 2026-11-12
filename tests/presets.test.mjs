@@ -100,7 +100,7 @@ test("the real presets pass, with notice warnings for ssc, upsc-cse and jee-main
   const dir = fileURLToPath(new URL("../presets/", import.meta.url));
   const { errors, warnings, count } = await validatePresets(dir);
   assert.deepEqual(errors, []);
-  assert.equal(count, 4);
+  assert.equal(count, 6);
   assert.deepEqual(
     warnings.filter((w) => w.includes("no official notice")),
     ["jee-main", "ssc", "upsc-cse"].map((id) => `${id}: no official notice linked — specs unverified`),
@@ -140,4 +140,35 @@ test("the XSS fixture preset is schema-valid (so the XSS e2e test exercises a re
   const { errors, warnings } = await validatePresets(fixture("xss"), { now: NOW });
   assert.deepEqual(errors, []);
   assert.deepEqual(warnings, ["xss-test: no official notice linked — specs unverified"]);
+});
+
+test("NEET (UG) and CUET (UG): bulletin values exactly, official notices linked (M3c)", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const load = async (id) => JSON.parse(await readFile(new URL(`../presets/${id}.json`, import.meta.url), "utf8"));
+  const docs = (p) => p.documents.map((d) => [d.id, d.kind, d.width, d.height, d.min_kb, d.max_kb, d.filename]);
+  const neet = await load("neet-ug");
+  const cuet = await load("cuet-ug");
+  assert.deepEqual(docs(neet), [
+    ["photo", "photo", 276, 354, 10, 200, "photograph.jpg"],
+    ["signature", "signature", 276, 118, 10, 100, "signature.jpg"],
+    ["fingers", "thumb", 800, 500, 50, 200, "finger_thumb.jpg"],
+  ]);
+  assert.deepEqual(docs(cuet), [
+    ["photo", "photo", 276, 354, 10, 200, "photograph.jpg"],
+    ["signature", "signature", 276, 118, 10, 50, "signature.jpg"],
+  ]);
+  for (const p of [neet, cuet]) {
+    assert.equal(p.category, "Entrance exams");
+    assert.equal(p.last_verified, "2026-11-12");
+    assert.deepEqual(p.sources.map((s) => s.type), ["notice", "portal"]);
+    assert.match(p.sources[0].url, /^https:\/\/cdnbbsr\.s3waas\.gov\.in\/.+\.pdf$/);
+    // Draft Hindi for the name, notes and every label and note.
+    const hi = p.translations.hi;
+    assert.ok(hi.name && hi.notes);
+    for (const d of p.documents) {
+      assert.ok(hi.documents[d.id].label, `${p.id}/${d.id} label`);
+      if (d.notes) assert.ok(hi.documents[d.id].notes, `${p.id}/${d.id} notes`);
+    }
+  }
+  assert.equal(cuet.documents[1].notes, undefined, "CUET signature has no notes");
 });

@@ -1,15 +1,36 @@
+<div align="center">
+
+<img src="icons/icon-192.png" alt="ExamSnap icon" width="96" height="96">
+
 # ExamSnap
 
-Turn a photo or signature into a JPEG with the exact pixel size and KB range Indian exam portals require. Everything runs in your browser and nothing is uploaded.
+**Exam photo & signature resizer for Indian forms: exact pixels, exact KB, 100% in your browser.**
 
-**Live:** https://examsnap.asifurrahaman.com/
+[![Live site](https://img.shields.io/badge/live-examsnap.asifurrahaman.com-2ea44f)](https://examsnap.asifurrahaman.com/)
+[![CI](https://img.shields.io/github/actions/workflow/status/GeekyAsif786/ExamSnap/ci.yml?branch=main&label=CI)](https://github.com/GeekyAsif786/ExamSnap/actions/workflows/ci.yml)
+[![CodeQL](https://img.shields.io/github/actions/workflow/status/GeekyAsif786/ExamSnap/codeql.yml?branch=main&label=CodeQL)](https://github.com/GeekyAsif786/ExamSnap/actions/workflows/codeql.yml)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
+[![हिंदी available](https://img.shields.io/badge/%E0%A4%B9%E0%A4%BF%E0%A4%82%E0%A4%A6%E0%A5%80-available-ff9933)](https://examsnap.asifurrahaman.com/hi/)
 
-Works offline after your first visit, and you can install it from your browser menu ("Install app" / "Add to Home Screen").
+### [Open ExamSnap →](https://examsnap.asifurrahaman.com/) · [हिंदी में खोलें →](https://examsnap.asifurrahaman.com/hi/)
+
+</div>
+
+<!-- DEMO_GIF -->
+<!-- Maintainer: paste the GitHub-hosted demo video/GIF link above (uploaded via an issue or PR comment; no binaries in the repo). -->
 
 <p>
   <img src="docs/screenshots/root-empty-desktop-light.webp" alt="ExamSnap on desktop: choose an exam and document, upload, adjust, make and download" width="640">
   <img src="docs/screenshots/ssc-result-mobile-light.webp" alt="ExamSnap SSC page on a phone with a finished 276×354 px, 20.5 KB photo" width="195">
 </p>
+
+## Why ExamSnap
+
+- **Exact pixels, exact KB.** The file comes out at the portal's pixel size and inside its KB range, sized to pass whether the portal counts 1 KB as 1000 or 1024 bytes.
+- **Private.** Nothing is uploaded; location and camera data (EXIF, XMP, IPTC) are stripped from every file.
+- **Works offline.** After your first visit it runs without a connection, and you can install it from your browser menu ("Install app" / "Add to Home Screen").
+- **Presets with sources.** Every exam links where its numbers come from; official notices are marked, and anything else shows a check-before-you-submit warning.
 
 ## Supported exams
 
@@ -17,12 +38,25 @@ Works offline after your first visit, and you can install it from your browser m
 | Exam | Documents | Source |
 | --- | --- | --- |
 | [Banking — IBPS PO / Clerk / RRB / SO, RBI, PSU banks](https://examsnap.asifurrahaman.com/banking-ibps/) | Photograph: 200×230 px, 20–50 KB<br>Signature: 140×60 px, 10–20 KB<br>Left thumb impression: 240×240 px, 20–50 KB<br>Handwritten declaration: 800×400 px, 50–100 KB | Official notice |
+| [CUET (UG) — NTA](https://examsnap.asifurrahaman.com/cuet-ug/) | Passport size photograph (3.5 × 4.5 cm): 276×354 px, 10–200 KB<br>Signature (3.5 × 1.5 cm): 276×118 px, 10–50 KB | Official notice |
 | [JEE Main (NTA)](https://examsnap.asifurrahaman.com/jee-main/) | Photograph (3.5 × 4.5 cm): 276×354 px, 10–200 KB<br>Signature (3.5 × 1.5 cm): 276×118 px, 10–30 KB | [⚠ Needs verification](https://github.com/GeekyAsif786/ExamSnap/labels/verify-preset) |
+| [NEET (UG) — NTA](https://examsnap.asifurrahaman.com/neet-ug/) | Passport size photograph (3.5 × 4.5 cm): 276×354 px, 10–200 KB<br>Signature (3.5 × 1.5 cm): 276×118 px, 10–100 KB<br>Fingers &amp; thumb impressions (left and right hands): 800×500 px, 50–200 KB | Official notice |
 | [SSC — CGL / CHSL / MTS / GD / CPO](https://examsnap.asifurrahaman.com/ssc/) | Photograph (3.5 × 4.5 cm): 276×354 px, 20–50 KB<br>Signature (6.0 × 2.0 cm): 472×157 px, 10–20 KB | [⚠ Needs verification](https://github.com/GeekyAsif786/ExamSnap/labels/verify-preset) |
 | [UPSC — Civil Services (and other UPSC exams)](https://examsnap.asifurrahaman.com/upsc-cse/) | Photograph: 400×500 px, 20–200 KB<br>Signature ×3 (one image): 500×350 px, 20–100 KB<br>Photo ID card: 800×500 px, 20–200 KB | [⚠ Needs verification](https://github.com/GeekyAsif786/ExamSnap/labels/verify-preset) |
 <!-- exams:end -->
 
 Your exam missing? [Request it](https://github.com/GeekyAsif786/ExamSnap/issues/new?template=request-exam.yml&title=%5BExam%5D%20) · [Add it yourself in 10 minutes](CONTRIBUTING.md#add-an-exam-in-10-minutes)
+
+## How it works
+
+For developers: the image pipeline is pure functions in [`src/core/`](src/core/), unit-tested in Node.
+
+- **Fit the byte range:** [`fitToRange`](src/core/fit.js) binary-searches JPEG quality and keeps the highest quality that fits under the maximum.
+- **Reach the minimum without changing pixels:** [`padJpeg`](src/core/jpeg.js) inserts space-filled COM segments after the leading APPn segments, so APP0/JFIF stays first.
+- **Strip metadata:** [`stripMetadata`](src/core/jpeg.js) drops APP1 (EXIF, XMP), APP13 (IPTC) and text COM segments from every encode before it is measured.
+- **JFIF header:** [`ensureJfif`](src/core/jpeg.js) adds a standard JFIF APP0 when the browser's encoder didn't write one, because some portals check for it.
+- **What a KB is:** [`byteRange`](src/core/size.js) uses min × 1024 and max × 1000 bytes, so the file is in range under either definition (both × 1000 only if that leaves no room).
+- **No network at runtime:** a Content-Security-Policy with `default-src 'none'` allows only the site's own scripts, styles and service worker.
 
 ## Security & privacy
 

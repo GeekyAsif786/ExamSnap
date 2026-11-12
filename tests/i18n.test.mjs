@@ -218,6 +218,25 @@ test("review markdown: every key with English and the translation; preset fields
   assert.ok(!md.includes("documents.sig.notes"), "no row for notes English doesn't have");
 });
 
+test("review markdown: presets new for review come first under their own heading, once", async () => {
+  const { reviewMarkdown } = await import("../scripts/i18n-review.mjs");
+  const preset = (id) => ({ id, name: `${id} exam`, documents: [{ id: "photo", label: "Photo" }] });
+  const args = [{ code: "hi", name: "हिंदी", status: "draft" }, { a: "A" }, { a: "अ" }, [preset("old"), preset("fresh")], "Hindi"];
+  const md = reviewMarkdown(...args, { heading: "New in M9", ids: ["fresh"] });
+  const at = (s) => md.indexOf(s);
+  assert.ok(at("## UI strings") < at("## New in M9"));
+  assert.ok(at("## New in M9") < at("### `fresh`"));
+  assert.ok(at("### `fresh`") < at("## Exam presets"));
+  assert.ok(at("## Exam presets") < at("### `old`"));
+  assert.equal(md.split("### `fresh`").length, 2, "listed once");
+  // Nothing new (or no option): no extra heading, every preset under "Exam presets".
+  for (const plain of [reviewMarkdown(...args), reviewMarkdown(...args, { heading: "New in M9", ids: [] })]) {
+    assert.ok(!plain.includes("New in M9"));
+    assert.ok(plain.indexOf("## Exam presets") < plain.indexOf("### `old`"));
+    assert.ok(plain.indexOf("## Exam presets") < plain.indexOf("### `fresh`"));
+  }
+});
+
 test("docs/i18n/hi-review.md is up to date and covers every key", async (t) => {
   const { run } = await import("../scripts/i18n-review.mjs");
   const { staleSeverity } = await import("../scripts/update-readme.mjs");

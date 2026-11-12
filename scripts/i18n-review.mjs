@@ -17,14 +17,22 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 export const REVIEW_DIR = join(ROOT, "docs", "i18n");
 
 /**
+ * Presets whose translations are new and not yet reviewed: listed first, under
+ * their own heading, so the reviewer finds them. Empty `ids` once reviewed.
+ */
+export const NEW_FOR_REVIEW = { heading: "New in M3c", ids: ["neet-ug", "cuet-ug"] };
+
+/**
  * The review document for one locale.
  * @param {{ code: string, name: string, status: string }} locale
  * @param {Record<string, unknown>} en English strings
  * @param {Record<string, unknown>} own the locale's strings
  * @param {object[]} presets presets in display order (with translations)
  * @param {string} englishName the language's English name, e.g. "Hindi"
+ * @param {{ heading: string, ids: string[] }} [newForReview] presets to list
+ *   first under their own heading (left out of "Exam presets")
  */
-export function reviewMarkdown(locale, en, own, presets, englishName) {
+export function reviewMarkdown(locale, en, own, presets, englishName, newForReview = { heading: "", ids: [] }) {
   const ownMap = new Map(flatten(own));
   const missing = "_(missing: English is shown)_";
   const row = (...cells) => `| ${cells.join(" | ")} |`;
@@ -46,8 +54,7 @@ export function reviewMarkdown(locale, en, own, presets, englishName) {
   for (const [key, value] of flatten(en)) {
     lines.push(row(`\`${key}\``, text(value), ownMap.has(key) ? text(ownMap.get(key)) : missing));
   }
-  lines.push("", "## Exam presets", "", `Optional per preset (\`translations.${locale.code}\` in \`presets/<id>.json\`); anything not translated is shown in English.`);
-  for (const p of presets) {
+  const presetRows = (p) => {
     const t = p.translations?.[locale.code] ?? {};
     const fields = [
       ["name", p.name, t.name],
@@ -61,7 +68,15 @@ export function reviewMarkdown(locale, en, own, presets, englishName) {
     for (const [field, english, translated] of fields) {
       lines.push(row(`\`${field}\``, text(english), translated ? text(translated) : "_(English)_"));
     }
+  };
+  const isNew = (p) => newForReview.ids.includes(p.id);
+  const fresh = presets.filter(isNew);
+  if (fresh.length) {
+    lines.push("", `## ${newForReview.heading}`, "", "Draft translations not yet reviewed by a native speaker. Once reviewed, they move to \"Exam presets\" below.");
+    fresh.forEach(presetRows);
   }
+  lines.push("", "## Exam presets", "", `Optional per preset (\`translations.${locale.code}\` in \`presets/<id>.json\`); anything not translated is shown in English.`);
+  presets.filter((p) => !isNew(p)).forEach(presetRows);
   return `${lines.join("\n")}\n`;
 }
 
@@ -79,7 +94,7 @@ export async function reviewDocs({ i18nDir = I18N_DIR, presetsDir = PRESETS_DIR,
   const out = new Map();
   for (const l of LOCALES.filter((x) => x.code !== DEFAULT_LOCALE)) {
     const own = (await load(`${l.code}.js`)).STRINGS;
-    out.set(join(outDir, `${l.code}-review.md`), reviewMarkdown(l, en, own, presets, ENGLISH_NAMES[l.code] ?? l.code));
+    out.set(join(outDir, `${l.code}-review.md`), reviewMarkdown(l, en, own, presets, ENGLISH_NAMES[l.code] ?? l.code, NEW_FOR_REVIEW));
   }
   return out;
 }

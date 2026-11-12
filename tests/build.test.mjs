@@ -289,6 +289,19 @@ test("sitemap: every page in every language with xhtml:link alternates", async (
   assert.match(xml, /xmlns:xhtml="http:\/\/www\.w3\.org\/1999\/xhtml"/);
 });
 
+test("NEET (UG) and CUET (UG) get landing pages in English and Hindi, all in the sitemap", async (t) => {
+  const dir = await tmp();
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const r = await build({ outDir: dir });
+  const xml = await readFile(join(dir, "sitemap.xml"), "utf8");
+  for (const page of ["neet-ug/", "cuet-ug/", "hi/neet-ug/", "hi/cuet-ug/"]) {
+    assert.ok(r.pages.includes(page), page);
+    assert.ok(xml.includes(`<loc>https://examsnap.asifurrahaman.com/${page}</loc>`), page);
+  }
+  const hi = await readFile(join(dir, "hi/neet-ug/index.html"), "utf8");
+  assert.ok(hi.includes("उँगलियों और अंगूठे के निशान"), "Hindi labels on the Hindi page");
+});
+
 test("draft locales are not built (unless INCLUDE_DRAFTS), and fall back to English", async (t) => {
   const src = await tmp();
   const out = await tmp();
