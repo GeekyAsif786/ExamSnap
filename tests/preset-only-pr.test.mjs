@@ -31,6 +31,10 @@ async function freshCheckout() {
   return dir;
 }
 
+// node --test prints "ℹ pass N" on a terminal and TAP ("# pass N") otherwise (CI).
+const PASSED = /^(?:ℹ|#) pass [1-9]\d*$/m;
+const FAILED_NONE = /^(?:ℹ|#) fail 0$/m;
+
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 function run(cwd, args, env = {}) {
   return new Promise((resolve) => {
@@ -66,8 +70,8 @@ test("preset-only PR: edit a preset JSON, nothing else; check and unit tests pas
   assert.equal(check.code, 0, check.out);
   const tests = await run(dir, ["test"]);
   assert.equal(tests.code, 0, tests.out);
-  assert.match(tests.out, /ℹ pass [1-9]\d*/);
-  assert.match(tests.out, /ℹ fail 0/);
+  assert.match(tests.out, PASSED);
+  assert.match(tests.out, FAILED_NONE);
   assert.match(await readFile(join(dir, "src/generated/presets.js"), "utf8"), /Re-checked against the portal/);
 });
 
@@ -87,7 +91,7 @@ test("preset-only PR that changes a number and notes: check and tests pass on th
   assert.match(check.out, /::warning title=Translation review::/);
   const tests = await run(dir, ["test"], pr);
   assert.equal(tests.code, 0, tests.out);
-  assert.match(tests.out, /ℹ fail 0/);
+  assert.match(tests.out, FAILED_NONE);
   // After merge (push to main) the stale table is an error until regenerated.
   const main = await run(dir, ["run", "check"], { GITHUB_ACTIONS: "true", GITHUB_EVENT_NAME: "push", GITHUB_REF: "refs/heads/main" });
   assert.notEqual(main.code, 0);
