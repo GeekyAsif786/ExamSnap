@@ -396,8 +396,9 @@ async function main() {
   }
   const { file, warnings } = await createPreset(preset, { dir, out, readme });
   const rel = (p) => relative(process.cwd(), p) || p;
-  const files = [rel(file), rel(out), rel(readme)];
-  console.log(`\nCreated ${files[0]}; updated ${files[1]} and ${files[2]}.`);
+  // The presets module is generated and gitignored; only these get committed.
+  const files = [rel(file), rel(readme)];
+  console.log(`\nCreated ${files[0]}; updated ${files[1]} (and regenerated ${rel(out)}).`);
   for (const w of warnings) console.warn(`WARN  ${w}`);
   console.log(nextSteps(preset.id, files));
 }

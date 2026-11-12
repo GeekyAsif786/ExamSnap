@@ -5,3 +5,4 @@ playwright-report/
 dist/
 dist-subpath/
 /screenshots/
+/src/generated/presets.js

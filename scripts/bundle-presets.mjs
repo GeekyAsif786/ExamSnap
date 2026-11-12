@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { readdir, readFile, writeFile } from "node:fs/promises";
-import { basename, join } from "node:path";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validatePresets } from "./check-presets.mjs";
 
@@ -10,8 +10,9 @@ export const OUT_PATH = join(ROOT, "src", "generated", "presets.js");
 
 const HEADER = `// SPDX-License-Identifier: CC0-1.0
 // GENERATED FILE — DO NOT EDIT BY HAND.
-// Built from presets/*.json by scripts/bundle-presets.mjs (npm run build:presets).
-// \`npm run check\` fails if this file is out of date.
+// Built from presets/*.json by scripts/bundle-presets.mjs. Not committed:
+// npm regenerates it before dev, preview, build, test, test:e2e, screenshots
+// and check, so a preset change never needs this file updated by hand.
 `;
 
 export const byCategoryThenName = (a, b) =>
@@ -60,6 +61,7 @@ export async function run({ check = false, dir = PRESETS_DIR, out = OUT_PATH } =
   }
   const stale = current !== next;
   if (check || !stale) return { stale, written: false };
+  await mkdir(dirname(out), { recursive: true });
   await writeFile(out, next);
   return { stale, written: true };
 }

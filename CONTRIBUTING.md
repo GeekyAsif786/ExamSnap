@@ -18,7 +18,7 @@ You need [Node.js 22+](https://nodejs.org/) and git. First time only: fork the r
    ```sh
    npm run new-preset
    ```
-   It asks for the exam id, name, category, source, then each document (label, kind, size, KB range, file name). Sizes can be typed in pixels, or in centimetres like `3.5cm` and it converts them for you. It writes `presets/<id>.json`, checks it, and updates the generated files.
+   It asks for the exam id, name, category, source, then each document (label, kind, size, KB range, file name). Sizes can be typed in pixels, or in centimetres like `3.5cm` and it converts them for you. It writes `presets/<id>.json`, checks it, and updates the README exams table.
 3. **Check everything:**
    ```sh
    npm run check
@@ -125,7 +125,7 @@ Presets marked "⚠ Needs verification" in the [README](README.md#supported-exam
 3. Add the notice to `sources` with type `notice`. Fix any number that doesn't match it. Set `last_verified` to today's date.
 4. Commit to a new branch and open a pull request, and say you edited on GitHub.
 
-CI will report that the generated files (`src/generated/presets.js`, the README table) are out of date. That's expected for edits made on GitHub: the maintainer regenerates them before merging, so leave "Allow edits by maintainers" ticked. If you have the repo cloned, `npm run build:presets && npm run update-readme` fixes it yourself.
+CI will report that the README exams table is out of date. That's expected for edits made on GitHub: the maintainer regenerates it before merging, so leave "Allow edits by maintainers" ticked. If you have the repo cloned, `npm run update-readme` fixes it yourself.
 
 ## Translations
 
