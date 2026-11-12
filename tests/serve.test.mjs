@@ -5,7 +5,7 @@ import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { request } from "node:http";
-import { createDevServer, resolvePath, MIME } from "../scripts/serve.mjs";
+import { createDevServer, normalizeBase, parseArgs, resolvePath, MIME } from "../scripts/serve.mjs";
 
 let tmp, server, base;
 
@@ -90,4 +90,46 @@ test("resolvePath stays inside root", () => {
 
 test("MIME map covers the required extensions", () => {
   for (const ext of [".html", ".js", ".css", ".json", ".svg", ".webmanifest"]) assert.ok(MIME[ext], ext);
+});
+
+test("normalizeBase", () => {
+  assert.equal(normalizeBase("/"), "/");
+  assert.equal(normalizeBase(""), "/");
+  assert.equal(normalizeBase("ExamSnap"), "/ExamSnap/");
+  assert.equal(normalizeBase("/ExamSnap"), "/ExamSnap/");
+  assert.equal(normalizeBase("/a//b/"), "/a/b/");
+});
+
+test("parseArgs", () => {
+  assert.deepEqual(parseArgs(["node", "serve.mjs"], {}), { port: 5173, dir: null, base: "/", notFound: null });
+  assert.deepEqual(
+    parseArgs(["node", "serve.mjs", "--dir", "dist", "--base", "/ExamSnap", "--port", "4173", "--not-found", "404.html"], {}),
+    { port: 4173, dir: "dist", base: "/ExamSnap/", notFound: "404.html" },
+  );
+  assert.equal(parseArgs(["node", "serve.mjs"], { PORT: "8080" }).port, 8080);
+  assert.throws(() => parseArgs(["node", "serve.mjs", "--port", "x"], {}), /invalid port/);
+});
+
+test("base path: serves under the prefix, redirects the bare prefix, 404 page elsewhere", async (t) => {
+  await writeFile(join(tmp, "404.html"), "<p>not here</p>");
+  const s = createDevServer({ root: tmp, base: "/ExamSnap/", notFound: "404.html" });
+  await new Promise((r) => s.listen(0, "127.0.0.1", r));
+  t.after(() => new Promise((r) => s.close(r)));
+  const b = `http://127.0.0.1:${s.address().port}`;
+
+  const home = await fetch(`${b}/ExamSnap/`);
+  assert.equal(home.status, 200);
+  assert.equal(await home.text(), "<!doctype html>");
+  assert.equal(await (await fetch(`${b}/ExamSnap/src/app.js`)).text(), "export {}");
+
+  const bare = await fetch(`${b}/ExamSnap?x=1`, { redirect: "manual" });
+  assert.equal(bare.status, 301);
+  assert.equal(bare.headers.get("location"), "/ExamSnap/?x=1");
+
+  for (const path of ["/", "/src/app.js", "/ExamSnap/nope/", "/ExamSnap/missing.js"]) {
+    const res = await fetch(b + path);
+    assert.equal(res.status, 404, path);
+    assert.equal(res.headers.get("content-type"), "text/html; charset=utf-8", path);
+    assert.equal(await res.text(), "<p>not here</p>", path);
+  }
 });
