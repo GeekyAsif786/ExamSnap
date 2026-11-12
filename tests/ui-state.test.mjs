@@ -6,6 +6,7 @@ import { cropRect } from "../src/core/index.js";
 import {
   CUSTOM_ID,
   canUseServiceWorker,
+  isFramed,
   clampZoom,
   createState,
   currentDoc,
@@ -282,4 +283,19 @@ test("URL params: custom sizes are never read from the URL", () => {
   assert.equal(parseCustom({ width: "<script>", height: "100", minKb: "20", maxKb: "50" }).ok, false);
   assert.equal(parseCustom({ width: "1e3", height: "100", minKb: "20", maxKb: "50" }).ok, false);
   assert.equal(parseCustom({ width: "200", height: "200", minKb: "Infinity", maxKb: "Infinity" }).ok, false);
+});
+
+test("isFramed", () => {
+  const win = {};
+  win.self = win;
+  win.top = win;
+  assert.equal(isFramed(win), false);
+  assert.equal(isFramed({ self: {}, top: {} }), true);
+  const throwing = { self: {} };
+  Object.defineProperty(throwing, "top", {
+    get() {
+      throw new Error("cross-origin");
+    },
+  });
+  assert.equal(isFramed(throwing), true);
 });

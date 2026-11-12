@@ -257,6 +257,19 @@ export function hasMetadataSegment(bytes) {
 }
 
 /**
+ * True when the page is inside a frame. Cross-origin access errors count
+ * as framed.
+ * @param {{ top: unknown, self: unknown }} win
+ */
+export function isFramed(win) {
+  try {
+    return win.top !== win.self;
+  } catch {
+    return true;
+  }
+}
+
+/**
  * Service workers need a secure context: https, or localhost for development.
  * @param {{ protocol: string, hostname: string }} loc
  */

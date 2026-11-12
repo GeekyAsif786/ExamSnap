@@ -107,7 +107,7 @@ export async function build({ root = ROOT, outDir, base = DEFAULT_BASE, origin =
     // The build owns the CSP: whatever the dev template says is replaced.
     let html = replaceOnce(template, cspInTemplate, cspMeta());
     html = replaceOnce(html, 'href="src/ui/styles.css"', `href="${prefix}${assets["src/ui/styles.css"]}"`);
-    html = replaceOnce(html, 'src="src/ui/app.js"', `src="${prefix}${assets["src/ui/app.js"]}"`);
+    html = replaceOnce(html, 'src="src/ui/main.js"', `src="${prefix}${assets["src/ui/main.js"]}"`);
     html = replaceOnce(html, 'href="favicon.svg"', `href="${prefix}${assets["favicon.svg"]}"`);
     html = replaceOnce(html, "<title>ExamSnap</title>", `<title>${esc(title)}</title>`);
     html = replaceOnce(

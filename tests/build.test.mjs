@@ -58,7 +58,7 @@ test("BASE_PATH still works: a GitHub Pages project site under /ExamSnap/", asyn
   await build({ outDir: dir, base: "/ExamSnap/", origin: "https://geekyasif786.github.io" });
   const ssc = await readFile(join(dir, "ssc/index.html"), "utf8");
   assert.match(ssc, /<link rel="canonical" href="https:\/\/geekyasif786\.github\.io\/ExamSnap\/ssc\/">/);
-  assert.match(ssc, /src="\.\.\/src\/ui\/app\.[0-9a-f]{8}\.js"/, "assets stay relative");
+  assert.match(ssc, /src="\.\.\/src\/ui\/main\.[0-9a-f]{8}\.js"/, "assets stay relative");
   assert.match(await readFile(join(dir, "404.html"), "utf8"), /href="\/ExamSnap\/src\/ui\/styles\.[0-9a-f]{8}\.css"/);
   const manifest = JSON.parse(await readFile(join(dir, "manifest.webmanifest"), "utf8"));
   assert.deepEqual([manifest.id, manifest.start_url, manifest.scope], ["/ExamSnap/", "/ExamSnap/", "/ExamSnap/"]);
@@ -70,7 +70,7 @@ test("BASE_PATH and SITE_ORIGIN: another custom domain only needs base '/' and a
   await build({ outDir: dir, base: "/", origin: "https://examsnap.example" });
   const ssc = await readFile(join(dir, "ssc/index.html"), "utf8");
   assert.match(ssc, /<link rel="canonical" href="https:\/\/examsnap\.example\/ssc\/">/);
-  assert.match(ssc, /src="\.\.\/src\/ui\/app\.[0-9a-f]{8}\.js"/, "assets stay relative");
+  assert.match(ssc, /src="\.\.\/src\/ui\/main\.[0-9a-f]{8}\.js"/, "assets stay relative");
   const notFound = await readFile(join(dir, "404.html"), "utf8");
   assert.match(notFound, /href="\/src\/ui\/styles\.[0-9a-f]{8}\.css"/, "404 uses root-absolute paths under the base");
   assert.match(await readFile(join(dir, "robots.txt"), "utf8"), /Sitemap: https:\/\/examsnap\.example\/sitemap\.xml/);
@@ -87,7 +87,7 @@ test("hashed imports point at files that exist in the build", async (t) => {
   const paths = new Set(r.files.map((f) => f.path));
   for (const f of r.files.filter((f) => f.path.endsWith(".js") && f.path.startsWith("src/"))) {
     const code = await readFile(join(dir, f.path), "utf8");
-    for (const m of code.matchAll(/\bfrom\s*"(\.{1,2}\/[^"]+)"/g)) {
+    for (const m of code.matchAll(/\b(?:from\s*|import\s*\(\s*)"(\.{1,2}\/[^"]+)"/g)) {
       const target = new URL(m[1], `file:///${f.path}`).pathname.slice(1);
       assert.ok(paths.has(target), `${f.path} imports missing ${target}`);
     }

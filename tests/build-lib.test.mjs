@@ -61,6 +61,8 @@ test("hashName: 8 hex chars before the extension, stable and content-dependent",
 test("findImports / rewriteImports handle static import and export-from forms", () => {
   const code = `import { a } from "./a.js";\nimport b from '../core/b.js';\nexport { c } from "./c.js";\nimport "./side.js";\nconst x = "./not-an-import.js";\nimport { y } from "node:fs";\n`;
   assert.deepEqual(findImports(code), ["./a.js", "../core/b.js", "./c.js", "./side.js"]);
+  assert.deepEqual(findImports(`if (x) import("./app.js");\nimport( './b.js' );`), ["./app.js", "./b.js"]);
+  assert.equal(rewriteImports(`import("./app.js")`, (s) => s.replace(".js", ".h.js")), `import("./app.h.js")`);
   const out = rewriteImports(code, (s) => s.replace(".js", ".h.js"));
   assert.equal(
     out,

@@ -162,7 +162,7 @@ test("every internal link and asset returns 200 under BASE_PATH (crawl from the 
     const body = await res.text();
     let refs = [];
     if (type.startsWith("text/html")) refs = htmlRefs(body);
-    else if (type.startsWith("text/javascript")) refs = [...body.matchAll(/\bfrom\s*["'](\.{1,2}\/[^"']+)["']/g)].map((m) => m[1]);
+    else if (type.startsWith("text/javascript")) refs = [...body.matchAll(/\b(?:from\s*|import\s*\(\s*)["'](\.{1,2}\/[^"']+)["']/g)].map((m) => m[1]);
     else if (type.startsWith("application/manifest+json")) refs = [JSON.parse(body).start_url, ...JSON.parse(body).icons.map((i) => i.src)];
     for (const ref of refs) {
       const abs = toLocal(new URL(toLocal(ref), url).href.split("#")[0]);

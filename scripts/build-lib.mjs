@@ -51,8 +51,9 @@ export function hashAll(parts) {
   return h.digest("hex");
 }
 
-// Static `import … from "./x.js"` / `export … from "./x.js"` and `import "./x.js"`.
-const IMPORT_RE = /(\bfrom\s*|\bimport\s*)(["'])(\.{1,2}\/[^"']+)\2/g;
+// `import … from "./x.js"`, `export … from "./x.js"`, `import "./x.js"` and
+// dynamic `import("./x.js")` with a literal specifier.
+const IMPORT_RE = /(\bfrom\s*|\bimport\s*\(?\s*)(["'])(\.{1,2}\/[^"']+)\2/g;
 
 /** Relative module specifiers imported by `code`, in order, without duplicates. */
 export function findImports(code) {

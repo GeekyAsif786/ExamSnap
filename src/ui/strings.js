@@ -105,6 +105,8 @@ export const STRINGS = {
   notFoundBody: "There is nothing at this address.",
   notFoundHome: "Go to ExamSnap",
 
+  framedMessage: "For your privacy, ExamSnap only runs when opened directly, not inside another website.",
+  framedOpen: "Open ExamSnap",
   updateAvailable: "A new version is available.",
   updateReload: "Reload",
 
