@@ -8,7 +8,7 @@ import { STRINGS as HI } from "../../src/ui/i18n/hi.js";
 import { localizePreset } from "../../src/ui/i18n/localize.js";
 import { DEFAULT_ORIGIN, siteUrl } from "../../scripts/build-lib.mjs";
 import { flatten, paramNames } from "../../scripts/check-locales.mjs";
-import { test, expect, loadImage, readResult } from "./helpers.mjs";
+import { test, expect, loadImage, readResult, gotoReady, reloadReady, waitReady } from "./helpers.mjs";
 
 const base = () => new URL(test.info().project.use.baseURL).pathname;
 const live = (path = "") => siteUrl(DEFAULT_ORIGIN, base(), path);
@@ -16,13 +16,13 @@ const PAGES = ["", ...PRESETS.map((p) => `${p.id}/`)];
 const HI_PRESETS = PRESETS.map((p) => localizePreset(p, "hi"));
 
 async function openHi(page, path, query = "") {
-  await page.goto(`./hi/${path}?test=1${query ? `&${query}` : ""}`);
+  await gotoReady(page, `./hi/${path}?test=1${query ? `&${query}` : ""}`);
   await page.waitForFunction(() => window.__examsnap);
 }
 
 test("every /hi/ page: lang, canonical, hreflang en/hi/x-default, Hindi title and h1", async ({ page }) => {
   for (const p of PAGES) {
-    await page.goto(`./hi/${p}`);
+    await gotoReady(page, `./hi/${p}`);
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", live(`hi/${p}`));
     const alternates = await page.locator('link[rel="alternate"][hreflang]').evaluateAll((ls) => ls.map((l) => [l.hreflang, l.href]));
@@ -43,7 +43,7 @@ test("every /hi/ page: lang, canonical, hreflang en/hi/x-default, Hindi title an
     }
   }
   // The English pages point back the same way.
-  await page.goto("./ssc/");
+  await gotoReady(page, "./ssc/");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.locator('link[rel="alternate"][hreflang="hi"]')).toHaveAttribute("href", live("hi/ssc/"));
 });
@@ -56,7 +56,7 @@ test("each page downloads only its own language's strings module", async ({ page
       if (m) modules.push(m[1]);
     };
     page.on("request", listener);
-    await page.goto(path);
+    await gotoReady(page, path);
     await expect(page.locator("#make")).toHaveText(own === "hi" ? HI.makeButton : EN.makeButton);
     page.off("request", listener);
     expect(modules, path).toContain(own);
@@ -102,8 +102,9 @@ test("/hi/jee-main/: make a signature end to end, in Hindi", async ({ page }) =>
 });
 
 test("language switcher: same page, keeps ?doc= (and ?exam=), round-trips", async ({ page }) => {
-  await page.goto("./ssc/?doc=signature&test=1");
+  await gotoReady(page, "./ssc/?doc=signature&test=1");
   await page.getByRole("link", { name: "हिन्दी" }).click();
+  await waitReady(page);
   await expect(page).toHaveURL(new RegExp(`${base()}hi/ssc/\\?doc=signature$`));
   await expect(page.locator("html")).toHaveAttribute("lang", "hi");
   await expect(page.locator("#doc")).toHaveValue("signature");
@@ -112,19 +113,22 @@ test("language switcher: same page, keeps ?doc= (and ?exam=), round-trips", asyn
   await page.locator("#doc").selectOption("photo");
   await expect(page.getByRole("link", { name: "English" })).toHaveAttribute("href", "../../ssc/?doc=photo");
   await page.getByRole("link", { name: "English" }).click();
+  await waitReady(page);
   await expect(page).toHaveURL(new RegExp(`${base()}ssc/\\?doc=photo$`));
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.locator("#doc")).toHaveValue("photo");
 
   // Root page: ?exam= and ?doc= both survive.
-  await page.goto("./?exam=jee-main&doc=signature");
+  await gotoReady(page, "./?exam=jee-main&doc=signature");
   const link = page.getByRole("link", { name: "हिन्दी" });
   await expect(link).toHaveAttribute("lang", "hi");
   await expect(link).toHaveAttribute("hreflang", "hi");
   await link.click();
+  await waitReady(page);
   await expect(page).toHaveURL(new RegExp(`${base()}hi/\\?exam=jee-main&doc=signature$`));
   await expect(page.locator("#exam")).toHaveValue("jee-main");
   await page.getByRole("link", { name: "English" }).click();
+  await waitReady(page);
   await expect(page).toHaveURL(new RegExp(`${base()}\\?exam=jee-main&doc=signature$`));
 });
 
@@ -209,7 +213,7 @@ test("on a 390×844 phone the tool starts on the first screen of every /hi/ page
   const context = await newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   for (const p of PAGES) {
-    await page.goto(`./hi/${p}`);
+    await gotoReady(page, `./hi/${p}`);
     const top = await page.getByText(HI.chooseFile, { exact: true }).evaluate((n) => n.getBoundingClientRect().bottom);
     expect(top, `hi/${p}`).toBeLessThan(844);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -219,7 +223,7 @@ test("on a 390×844 phone the tool starts on the first screen of every /hi/ page
 });
 
 test("Devanagari renders with system fonts: real, distinct glyphs (no tofu)", async ({ page }) => {
-  await page.goto("./hi/");
+  await gotoReady(page, "./hi/");
   const result = await page.evaluate(() => {
     const font = getComputedStyle(document.body).fontFamily;
     const draw = (text) => {
@@ -258,7 +262,7 @@ test("offline: a /hi/ page reloads and makes a file, and other /hi/ pages open",
   await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
   await context.setOffline(true);
   try {
-    await page.reload();
+    await reloadReady(page);
     await page.waitForFunction(() => window.__examsnap);
     await expect(page.locator("html")).toHaveAttribute("lang", "hi");
     await loadImage(page, "photo");
@@ -268,9 +272,9 @@ test("offline: a /hi/ page reloads and makes a file, and other /hi/ pages open",
     expect((await readResult(page)).decoded).toEqual({ width: photo.width, height: photo.height });
 
     const ssc = HI_PRESETS.find((p) => p.id === "ssc");
-    await page.goto("./hi/ssc/");
+    await gotoReady(page, "./hi/ssc/");
     await expect(page.locator("h1")).toHaveText(HI.landingHeading(ssc.name));
-    await page.goto("./hi/");
+    await gotoReady(page, "./hi/");
     await expect(page.locator("#make")).toHaveText(HI.makeButton);
   } finally {
     await context.setOffline(false);

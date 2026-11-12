@@ -3,7 +3,7 @@
 import { PRESETS } from "../../src/generated/presets.js";
 import { STRINGS as S } from "../../src/ui/i18n/en.js";
 import { CSP, DEFAULT_ORIGIN, docSummary, pageDescription, pageTitle, siteUrl } from "../../scripts/build-lib.mjs";
-import { test, expect } from "./helpers.mjs";
+import { test, expect, gotoReady, waitReady } from "./helpers.mjs";
 
 // The site's base path in this project ("/" or "/ExamSnap/").
 const base = () => new URL(test.info().project.use.baseURL).pathname;
@@ -13,7 +13,7 @@ const hasNotice = (p) => p.sources.some((s) => s.type === "notice");
 test.describe("landing pages", () => {
   for (const preset of PRESETS) {
     test(`${preset.id}: preselected, title, canonical, h1, spec table, meta`, async ({ page }) => {
-      await page.goto(`./${preset.id}/`);
+      await gotoReady(page, `./${preset.id}/`);
       await expect(page.locator("#exam")).toHaveValue(preset.id);
       await expect(page.locator("#doc")).toHaveValue(preset.documents[0].id);
       // The page's own exam is implied by the path, so only doc is in the URL.
@@ -83,7 +83,7 @@ test.describe("landing pages", () => {
     const context = await newContext({ viewport: { width: 390, height: 844 } });
     const page = await context.newPage();
     for (const preset of PRESETS) {
-      await page.goto(`./${preset.id}/`);
+      await gotoReady(page, `./${preset.id}/`);
       const top = await page.getByText("Choose a photo").evaluate((n) => n.getBoundingClientRect().top);
       expect(top, preset.id).toBeLessThan(844);
       // Exactly one warning element per page; visible only without an official notice.
@@ -101,7 +101,7 @@ test.describe("landing pages", () => {
     const context = await newContext({ viewport: { width: 360, height: 740 } });
     const page = await context.newPage();
     for (const preset of PRESETS) {
-      await page.goto(`./${preset.id}/`);
+      await gotoReady(page, `./${preset.id}/`);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow, preset.id).toBeLessThanOrEqual(0);
       // Each document is a labelled card; notes are readable without scrolling the table.
@@ -112,16 +112,16 @@ test.describe("landing pages", () => {
   });
 
   test("?exam= and ?doc= override a landing page's exam", async ({ page }) => {
-    await page.goto("./ssc/?exam=jee-main&doc=signature");
+    await gotoReady(page, "./ssc/?exam=jee-main&doc=signature");
     await expect(page.locator("#exam")).toHaveValue("jee-main");
     await expect(page.locator("#doc")).toHaveValue("signature");
-    await page.goto("./ssc/?doc=signature");
+    await gotoReady(page, "./ssc/?doc=signature");
     await expect(page.locator("#exam")).toHaveValue("ssc");
     await expect(page.locator("#doc")).toHaveValue("signature");
   });
 
   test("root page: generic meta and a link to every exam page", async ({ page }) => {
-    await page.goto("./");
+    await gotoReady(page, "./");
     await expect(page).toHaveTitle(S.docTitle);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", live());
     await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", S.rootDescription);
@@ -129,6 +129,7 @@ test.describe("landing pages", () => {
     const links = await page.locator(".exam-links a").evaluateAll((as) => as.map((a) => [a.getAttribute("href"), a.textContent]));
     expect(links).toEqual(PRESETS.map((p) => [`${p.id}/`, p.name]));
     await page.locator(".exam-links a", { hasText: PRESETS[1].name }).click();
+    await waitReady(page);
     await expect(page.locator("#exam")).toHaveValue(PRESETS[1].id);
   });
 
@@ -216,6 +217,7 @@ test("unknown paths get 404.html with status 404, and its assets load", async ({
   await page.goto("./no/such/page/");
   await expect(page.locator("h1")).toHaveText(S.notFoundHeading);
   await page.getByRole("link", { name: S.notFoundHome }).click();
+  await waitReady(page);
   await expect(page).toHaveURL(new RegExp(`${base()}(\\?.*)?$`));
   await expect(page.locator("#exam")).toBeVisible();
 });
@@ -238,7 +240,7 @@ test("a CSP violation is reported (the e2e watcher itself works)", async ({ newC
   // A separate watched context: Chromium reports the blocked image as a
   // request, which the default page fixture would flag as external.
   const page = await (await newContext()).newPage();
-  await page.goto("./");
+  await gotoReady(page, "./");
   // Blocked by img-src 'self' in every engine.
   await page.evaluate(() => {
     const img = new Image();

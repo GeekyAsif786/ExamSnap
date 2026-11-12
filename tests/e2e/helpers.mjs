@@ -64,10 +64,33 @@ export const test = base.extend({
 });
 export { expect };
 
+/**
+ * Wait until the app has finished starting on the current page: its
+ * language module is loaded, the selects are built and the URL is synced
+ * (the app then sets <html data-ready="1">). One-shot reads (evaluate,
+ * textContent, getAttribute, count) are only safe after this.
+ */
+export async function waitReady(page) {
+  await page.locator('html[data-ready="1"]').waitFor({ state: "attached" });
+}
+
+/** Navigate to an app page (relative to baseURL, or absolute) and wait until it is ready. */
+export async function gotoReady(page, url) {
+  const res = await page.goto(url);
+  await waitReady(page);
+  return res;
+}
+
+/** Reload an app page and wait until it is ready. */
+export async function reloadReady(page) {
+  await page.reload();
+  await waitReady(page);
+}
+
 /** Open the app with the test hook enabled. */
 export async function openApp(page, query = "") {
   // Relative to baseURL (the built site under BASE_PATH).
-  await page.goto(`./?test=1${query ? `&${query}` : ""}`);
+  await gotoReady(page, `./?test=1${query ? `&${query}` : ""}`);
   await page.waitForFunction(() => window.__examsnap);
 }
 

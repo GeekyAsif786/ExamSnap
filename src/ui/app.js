@@ -526,3 +526,7 @@ if (swUrl && "serviceWorker" in navigator && canUseServiceWorker(location)) {
 if (new URLSearchParams(location.search).get("test") === "1") {
   window.__examsnap = { state, loadFile, make };
 }
+
+// Init is done: strings loaded, selects built, URL synced. Tests (and
+// anything else) wait for this instead of racing the async locale import.
+document.documentElement.dataset.ready = "1";

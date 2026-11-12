@@ -121,6 +121,7 @@ try {
         };
 
         await page.goto(`${site}${path}?test=1`);
+        await page.locator('html[data-ready="1"]').waitFor({ state: "attached" });
         await page.waitForFunction(() => window.__examsnap);
         await shot("empty");
 

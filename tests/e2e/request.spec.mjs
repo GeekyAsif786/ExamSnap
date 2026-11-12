@@ -4,7 +4,7 @@
 // fail the test on any CSP violation, page error or external request.
 import { REQUEST_EXAM_URL } from "../../scripts/build-lib.mjs";
 import { STRINGS as S } from "../../src/ui/i18n/en.js";
-import { test, expect, openApp } from "./helpers.mjs";
+import { test, expect, openApp, gotoReady } from "./helpers.mjs";
 
 const requestLink = (page) => page.locator(".field .request a");
 const footerLink = (page) => page.locator("footer a[data-request]");
@@ -63,7 +63,7 @@ test("on Custom size, the link carries only width, height and KB range", async (
 });
 
 test("landing pages and the 404 page carry the footer request link", async ({ page }) => {
-  await page.goto("./ssc/");
+  await gotoReady(page, "./ssc/");
   await expectHref(page, REQUEST_EXAM_URL);
   await page.goto("./no-such-page/");
   const link = page.locator("footer a", { hasText: S.footerRequest });
