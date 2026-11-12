@@ -64,3 +64,27 @@ test("stale last_verified and missing notice are warnings, not errors", async ()
     "sample: no official notice linked — specs unverified",
   ]);
 });
+
+test("the real presets pass, with notice warnings for ssc, upsc-cse and jee-main", async () => {
+  const dir = fileURLToPath(new URL("../presets/", import.meta.url));
+  const { errors, warnings, count } = await validatePresets(dir);
+  assert.deepEqual(errors, []);
+  assert.equal(count, 4);
+  assert.deepEqual(
+    warnings.filter((w) => w.includes("no official notice")),
+    ["jee-main", "ssc", "upsc-cse"].map((id) => `${id}: no official notice linked — specs unverified`),
+  );
+});
+
+test("every real preset document yields a usable byte range", async () => {
+  const { readdir, readFile } = await import("node:fs/promises");
+  const { byteRange } = await import("../src/core/size.js");
+  const dir = new URL("../presets/", import.meta.url);
+  for (const name of (await readdir(dir)).filter((n) => n.endsWith(".json") && n !== "schema.json")) {
+    const preset = JSON.parse(await readFile(new URL(name, dir), "utf8"));
+    for (const doc of preset.documents) {
+      const r = byteRange(doc.min_kb, doc.max_kb);
+      assert.ok(r.minBytes < r.maxBytes, `${preset.id}/${doc.id}`);
+    }
+  }
+});
