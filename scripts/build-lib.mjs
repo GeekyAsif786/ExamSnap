@@ -7,7 +7,7 @@ import { hasNotice } from "../src/ui/state.js";
 
 export { normalizeBase };
 export const DEFAULT_BASE = "/";
-export const DEFAULT_ORIGIN = "https://examsnap.asifurrahaman.com";
+export const DEFAULT_ORIGIN = "https://examsnap.xac3.xyz";
 /** The request-exam issue form; the app adds custom specs to it at runtime. */
 export const REQUEST_EXAM_URL = "https://github.com/GeekyAsif786/ExamSnap/issues/new?template=request-exam.yml&title=%5BExam%5D%20";
 export const TITLE_MAX = 65;

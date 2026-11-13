@@ -2,7 +2,7 @@
 
 ## Supported version
 
-Only the latest deploy of https://examsnap.asifurrahaman.com/ (the `main` branch) is supported. Fixes are not backported.
+Only the latest deploy of https://examsnap.xac3.xyz/ (the `main` branch) is supported. Fixes are not backported.
 
 ## Reporting a vulnerability
 

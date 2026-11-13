@@ -93,8 +93,8 @@ test("launch README: header, links, demo placeholder, sections in order, local l
   for (const b of ["Live site", "CI", "CodeQL", "License: AGPL-3.0", "PRs welcome", "हिंदी available"]) {
     assert.ok(readme.includes(`[![${b}](https://img.shields.io/`), b);
   }
-  assert.ok(readme.includes("[Open ExamSnap →](https://examsnap.asifurrahaman.com/)"));
-  assert.ok(readme.includes("[हिंदी में खोलें →](https://examsnap.asifurrahaman.com/hi/)"));
+  assert.ok(readme.includes("[Open ExamSnap →](https://examsnap.xac3.xyz/)"));
+  assert.ok(readme.includes("[हिंदी में खोलें →](https://examsnap.xac3.xyz/hi/)"));
   assert.equal(readme.split("<!-- DEMO_GIF -->").length, 2);
   const order = ["ExamSnap", "Why ExamSnap", "Supported exams", "How it works", "Security & privacy", "Contributors", "Licensing", "Development"];
   const at = order.map((x) => h.indexOf(x));

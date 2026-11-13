@@ -184,7 +184,7 @@ async function assertCreated(s, stdout, id) {
   assert.deepEqual((await validatePresets(s.dir)).errors, []);
   const { PRESETS } = await import(`data:text/javascript,${encodeURIComponent(await readFile(s.out, "utf8"))}`);
   assert.deepEqual(PRESETS.find((p) => p.id === id), preset);
-  assert.match(await readFile(s.readme, "utf8"), new RegExp(`\\(https://examsnap\\.asifurrahaman\\.com/${id}/\\)`));
+  assert.match(await readFile(s.readme, "utf8"), new RegExp(`\\(https://examsnap\\.xac3\\.xyz/${id}/\\)`));
   assert.match(stdout, /Next steps:/);
   assert.match(stdout, /npm run preview/);
   assert.ok(stdout.includes(`http://localhost:4173/${id}/`), stdout);

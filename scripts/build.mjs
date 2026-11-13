@@ -4,7 +4,7 @@
 // at /, others under /<code>/), sitemap, robots, 404. No bundler and no
 // minifier; comment-only lines are dropped from shipped JS.
 //   BASE_PATH      URL prefix the site is served under (default /)
-//   SITE_ORIGIN    origin for absolute URLs (default https://examsnap.asifurrahaman.com)
+//   SITE_ORIGIN    origin for absolute URLs (default https://examsnap.xac3.xyz)
 //   INCLUDE_DRAFTS 1 also builds draft locales (for translators' previews;
 //                  never set by CI or deploy)
 // Deterministic: same inputs, byte-identical output.

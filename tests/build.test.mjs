@@ -49,11 +49,11 @@ test("defaults: the custom domain at the root", async (t) => {
   t.after(() => rm(dir, { recursive: true, force: true }));
   await build({ outDir: dir });
   const ssc = await readFile(join(dir, "ssc/index.html"), "utf8");
-  assert.match(ssc, /<link rel="canonical" href="https:\/\/examsnap\.asifurrahaman\.com\/ssc\/">/);
-  assert.equal(await readFile(join(dir, "robots.txt"), "utf8"), "User-agent: *\nAllow: /\n\nSitemap: https://examsnap.asifurrahaman.com/sitemap.xml\n");
+  assert.match(ssc, /<link rel="canonical" href="https:\/\/examsnap\.xac3\.xyz\/ssc\/">/);
+  assert.equal(await readFile(join(dir, "robots.txt"), "utf8"), "User-agent: *\nAllow: /\n\nSitemap: https://examsnap.xac3.xyz/sitemap.xml\n");
   const manifest = JSON.parse(await readFile(join(dir, "manifest.webmanifest"), "utf8"));
   assert.deepEqual([manifest.id, manifest.start_url, manifest.scope], ["/", "/", "/"]);
-  assert.match(await readFile(join(dir, "sitemap.xml"), "utf8"), /<loc>https:\/\/examsnap\.asifurrahaman\.com\/<\/loc>/);
+  assert.match(await readFile(join(dir, "sitemap.xml"), "utf8"), /<loc>https:\/\/examsnap\.xac3\.xyz\/<\/loc>/);
   assert.match(await readFile(join(dir, "404.html"), "utf8"), /href="\/src\/ui\/styles\.[0-9a-f]{8}\.css"/);
 });
 
@@ -226,7 +226,7 @@ test("every page: <html lang/dir>, its one strings module, self-canonical and hr
   const dir = await tmp();
   t.after(() => rm(dir, { recursive: true, force: true }));
   const r = await build({ outDir: dir });
-  const origin = "https://examsnap.asifurrahaman.com/";
+  const origin = "https://examsnap.xac3.xyz/";
   for (const page of r.pages) {
     const html = await readFile(join(dir, page, "index.html"), "utf8");
     const lang = page.startsWith("hi/") ? "hi" : "en";
@@ -283,7 +283,7 @@ test("sitemap: every page in every language with xhtml:link alternates", async (
   t.after(() => rm(dir, { recursive: true, force: true }));
   const r = await build({ outDir: dir });
   const xml = await readFile(join(dir, "sitemap.xml"), "utf8");
-  const origin = "https://examsnap.asifurrahaman.com/";
+  const origin = "https://examsnap.xac3.xyz/";
   assert.deepEqual([...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]), r.pages.map((p) => `${origin}${p}`));
   assert.equal(xml.match(/<xhtml:link /g).length, r.pages.length * 3);
   assert.match(xml, /xmlns:xhtml="http:\/\/www\.w3\.org\/1999\/xhtml"/);
@@ -296,7 +296,7 @@ test("NEET (UG) and CUET (UG) get landing pages in English and Hindi, all in the
   const xml = await readFile(join(dir, "sitemap.xml"), "utf8");
   for (const page of ["neet-ug/", "cuet-ug/", "hi/neet-ug/", "hi/cuet-ug/"]) {
     assert.ok(r.pages.includes(page), page);
-    assert.ok(xml.includes(`<loc>https://examsnap.asifurrahaman.com/${page}</loc>`), page);
+    assert.ok(xml.includes(`<loc>https://examsnap.xac3.xyz/${page}</loc>`), page);
   }
   const hi = await readFile(join(dir, "hi/neet-ug/index.html"), "utf8");
   assert.ok(hi.includes("उँगलियों और अंगूठे के निशान"), "Hindi labels on the Hindi page");
