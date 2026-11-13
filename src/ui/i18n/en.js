@@ -64,6 +64,7 @@ export const STRINGS = {
   adjustEmpty: "Add a photo in step 2 to adjust the crop.",
   previewLabel: "Crop preview. Drag to move. Arrow keys move, plus and minus zoom.",
   adjustHint: "Drag to move · pinch, scroll or use the slider to zoom.",
+  faceGuideLabel: "Show face guide",
   zoomLabel: "Zoom",
   cleanLabel: "Clean background",
   cleanHint: "Turns paper pure white and makes ink darker.",
