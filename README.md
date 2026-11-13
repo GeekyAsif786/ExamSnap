@@ -6,14 +6,16 @@
 
 **Exam photo & signature resizer for Indian forms: exact pixels, exact KB, 100% in your browser.**
 
-[![Live site](https://img.shields.io/badge/live-examsnap.asifurrahaman.com-2ea44f)](https://examsnap.asifurrahaman.com/)
+[![Live site](https://img.shields.io/badge/live-examsnap.xac3.xyz-2ea44f)](https://examsnap.xac3.xyz/)
 [![CI](https://img.shields.io/github/actions/workflow/status/GeekyAsif786/ExamSnap/ci.yml?branch=main&label=CI)](https://github.com/GeekyAsif786/ExamSnap/actions/workflows/ci.yml)
 [![CodeQL](https://img.shields.io/github/actions/workflow/status/GeekyAsif786/ExamSnap/codeql.yml?branch=main&label=CodeQL)](https://github.com/GeekyAsif786/ExamSnap/actions/workflows/codeql.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
-[![हिंदी available](https://img.shields.io/badge/%E0%A4%B9%E0%A4%BF%E0%A4%82%E0%A4%A6%E0%A5%80-available-ff9933)](https://examsnap.asifurrahaman.com/hi/)
+[![हिंदी available](https://img.shields.io/badge/%E0%A4%B9%E0%A4%BF%E0%A4%82%E0%A4%A6%E0%A5%80-available-ff9933)](https://examsnap.xac3.xyz/hi/)
 
-### [Open ExamSnap →](https://examsnap.asifurrahaman.com/) · [हिंदी में खोलें →](https://examsnap.asifurrahaman.com/hi/)
+### [Open ExamSnap →](https://examsnap.xac3.xyz/) · [हिंदी में खोलें →](https://examsnap.xac3.xyz/hi/)
+
+**Moved:** ExamSnap now lives at examsnap.xac3.xyz. The old address, examsnap.asifurrahaman.com, redirects to the new one.
 
 </div>
 
@@ -42,12 +44,12 @@ https://github.com/user-attachments/assets/6cc848a9-ffcb-42be-a3d5-b17467e6c295
 <!-- exams:start -->
 | Exam | Documents | Source |
 | --- | --- | --- |
-| [Banking — IBPS PO / Clerk / RRB / SO, RBI, PSU banks](https://examsnap.asifurrahaman.com/banking-ibps/) | Photograph: 200×230 px, 20–50 KB<br>Signature: 140×60 px, 10–20 KB<br>Left thumb impression: 240×240 px, 20–50 KB<br>Handwritten declaration: 800×400 px, 50–100 KB | Official notice |
-| [CUET (UG) — NTA](https://examsnap.asifurrahaman.com/cuet-ug/) | Passport size photograph (3.5 × 4.5 cm): 276×354 px, 10–200 KB<br>Signature (3.5 × 1.5 cm): 276×118 px, 10–50 KB | Official notice |
-| [JEE Main (NTA)](https://examsnap.asifurrahaman.com/jee-main/) | Photograph (3.5 × 4.5 cm): 276×354 px, 10–200 KB<br>Signature (3.5 × 1.5 cm): 276×118 px, 10–100 KB | Official notice |
-| [NEET (UG) — NTA](https://examsnap.asifurrahaman.com/neet-ug/) | Passport size photograph (3.5 × 4.5 cm): 276×354 px, 10–200 KB<br>Signature (3.5 × 1.5 cm): 276×118 px, 10–100 KB<br>Fingers &amp; thumb impressions (left and right hands): 800×500 px, 50–200 KB | Official notice |
-| [SSC — CGL / CHSL / MTS / GD / CPO](https://examsnap.asifurrahaman.com/ssc/) | Photograph (3.5 × 4.5 cm): 276×354 px, 20–50 KB<br>Signature (6.0 × 2.0 cm): 472×157 px, 10–20 KB | [⚠ Needs verification](https://github.com/GeekyAsif786/ExamSnap/labels/verify-preset) |
-| [UPSC — Civil Services (and other UPSC exams)](https://examsnap.asifurrahaman.com/upsc-cse/) | Photograph: 400×500 px, 20–200 KB<br>Signature ×3 (one image): 500×350 px, 20–100 KB<br>Photo ID card: 800×500 px, 20–200 KB | [⚠ Needs verification](https://github.com/GeekyAsif786/ExamSnap/labels/verify-preset) |
+| [Banking — IBPS PO / Clerk / RRB / SO, RBI, PSU banks](https://examsnap.xac3.xyz/banking-ibps/) | Photograph: 200×230 px, 20–50 KB<br>Signature: 140×60 px, 10–20 KB<br>Left thumb impression: 240×240 px, 20–50 KB<br>Handwritten declaration: 800×400 px, 50–100 KB | Official notice |
+| [CUET (UG) — NTA](https://examsnap.xac3.xyz/cuet-ug/) | Passport size photograph (3.5 × 4.5 cm): 276×354 px, 10–200 KB<br>Signature (3.5 × 1.5 cm): 276×118 px, 10–50 KB | Official notice |
+| [JEE Main (NTA)](https://examsnap.xac3.xyz/jee-main/) | Photograph (3.5 × 4.5 cm): 276×354 px, 10–200 KB<br>Signature (3.5 × 1.5 cm): 276×118 px, 10–100 KB | Official notice |
+| [NEET (UG) — NTA](https://examsnap.xac3.xyz/neet-ug/) | Passport size photograph (3.5 × 4.5 cm): 276×354 px, 10–200 KB<br>Signature (3.5 × 1.5 cm): 276×118 px, 10–100 KB<br>Fingers &amp; thumb impressions (left and right hands): 800×500 px, 50–200 KB | Official notice |
+| [SSC — CGL / CHSL / MTS / GD / CPO](https://examsnap.xac3.xyz/ssc/) | Photograph (3.5 × 4.5 cm): 276×354 px, 20–50 KB<br>Signature (6.0 × 2.0 cm): 472×157 px, 10–20 KB | [⚠ Needs verification](https://github.com/GeekyAsif786/ExamSnap/labels/verify-preset) |
+| [UPSC — Civil Services (and other UPSC exams)](https://examsnap.xac3.xyz/upsc-cse/) | Photograph: 400×500 px, 20–200 KB<br>Signature ×3 (one image): 500×350 px, 20–100 KB<br>Photo ID card: 800×500 px, 20–200 KB | [⚠ Needs verification](https://github.com/GeekyAsif786/ExamSnap/labels/verify-preset) |
 <!-- exams:end -->
 
 Your exam missing? [Request it](https://github.com/GeekyAsif786/ExamSnap/issues/new?template=request-exam.yml&title=%5BExam%5D%20) · [Add it yourself in 10 minutes](CONTRIBUTING.md#add-an-exam-in-10-minutes)
@@ -109,6 +111,6 @@ Every push to `main` runs lint, check and unit tests, builds, and deploys `dist/
 The build reads two environment variables:
 
 - `BASE_PATH` — URL prefix the site lives under. Default `/`.
-- `SITE_ORIGIN` — origin used for canonical, sitemap and social URLs. Default `https://examsnap.asifurrahaman.com`.
+- `SITE_ORIGIN` — origin used for canonical, sitemap and social URLs. Default `https://examsnap.xac3.xyz`.
 
 The site is served from the custom domain set in Settings → Pages (Actions-based deploys need no `CNAME` file). To serve it somewhere else, set the repository variables `BASE_PATH` and `SITE_ORIGIN` (Settings → Secrets and variables → Actions → Variables) and re-run the deploy; for example `BASE_PATH=/ExamSnap/` and `SITE_ORIGIN=https://geekyasif786.github.io` for the project-site URL.

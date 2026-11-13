@@ -43,7 +43,7 @@ test("table: exam linked to its landing page, documents, source status", () => {
       `| [Y](https://site.example/y/) | A: 1×2 px, 3–4 KB<br>B: 5×6 px, 7–8.5 KB | [⚠ Needs verification](${VERIFY_URL}) |`,
     ].join("\n"),
   );
-  assert.match(examsTable([preset()]), /\(https:\/\/examsnap\.asifurrahaman\.com\/x\/\)/);
+  assert.match(examsTable([preset()]), /\(https:\/\/examsnap\.xac3\.xyz\/x\/\)/);
 });
 
 test("portal-only sources still need verification", () => {
@@ -88,7 +88,7 @@ test("the committed README table is up to date and lists every preset", async (t
   if (stale && staleSeverity(process.env) === "warning") return t.skip("README table stale on a PR: maintainer regenerates it");
   assert.equal(stale, false);
   const text = await readFile(README_PATH, "utf8");
-  for (const p of await readPresets()) assert.ok(text.includes(`(https://examsnap.asifurrahaman.com/${p.id}/)`), p.id);
+  for (const p of await readPresets()) assert.ok(text.includes(`(https://examsnap.xac3.xyz/${p.id}/)`), p.id);
   assert.match(text, /Your exam missing\? \[Request it\]\(https:\/\/github\.com\/GeekyAsif786\/ExamSnap\/issues\/new\?template=request-exam\.yml&title=%5BExam%5D%20\) · \[Add it yourself in 10 minutes\]\(CONTRIBUTING\.md#add-an-exam-in-10-minutes\)/);
   assert.match(text, /contrib\.rocks\/image\?repo=GeekyAsif786\/ExamSnap/);
 });
